@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/theme.css">
+<script src="shared/storage.js"></script>
+<script src="shared/profile.js"></script>
 <style>
 :root{
   --canvas: var(--te-canvas, #F5F7FA); --surface: var(--te-surface, #FFFFFF);
@@ -120,15 +122,118 @@ footer b{color:var(--muted); font-weight:800}
   .card,.go::after{transition:none}
   .card:hover,.card:focus-visible{transform:none}
 }
+
+/* ===== 语言闸 ＋ 学生资料闸（append-only） ===== */
+.gate{
+  position:fixed; inset:0; z-index:100; display:grid; place-items:center;
+  padding:22px; background:var(--canvas); overflow-y:auto;
+}
+.gate.hidden{display:none}
+.gcard{
+  width:min(430px,100%); background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--sh-hi); padding:30px 24px; text-align:center;
+}
+.gcard .eyebrow{
+  font-family:var(--font-h); font-weight:700; font-size:10.5px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--brand-2);
+}
+.gcard h2{font-family:var(--font-h); font-weight:700; font-size:21px; color:var(--brand); margin:8px 0 2px; line-height:1.3}
+.gcard .gsub{color:var(--muted); font-size:13.5px; font-weight:600; line-height:1.6; margin-bottom:20px}
+.langopt{
+  display:flex; align-items:center; gap:14px; width:100%; text-align:left; cursor:pointer;
+  background:var(--surface); border:2px solid var(--line); border-radius:15px;
+  padding:14px 16px; margin-bottom:11px; font-family:var(--font-b);
+  transition:border-color .15s, transform .12s, background .15s;
+}
+.langopt:hover,.langopt:focus-visible{border-color:var(--brand-2); background:var(--brand-soft); transform:translateY(-2px); outline:none}
+.langopt.cur{border-color:var(--brand); background:var(--brand-soft)}
+.langopt .flag{
+  width:44px; height:44px; flex:none; border-radius:13px; background:var(--brand-soft);
+  display:grid; place-items:center; font-family:var(--font-h); font-weight:700;
+  font-size:17px; color:var(--brand);
+}
+.langopt.cur .flag{background:var(--brand); color:#fff}
+.langopt .nm{display:block; font-weight:800; font-size:15.5px; color:var(--ink)}
+.langopt .sb{display:block; font-size:12.5px; color:var(--muted); font-weight:600; margin-top:1px}
+.langopt .tick{margin-left:auto; color:var(--brand); font-weight:800}
+.gnote{margin-top:16px; font-size:12px; line-height:1.6; color:var(--subtle); font-weight:700}
+
+.qrow{text-align:left; margin-bottom:13px}
+.qrow label{display:block; font-size:13px; font-weight:800; color:var(--ink); margin-bottom:5px}
+.qrow input{
+  width:100%; font-family:var(--font-b); font-size:15px; font-weight:600; color:var(--ink);
+  background:var(--canvas); border:2px solid var(--line); border-radius:12px; padding:11px 13px;
+}
+.qrow input:focus{outline:none; border-color:var(--brand-2); background:var(--surface)}
+.gbtn{
+  width:100%; font-family:var(--font-h); font-weight:600; font-size:15px; cursor:pointer;
+  border-radius:13px; padding:13px; border:2px solid var(--brand); background:var(--brand); color:#fff;
+}
+.gbtn:hover{background:var(--brand-2); border-color:var(--brand-2)}
+.gbtn.ghost{background:transparent; color:var(--muted); border-color:transparent; padding:9px; font-size:13.5px}
+.gbtn.ghost:hover{color:var(--brand-2); background:transparent}
+
+/* 顶部：语言切换 ＋ 我的资料 */
+.topbar{
+  width:100%; max-width:1180px; display:flex; align-items:center; gap:8px;
+  justify-content:flex-end; margin-bottom:14px; flex-wrap:wrap;
+}
+.who{margin-right:auto; font-size:13px; font-weight:700; color:var(--muted)}
+.who b{color:var(--brand); font-weight:800}
+.langtog{display:flex; gap:2px; background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:3px}
+.langtog button{
+  border:0; background:transparent; cursor:pointer; font-family:var(--font-h); font-weight:600;
+  font-size:12px; color:var(--muted); padding:6px 11px; border-radius:8px;
+}
+.langtog button.on{background:var(--brand); color:#fff}
+.iconbtn{
+  border:1px solid var(--line); background:var(--surface); cursor:pointer;
+  font-family:var(--font-h); font-weight:600; font-size:12.5px; color:var(--brand-2);
+  padding:8px 13px; border-radius:11px;
+}
+.iconbtn:hover{border-color:var(--brand-2); background:var(--brand-soft)}
+@media (prefers-reduced-motion:reduce){ .langopt{transition:none} .langopt:hover{transform:none} }
 </style>
 </head>
 <body>
+
+<!-- 语言闸：三种语言各用自己的语言写，学生才认得出哪个是他要的 -->
+<div class="gate hidden" id="gLang">
+  <div class="gcard">
+    <p class="eyebrow">Language · 语言 · Bahasa</p>
+    <h2>选择解释语言<br>Pilih bahasa penerangan<br>Choose your explanation language</h2>
+    <p class="gsub"></p>
+    <div id="langList"></div>
+    <p class="gnote">英文学习内容相同，只有解释语言不同。<br>
+      Kandungan Bahasa Inggeris adalah sama.<br>
+      English content is identical in all versions.</p>
+  </div>
+</div>
+
+<!-- 学生资料闸 -->
+<div class="gate hidden" id="gMe">
+  <div class="gcard">
+    <p class="eyebrow" id="meEyebrow"></p>
+    <h2 id="meTitle"></h2>
+    <p class="gsub" id="meSub"></p>
+    <div id="meForm"></div>
+    <button class="gbtn" id="meSave"></button>
+    <button class="gbtn ghost" id="meSkip"></button>
+  </div>
+</div>
+
 <div class="wrap">
+
+  <div class="topbar">
+    <span class="who" id="who"></span>
+    <button class="iconbtn" id="meBtn"></button>
+    <div class="langtog" id="langTog"></div>
+  </div>
 
   <header>
     <div class="mark">Touch English</div>
-    <h1>E-learning 课程</h1>
-    <p class="sub">选你的课程开始 · Pick your course to begin</p>
+    <h1 data-t="h1"></h1>
+    <p class="sub" data-t="sub"></p>
   </header>
 
   <main class="grid">
@@ -142,7 +247,7 @@ footer b{color:var(--muted); font-weight:800}
         <li>Speak, record &amp; listen back</li>
         <li>5 modules · 25 lessons</li>
       </ul>
-      <span class="go">开始</span>
+      <span class="go" data-t="go"></span>
     </a>
 
     <a class="card" href="courses/level-1/index.html">
@@ -154,7 +259,7 @@ footer b{color:var(--muted); font-weight:800}
         <li>Speak, record &amp; listen back</li>
         <li>5 modules · 25 lessons</li>
       </ul>
-      <span class="go">开始</span>
+      <span class="go" data-t="go"></span>
     </a>
 
     <a class="card" href="courses/level-2/index.html">
@@ -166,7 +271,7 @@ footer b{color:var(--muted); font-weight:800}
         <li>Speak 4–5 connected sentences, record &amp; listen back</li>
         <li>5 modules · 25 lessons</li>
       </ul>
-      <span class="go">开始</span>
+      <span class="go" data-t="go"></span>
     </a>
 
     <a class="card" href="courses/speaking-bonus/index.html">
@@ -178,7 +283,7 @@ footer b{color:var(--muted); font-weight:800}
         <li>84 speaking patterns to build and say</li>
         <li>Record yourself &amp; listen back</li>
       </ul>
-      <span class="go">开始</span>
+      <span class="go" data-t="go"></span>
     </a>
 
     <a class="card" href="courses/ipa/index.html">
@@ -190,7 +295,7 @@ footer b{color:var(--muted); font-weight:800}
         <li>Hear each sound, then spot it in real words</li>
         <li>5 stages · easy-to-hard sound practice</li>
       </ul>
-      <span class="go">开始</span>
+      <span class="go" data-t="go"></span>
     </a>
 
     <a class="card" href="courses/grammar/index.html">
@@ -204,8 +309,8 @@ footer b{color:var(--muted); font-weight:800}
       </ul>
       <!-- 介面是英文，但 17 支教学影片是华语讲解 —— 不懂中文的学生看不懂影片，
            所以在这里讲明。不需要的话把这一行删掉即可。 -->
-      <span class="note">Video lessons are taught in Chinese</span>
-      <span class="go">开始</span>
+      <span class="note" data-t="cnvideo"></span>
+      <span class="go" data-t="go"></span>
     </a>
 
     <!-- 适用级别已确认为全级别；title / subtitle / 重点还是暂用课程实际内容描述，等 Marco 给正式文案 -->
@@ -218,16 +323,167 @@ footer b{color:var(--muted); font-weight:800}
         <li>错题自动进复习本，按间隔重练</li>
         <li>每日目标 · 连续天数</li>
       </ul>
-      <span class="go">开始</span>
+      <span class="go" data-t="go"></span>
     </a>
 
   </main>
 
   <footer>
-    进度存在这台电脑的浏览器里 —— <b>换电脑或清除浏览器资料就会归零</b>。<br>
-    请保持整个资料夹的结构完整，不要单独搬走某一个课程资料夹。
+    <span data-t="foot1"></span><br>
+    <span data-t="foot2"></span>
   </footer>
 
 </div>
+
+<script>
+/* =============================================================================
+   启动页：选一次解释语言、填一次资料，7 个课程共用。
+   资料存在 shared/profile.js（localStorage 的 touch:v1:profile），
+   跟各课程自己的进度分开 —— 重置某一个课程不会把名字洗掉。
+
+   只有「跟学生解释的话」会换语言。课程名称与英文简介是教材／文案，不动。
+   —— 这是 Pre-Beg／L1／L2 本来就定下的规矩：
+      「英文学习内容相同，只有解释语言不同。」
+============================================================================= */
+(function () {
+  "use strict";
+  var P = globalThis.TouchProfile;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (x) { return String(x == null ? "" : x)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
+
+  /* profile.js 没载到（例如整个 shared/ 被搬走了）就当没有这个功能，
+     卡片本来就能点，课程照样进得去。 */
+  if (!P) { document.querySelectorAll("[data-t]").forEach(function (e) {
+              if (!e.textContent.trim()) e.textContent = ""; });
+            var tb = document.querySelector(".topbar"); if (tb) tb.style.display = "none";
+            return; }
+
+  var T = {
+    h1:      { zh: "E-learning 课程",  ms: "Kursus E-learning",  en: "E-learning Courses" },
+    sub:     { zh: "选你的课程开始",    ms: "Pilih kursus anda untuk mula", en: "Pick your course to begin" },
+    go:      { zh: "开始",             ms: "Mula",               en: "Start" },
+    cnvideo: { zh: "教学影片是华语讲解",
+               ms: "Video pengajaran dalam bahasa Cina",
+               en: "Video lessons are taught in Chinese" },
+    foot1:   { zh: "进度存在这台电脑的浏览器里 —— 换电脑或清除浏览器资料就会归零。",
+               ms: "Kemajuan disimpan dalam pelayar komputer ini — tukar komputer atau kosongkan data pelayar, kemajuan akan hilang.",
+               en: "Your progress is saved in this browser — switching computers or clearing browser data resets it." },
+    foot2:   { zh: "请保持整个资料夹的结构完整，不要单独搬走某一个课程资料夹。",
+               ms: "Kekalkan struktur folder ini. Jangan alihkan mana-mana folder kursus secara berasingan.",
+               en: "Keep the whole folder together. Don't move a single course folder on its own." },
+
+    meBtn:   { zh: "我的资料",  ms: "Maklumat saya", en: "My info" },
+    meAdd:   { zh: "填我的资料", ms: "Isi maklumat",  en: "Add my info" },
+    hi:      { zh: "嗨，",     ms: "Hai, ",         en: "Hi, " },
+
+    meEyebrow: { zh: "关于你", ms: "Tentang anda", en: "About you" },
+    meTitle:   { zh: "先认识你一下", ms: "Kenali anda dahulu", en: "Tell us about you" },
+    meSub:     { zh: "填了之後，练习句会变成关于你自己的 —— 讲自己的事情才记得住。四题都可以跳过，之後也能改。",
+                 ms: "Selepas ini, ayat latihan akan menjadi tentang diri anda — lebih mudah diingat. Anda boleh langkau dan ubah kemudian.",
+                 en: "Your practice sentences will then be about you — much easier to remember. You can skip this and change it later." },
+    save:      { zh: "储存", ms: "Simpan", en: "Save" },
+    skip:      { zh: "先跳过", ms: "Langkau dahulu", en: "Skip for now" }
+  };
+
+  var ASK = [
+    { k: "name",  q: { zh: "我们怎么称呼你？", ms: "Apa nama anda?", en: "What should we call you?" },
+                  ph: { zh: "例如 Marco", ms: "cth. Marco", en: "e.g. Marco" } },
+    { k: "place", q: { zh: "你来自哪里？", ms: "Anda dari mana?", en: "Where are you from?" },
+                  ph: { zh: "例如 Johor", ms: "cth. Johor", en: "e.g. Johor" } },
+    { k: "job",   q: { zh: "你的工作是什么？", ms: "Apa pekerjaan anda?", en: "What is your job?" },
+                  ph: { zh: "例如 admin executive", ms: "cth. admin executive", en: "e.g. admin executive" } },
+    { k: "goal",  q: { zh: "你想用英文做到什么？", ms: "Apa matlamat Bahasa Inggeris anda?", en: "What do you want to do with your English?" },
+                  ph: { zh: "例如 speak confidently at work", ms: "cth. speak confidently at work", en: "e.g. speak confidently at work" } }
+  ];
+
+  var t = function (k) { return P.t(T[k]); };
+
+  /* ---------- 套用语言 ---------- */
+  function apply() {
+    document.querySelectorAll("[data-t]").forEach(function (el) {
+      var k = el.getAttribute("data-t");
+      if (T[k]) el.textContent = P.t(T[k]);
+    });
+    document.documentElement.lang = ({ zh: "zh", ms: "ms", en: "en" })[P.effective()];
+
+    var p = P.get();
+    $("who").innerHTML = p.name ? esc(t("hi")) + "<b>" + esc(p.name) + "</b>" : "";
+    $("meBtn").textContent = P.filled() ? t("meBtn") : t("meAdd");
+
+    $("langTog").innerHTML = P.LANGS.map(function (l) {
+      return '<button data-l="' + l + '"' + (P.effective() === l ? ' class="on"' : "") + '>' +
+             esc(l === "zh" ? "中文" : l === "ms" ? "BM" : "EN") + "</button>";
+    }).join("");
+    $("langTog").querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () { P.setLang(b.dataset.l); apply(); };
+    });
+  }
+
+  /* ---------- 语言闸 ---------- */
+  function langList() {
+    $("langList").innerHTML = P.LANGS.map(function (l) {
+      var m = P.meta[l], cur = P.lang() === l;
+      return '<button class="langopt' + (cur ? " cur" : "") + '" data-l="' + l + '">' +
+               '<span class="flag">' + esc(m.flag) + "</span>" +
+               '<span><span class="nm">' + esc(m.name) + '</span>' +
+               '<span class="sb">' + esc(m.sub) + "</span></span>" +
+               (cur ? '<span class="tick">✓</span>' : "") +
+             "</button>";
+    }).join("");
+    $("langList").querySelectorAll(".langopt").forEach(function (b) {
+      b.onclick = function () {
+        P.setLang(b.dataset.l);
+        apply();
+        $("gLang").classList.add("hidden");
+        if (!P.asked()) showMe(); else document.body.style.overflow = "";
+      };
+    });
+  }
+
+  /* ---------- 学生资料闸 ---------- */
+  function showMe() {
+    var p = P.get();
+    $("meEyebrow").textContent = t("meEyebrow");
+    $("meTitle").textContent   = t("meTitle");
+    $("meSub").textContent     = t("meSub");
+    $("meSave").textContent    = t("save");
+    $("meSkip").textContent    = P.asked() ? t("skip") : t("skip");
+    $("meForm").innerHTML = ASK.map(function (a) {
+      return '<div class="qrow"><label for="f_' + a.k + '">' + esc(P.t(a.q)) + "</label>" +
+             '<input id="f_' + a.k + '" value="' + esc(p[a.k]) + '" placeholder="' +
+             esc(P.t(a.ph)) + '" autocomplete="off" maxlength="60"></div>';
+    }).join("");
+    $("gMe").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMe(saveIt) {
+    if (saveIt) {
+      var patch = {};
+      ASK.forEach(function (a) { patch[a.k] = $("f_" + a.k).value; });
+      P.set(patch);
+    }
+    P.markAsked();
+    $("gMe").classList.add("hidden");
+    document.body.style.overflow = "";
+    apply();
+  }
+
+  $("meSave").onclick = function () { closeMe(true); };
+  $("meSkip").onclick = function () { closeMe(false); };
+  $("meBtn").onclick  = function () { showMe(); };
+
+  /* ---------- 开场 ---------- */
+  apply();
+  langList();
+  if (!P.lang()) {
+    $("gLang").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  } else if (!P.asked()) {
+    showMe();
+  }
+})();
+</script>
 </body>
 </html>
