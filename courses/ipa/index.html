@@ -548,6 +548,7 @@ h1,h2,h3,.disp{font-family:'Fredoka',sans-serif;font-weight:700;letter-spacing:.
 <div id="fx"></div>
 
 <script src="../../shared/storage.js"></script>
+<script src="../../shared/profile.js"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -1043,6 +1044,10 @@ function badgeMedal(b, locked){
 /* 共用存档层，见 ../../shared/storage.js（同一份模组给全部课程用）。
    无痕模式退回记忆体的处理已经在模组里，这里不用自己做。 */
 const store = TouchStore.open("ipa");
+
+/* 启动页选过的解释语言与名字。IPA 内部用的语言代码（en/zh/ms）跟共用层一样，
+   不用换算。载不到就退回这个课程自己那一份。 */
+const SP = globalThis.TouchProfile || null;
 const HAS_LS = store.persistent;
 const Persist = {
   load(){ return store.get("state", null); },
@@ -1126,13 +1131,37 @@ function nextStageId(id){ const i=COURSE.findIndex(s=>s.id===id); return COURSE[
 /* =====================================================================
    7. FEEDBACK SYSTEM  —  encouragement pools, hints, sound, motion.
    ===================================================================== */
-const PRAISE = ["Awesome!","You're getting sharper!","Perfect vowel control!","Great listening!",
+/* 答对／答错／连击的话。整组换语言，不逐句配对 —— 反正是随机挑一句。 */
+const PRAISE_ALL = {
+  en: ["Awesome!","You're getting sharper!","Perfect vowel control!","Great listening!",
   "Your pronunciation awareness is improving!","Nailed it!","Beautiful ear!","Spot on!","You're on fire!","Crisp & clear!",
   "You're hearing the difference now!","Excellent sound recognition!","You're building real communication skills!",
   "Clear and confident!","That's the difference an attentive ear makes.","Your accuracy is climbing!",
-  "Strong control of that sound!","You're tuning in beautifully!","Precise — well done!","Real progress right there!"];
-const COMBO_LINES = {3:"3 in a row! Keep going!",5:"🔥 5 streak — on fire!",8:"⚡ 8 streak — unstoppable!",
-  10:"🌟 10 streak — phenomenal!",15:"💎 15 streak — masterful!",20:"🚀 20 streak — incredible focus!"};
+  "Strong control of that sound!","You're tuning in beautifully!","Precise — well done!","Real progress right there!"],
+  zh: ["很好！","你越听越准了！","母音控制得很好！","耳朵很灵！",
+  "你对发音越来越有感觉了！","答对了！","好耳力！","完全正确！","状态很好！","又清楚又干脆！",
+  "你现在听得出差别了！","辨音能力很强！","这就是能沟通的真本事！",
+  "清楚又有自信！","专心听就是不一样。","你的准确度在往上走！",
+  "这个音你掌握得很稳！","耳朵调对频了！","很精准 —— 做得好！","这就是实实在在的进步！"],
+  ms: ["Bagus!","Pendengaran anda makin tajam!","Kawalan vokal yang tepat!","Pendengaran yang baik!",
+  "Kesedaran sebutan anda makin baik!","Tepat sekali!","Telinga yang tajam!","Betul!","Anda sedang panas!","Jelas dan bersih!",
+  "Anda sudah dengar bezanya!","Pengecaman bunyi yang cemerlang!","Anda sedang bina kemahiran komunikasi sebenar!",
+  "Jelas dan yakin!","Itulah bezanya bila telinga fokus.","Ketepatan anda makin naik!",
+  "Kawalan bunyi itu kukuh!","Telinga anda makin selaras!","Tepat — syabas!","Itu kemajuan yang nyata!"]
+};
+const COMBO_ALL = {
+  en: {3:"3 in a row! Keep going!",5:"🔥 5 streak — on fire!",8:"⚡ 8 streak — unstoppable!",
+  10:"🌟 10 streak — phenomenal!",15:"💎 15 streak — masterful!",20:"🚀 20 streak — incredible focus!"},
+  zh: {3:"连对 3 题！继续！",5:"🔥 连对 5 题 —— 状态很好！",8:"⚡ 连对 8 题 —— 挡不住了！",
+  10:"🌟 连对 10 题 —— 太强了！",15:"💎 连对 15 题 —— 大师级！",20:"🚀 连对 20 题 —— 专注力惊人！"},
+  ms: {3:"3 berturut-turut! Teruskan!",5:"🔥 5 berturut — sedang panas!",8:"⚡ 8 berturut — tidak dapat dihalang!",
+  10:"🌟 10 berturut — luar biasa!",15:"💎 15 berturut — tahap mahir!",20:"🚀 20 berturut — fokus yang hebat!"}
+};
+
+/* 现在这个语言的那一组（LANG 是学生选的解释语言，切换後自动换） */
+function praiseList(){ return PRAISE_ALL[LANG] || PRAISE_ALL.en; }
+function gentleList(){ return GENTLE_ALL[LANG] || GENTLE_ALL.en; }
+function comboLine(n){ return (COMBO_ALL[LANG] || COMBO_ALL.en)[n]; }
 const pick = a => a[Math.floor(Math.random()*a.length)];
 
 // --- sound (optional, synthesized, no assets) ---
@@ -1146,8 +1175,142 @@ const LANGS = [
   { code:"ms", label:"Bahasa Melayu", short:"BM" }
 ];
 function langShort(code){ const l=LANGS.find(x=>x.code===code); return l?l.short:"🌐"; }
-function loadLang(){ return store.get("lang", "") || ""; }
-function saveLang(code){ store.set("lang", code); }
+
+/* 说明文字三语。写法沿用 grammar-full 的 L(en, zh, bm) —— 翻译就贴在用它的地方，
+   不用另外维护一张对照表，改文案时不会漏掉另一边。
+
+   只有「跟学生解释怎么做」的字会换语言。英文教材不动：IPA 符号、例字、
+   转写答案永远是英文，按钮 Continue / Check answer 也维持英文
+   —— 跟 Pre-Beg／L1／L2 同一个规矩：「英文学习内容相同，只有解释语言不同。」 */
+/* 题型标签与题目指示：教材资料里写的是英文（那是来源真相，不动），
+   在显示的地方查表翻成学生的解释语言。查不到就原样显示英文。 */
+const Q_KIND = {
+  "Choose the IPA":  { zh:"选音标",     ms:"Pilih IPA" },
+  "Listen & choose": { zh:"听音选答",   ms:"Dengar & pilih" },
+  "Read the IPA":    { zh:"读音标",     ms:"Baca IPA" },
+  "Fill the sound":  { zh:"填音",       ms:"Isi bunyi" },
+  "Spot the sound":  { zh:"找出这个音", ms:"Cari bunyi" },
+  "Fill the glide":  { zh:"填滑音",     ms:"Isi bunyi luncur" },
+  "Quick check":     { zh:"快速检查",   ms:"Semakan pantas" },
+  "Minimal pair":    { zh:"最小对立对", ms:"Pasangan minimal" },
+  "Spot the odd one":{ zh:"找出不一样的", ms:"Cari yang berbeza" }
+};
+const Q_SUB = {
+  "Which word did you hear?":          { zh:"你听到的是哪一个字？", ms:"Perkataan mana yang anda dengar?" },
+  "Which sound do you hear?":          { zh:"你听到的是哪一个音？", ms:"Bunyi mana yang anda dengar?" },
+  "Which word contains this sound?":   { zh:"哪一个字里面有这个音？", ms:"Perkataan mana mengandungi bunyi ini?" },
+  "Type-free: which word did you hear?":{ zh:"不用打字：你听到的是哪一个字？", ms:"Tanpa menaip: perkataan mana yang anda dengar?" },
+  "Pick the TOUCH way 👇":             { zh:"选出 TOUCH 的念法 👇", ms:"Pilih cara TOUCH 👇" },
+  "Which word contains this glide?":   { zh:"哪一个字里面有这个滑音？", ms:"Perkataan mana mengandungi bunyi luncur ini?" },
+  "Which word has the buzzing “th”?":  { zh:"哪一个字的 th 是有声的（会震）？", ms:"Perkataan mana ada “th” yang bergetar?" }
+};
+function trQ(str, table){
+  const e = table[str];
+  return e ? L(str, e.zh, e.ms) : (str || "");
+}
+
+/* 关卡名称与徽章：教材资料里写英文（来源真相不动），显示时查表翻。
+   查不到就原样显示英文，所以之後加新关卡不会因为漏翻而变空白。 */
+const STAGE_TITLE = {
+  "Welcome Aboard":      { zh:"欢迎上路",       ms:"Selamat Datang" },
+  "Short & Long Vowels": { zh:"长短母音",       ms:"Vokal Pendek & Panjang" },
+  "Diphthongs":          { zh:"双母音",         ms:"Diftong" },
+  "Consonants":          { zh:"子音",           ms:"Konsonan" },
+  "Bonus Final Review":  { zh:"加码：总复习",   ms:"Bonus: Ulang Kaji Akhir" },
+  "Today's Review":      { zh:"今天的复习",     ms:"Ulang Kaji Hari Ini" },
+  "Sound Practice":      { zh:"音标练习",       ms:"Latihan Bunyi" }
+};
+const BADGE_TEXT = {
+  "Starter":              { zh:"起步",       ms:"Permulaan",        d:{ zh:"开始了你的旅程",   ms:"Memulakan perjalanan anda" } },
+  "Vowel Master":         { zh:"母音高手",   ms:"Sarjana Vokal",    d:{ zh:"母音全过关",       ms:"Tamatkan semua vokal" } },
+  "Diphthong Hero":       { zh:"双母音英雄", ms:"Wira Diftong",     d:{ zh:"滑音掌握了",       ms:"Menguasai bunyi luncur" } },
+  "Consonant Champ":      { zh:"子音冠军",   ms:"Juara Konsonan",   d:{ zh:"子音全搞定",       ms:"Menakluk konsonan" } },
+  "Pronunciation Master": { zh:"发音大师",   ms:"Sarjana Sebutan",  d:{ zh:"整个课程都完成了", ms:"Tamatkan keseluruhan kursus" } },
+  "Hot Streak":           { zh:"连击中",     ms:"Rentetan Panas",   d:{ zh:"连对 5 题",        ms:"5 betul berturut-turut" } },
+  "Flawless":             { zh:"零失误",     ms:"Tanpa Silap",      d:{ zh:"一整关全对",       ms:"Satu peringkat sempurna" } }
+};
+const REWARD_TEXT = {
+  "You're all set!":                                          { zh:"准备好了！", ms:"Anda dah bersedia!" },
+  "You're mastering English vowel sounds!":                   { zh:"英文母音你越掌握越好了！", ms:"Anda semakin menguasai bunyi vokal Inggeris!" },
+  "Your sound gliding is improving beautifully!":             { zh:"你的滑音进步很明显！", ms:"Bunyi luncur anda makin baik!" },
+  "You can now hear consonant differences much more clearly!":{ zh:"子音的差别你现在听得清楚多了！", ms:"Anda kini dengar beza konsonan dengan lebih jelas!" },
+  "Congratulations!":                                         { zh:"恭喜！", ms:"Tahniah!" },
+  "Review complete!":                                         { zh:"复习完成！", ms:"Ulang kaji selesai!" },
+  "Practice complete!":                                       { zh:"练习完成！", ms:"Latihan selesai!" },
+  "You completed the TOUCH English IPA Pronunciation Course!":{ zh:"你完成了 TOUCH English 的 IPA 发音课程！", ms:"Anda tamatkan Kursus Sebutan IPA TOUCH English!" }
+};
+function trReward(t){ const e = REWARD_TEXT[t]; return e ? L(t, e.zh, e.ms) : (t || ""); }
+/* 学习页的教学解释。这是零基础与 Level 1 学生最需要中文的地方 ——
+   他们看不懂 "diphthong glides from one vowel into another" 就学不下去。
+   一样查表翻，教材资料本身（英文）不动。 */
+const LEARN_TEXT = {
+  "The TOUCH Mindset":  { zh:"TOUCH 的心态", ms:"Pemikiran TOUCH" },
+  "Before we start, let's get the right mindset. Pronunciation is a skill — and skills grow with practice, not pressure.":
+    { zh:"开始之前，先把心态摆对。发音是一种技能 —— 技能是练出来的，不是逼出来的。",
+      ms:"Sebelum mula, betulkan pemikiran dahulu. Sebutan ialah kemahiran — kemahiran tumbuh dengan latihan, bukan tekanan." },
+  "IPA is <b>not for exams</b> — it's your map to clear speech.":
+    { zh:"IPA <b>不是拿来考试的</b> —— 它是你把话说清楚的地图。",
+      ms:"IPA <b>bukan untuk peperiksaan</b> — ia peta anda ke pertuturan yang jelas." },
+  "IPA helps you <b>communicate clearly</b> with anyone.":
+    { zh:"IPA 让你跟任何人都能<b>讲清楚</b>。", ms:"IPA membantu anda <b>berkomunikasi dengan jelas</b> dengan sesiapa sahaja." },
+  "English pronunciation is a <b>skill</b> you build.":
+    { zh:"英文发音是一种<b>可以练出来的技能</b>。", ms:"Sebutan Inggeris ialah <b>kemahiran</b> yang anda bina." },
+  "<b>Repetition</b> builds real speaking confidence.":
+    { zh:"<b>重复</b>才会长出真正的开口信心。", ms:"<b>Pengulangan</b> membina keyakinan bertutur yang sebenar." },
+  "<b>Communication comes before perfection.</b>":
+    { zh:"<b>先能沟通，再谈完美。</b>", ms:"<b>Komunikasi didahulukan, bukan kesempurnaan.</b>" },
+
+  "Short vs Long Vowels": { zh:"短母音 vs 长母音", ms:"Vokal Pendek vs Panjang" },
+  "Vowels carry the music of English. Long vowels are <b>longer & steady</b>; short vowels are <b>quick & light</b>. Tap any sound to listen.":
+    { zh:"母音是英文的旋律。长母音<b>拉得长、稳</b>；短母音<b>快、轻</b>。点任何一个音就能听。",
+      ms:"Vokal membawa irama Bahasa Inggeris. Vokal panjang <b>lebih lama & mantap</b>; vokal pendek <b>cepat & ringan</b>. Ketik mana-mana bunyi untuk mendengar." },
+  "Short vowels": { zh:"短母音", ms:"Vokal pendek" },
+  "Long vowels":  { zh:"长母音", ms:"Vokal panjang" },
+  "Tip: tap each word, then say it back. Hearing it a few times is all it takes.":
+    { zh:"小提示：点每一个字，然后跟着念回去。听几次就会了。",
+      ms:"Petua: ketik setiap perkataan, kemudian sebut semula. Dengar beberapa kali sudah memadai." },
+
+  "Gliding Sounds": { zh:"滑音", ms:"Bunyi Luncur" },
+  "A <b>diphthong</b> glides from one vowel into another in a single breath. Let your mouth move smoothly — don't stop halfway.":
+    { zh:"<b>双母音</b>是一口气里从一个母音滑到另一个母音。嘴巴要顺顺地移动 —— 不要滑到一半停住。",
+      ms:"<b>Diftong</b> meluncur dari satu vokal ke vokal lain dalam satu nafas. Biarkan mulut bergerak lancar — jangan berhenti separuh jalan." },
+  "Closing glides":  { zh:"收合滑音", ms:"Luncur menutup" },
+  "Centring glides": { zh:"向央滑音", ms:"Luncur ke tengah" },
+  "Say “go” slowly: /əʊ/ starts open, then rounds. One smooth move.":
+    { zh:"慢慢念 “go”：/əʊ/ 一开始嘴巴是开的，然後收圆。一个顺顺的动作。",
+      ms:"Sebut “go” perlahan-lahan: /əʊ/ bermula terbuka, kemudian membulat. Satu gerakan lancar." },
+
+  "Voiced vs Voiceless": { zh:"有声 vs 无声", ms:"Bersuara vs Tidak Bersuara" },
+  "Put your hand on your throat. <b>Voiced</b> sounds <b>vibrate</b>; <b>voiceless</b> sounds don't. Same mouth shape, different power!":
+    { zh:"手放在喉咙上。<b>有声</b>的音<b>会震</b>；<b>无声</b>的不会。嘴型一样，力道不一样！",
+      ms:"Letak tangan pada kerongkong. Bunyi <b>bersuara</b> <b>bergetar</b>; bunyi <b>tidak bersuara</b> tidak. Bentuk mulut sama, kuasa berbeza!" },
+  "Voiceless (no vibration)": { zh:"无声（不会震）", ms:"Tidak bersuara (tiada getaran)" },
+  "Voiced (vibration)":       { zh:"有声（会震）",   ms:"Bersuara (bergetar)" },
+  "Try /s/ then /z/ — same shape, but /z/ buzzes. That buzz is voicing.":
+    { zh:"念念看 /s/ 再念 /z/ —— 嘴型一样，但 /z/ 会嗡嗡震。那个震就是「有声」。",
+      ms:"Cuba /s/ kemudian /z/ — bentuk sama, tetapi /z/ berdengung. Dengungan itulah suara." },
+
+  "Everything You've Learned": { zh:"把学过的全部串起来", ms:"Semua Yang Anda Pelajari" },
+  "Let's bring it all together — everything you've been hearing, mixed into one relaxed round.":
+    { zh:"把前面听过的全部混在一起，轻松跑一轮。",
+      ms:"Mari gabungkan semuanya — semua yang anda dengar, dalam satu pusingan santai." },
+  "Recap": { zh:"总复习", ms:"Imbas semula" },
+  "Remember: <b>Consistency is more important than perfection.</b> Show up, repeat, improve.":
+    { zh:"记住：<b>持续，比完美更重要。</b> 有来、有练、就会进步。",
+      ms:"Ingat: <b>Konsisten lebih penting daripada sempurna.</b> Hadir, ulang, maju." }
+};
+function trLearn(t){ const e = LEARN_TEXT[t]; return e ? L(t, e.zh, e.ms) : (t || ""); }
+function trStage(t){ const e = STAGE_TITLE[t]; return e ? L(t, e.zh, e.ms) : (t || ""); }
+function badgeName(b){ const e = b && BADGE_TEXT[b.name]; return e ? L(b.name, e.zh, e.ms) : (b ? b.name : ""); }
+function badgeDesc(b){ const e = b && BADGE_TEXT[b.name]; return e ? L(b.desc, e.d.zh, e.d.ms) : (b ? b.desc : ""); }
+
+function L(en, zh, ms){
+  if(LANG === "zh") return zh !== undefined ? zh : en;
+  if(LANG === "ms") return ms !== undefined ? ms : en;
+  return en;
+}
+function loadLang(){ return store.get("lang", "") || (SP && SP.lang()) || ""; }
+function saveLang(code){ store.set("lang", code); if(SP) SP.setLang(code); }
 let LANG = loadLang() || "";           // "" until the learner picks the first time
 function setLang(code){
   if(!LANGS.some(l=>l.code===code)) return;
@@ -1526,20 +1689,25 @@ function renderLangPicker(){
     </div>`;
 }
 
-function nameChosen(){ return !!(S.name && S.name.trim()); }
+function nameChosen(){
+  if(S.name && S.name.trim()) return true;
+  /* 启动页问过了就不要再拦一次 —— 填了直接带出来，跳过也算问过 */
+  if(SP && SP.asked()){ const n=SP.get().name; if(n){ S.name=n; save(); } return true; }
+  return false;
+}
 // Ask the learner's name after they pick a language (first run only).
 function renderNameAsk(){
   const hud=document.getElementById("hud"); if(hud) hud.innerHTML="";
   document.getElementById("screen").innerHTML = `
     <div class="pad lang-pick">
       <div class="lang-logo">✦ TOUCH ENGLISH</div>
-      <h1 class="lang-title">What's your name?</h1>
-      <p class="lang-sub">你叫什么名字？· Siapa nama anda?</p>
+      <h1 class="lang-title">${L("What\u2019s your name?","你叫什么名字？","Siapa nama anda?")}</h1>
+      <p class="lang-sub">${L("We\u2019ll use it to greet you.","我们会用它来问候你。","Kami akan gunakannya untuk menyapa anda.")}</p>
       <div class="name-wrap">
         <input id="nameInput" class="name-input" type="text" maxlength="24"
-          placeholder="Your name" autocomplete="off"
+          placeholder="${L('Your name','你的名字','Nama anda')}" autocomplete="off"
           onkeydown="if(event.key==='Enter'){event.preventDefault();commitName();}">
-        <button class="btn coral" data-action="saveName">Start Learning →</button>
+        <button class="btn coral" data-action="saveName">${L("Start Learning →","开始学习 →","Mula Belajar →")}</button>
       </div>
     </div>`;
   const inp=document.getElementById("nameInput"); if(inp){ try{ inp.focus(); }catch(e){} }
@@ -1549,6 +1717,7 @@ function commitName(){
   const val=(inp && inp.value ? inp.value : "").trim();
   if(!val) return;                 // require a name to continue
   S.name = val; save();
+  if(SP){ SP.set({name:val}); SP.markAsked(); }
   go({name:"map"});
 }
 
@@ -1560,30 +1729,30 @@ function renderHUD(){
     <div class="hud-row">
       <span class="chip streak"><span class="ic">🔥</span>${S.streak}</span>
       <span class="chip xp"><span class="ic">⚡</span>${S.xp}</span>
-      <button class="sound-btn" data-action="toggleSound" title="Sound">${SOUND?"🔊":"🔈"}</button>
-      <button class="sound-btn lang-btn" data-action="cycleLang" title="Language">${LANG?langShort(LANG):"🌐"}</button>
+      <button class="sound-btn" data-action="toggleSound" title="${L("Sound","声音","Bunyi")}">${SOUND?"🔊":"🔈"}</button>
+      <button class="sound-btn lang-btn" data-action="cycleLang" title="${L("Language","语言","Bahasa")}">${LANG?langShort(LANG):"🌐"}</button>
       <span class="lvl">
         <span class="ring" style="--p:${(li.pct*360).toFixed(0)}deg"><i>${li.lvl}</i></span>
       </span>
     </div>
     <div class="xpbar"><i style="width:${(li.pct*100).toFixed(1)}%"></i></div>
-    <div class="xptxt">${li.into} / ${li.span} XP to Lvl ${li.lvl+1} · 🎯 ${S.todayXP}/${S.dailyGoal} today (${goalPct}%)</div>`;
+    <div class="xptxt">${li.into} / ${li.span} XP ${L("to Lvl","升到 Lvl","ke Lvl")} ${li.lvl+1} · 🎯 ${S.todayXP}/${S.dailyGoal} ${L("today","今天","hari ini")} (${goalPct}%)</div>`;
 }
 /* ---------- SOUNDS LIBRARY (all 44 phonemes; tap a card → reference card) ---------- */
 function renderSounds(){
   const groups = SOUND_LIBRARY.map(g=>`
     <div class="card block">
-      <h3>${g.title}</h3>
+      <h3>${trLearn(g.title)}</h3>
       ${soundTiles(g.items, g.cls||"")}
     </div>`).join("");
   $screen().innerHTML = `
     <div class="hero">
       <span class="logo">✦ TOUCH ENGLISH</span>
-      <h1>Sound Library</h1>
-      <p>All 44 sounds. Tap a card to open it — hear the sound, then see it in common words.</p>
+      <h1>${L("Sound Library","音标库","Pustaka Bunyi")}</h1>
+      <p>${L("All 44 sounds. Tap a card to open it — hear the sound, then see it in common words.","44 个音都在这里。点开任何一张卡 —— 先听那个音，再看它出现在哪些常用字里。","Semua 44 bunyi. Ketik satu kad — dengar bunyinya, kemudian lihat dalam perkataan biasa.")}</p>
     </div>
     <div class="pad" style="padding-top:0">${groups}</div>
-    <div class="fineprint">Tip: say each one out loud right after you hear it.</div>`;
+    <div class="fineprint">${L("Tip: say each one out loud right after you hear it.","小提示：每听完一个，马上跟着念出声。","Petua: sebut kuat-kuat sebaik sahaja anda dengar.")}</div>`;
 }
 // Sounds-page tiles: card body → reference card; speaker glyph → quick play.
 function soundTiles(items, cls){
@@ -1645,18 +1814,18 @@ function renderSoundCard(ipa){
   }).join("");
   $screen().innerHTML = `
     <div class="topbar"><button class="iconbtn" data-action="goSounds">✕</button>
-      <span class="topbar-title">Sound Reference</span><span style="width:38px"></span></div>
+      <span class="topbar-title">${L("Sound Reference","音标查询","Rujukan Bunyi")}</span><span style="width:38px"></span></div>
     <div class="pad">
       <div class="sc-hero ${cls}">
         <div class="sc-ipa-big">/${ipa}/</div>
         <button class="btn sc-listen" data-action="playPhoneme" data-ipa="${ipa}">
-          ${SPK_SVG}<span>Listen</span>
+          ${SPK_SVG}<span>${L("Listen","听","Dengar")}</span>
         </button>
-        ${groupTitle?`<div class="sc-group">${groupTitle}</div>`:""}
+        ${groupTitle?`<div class="sc-group">${trLearn(groupTitle)}</div>`:""}
       </div>
-      <div class="sc-lead">This sound appears in these common words. Tap any word to hear it.</div>
+      <div class="sc-lead">${L("This sound appears in these common words. Tap any word to hear it.","这个音会出现在下面这些常用字里。点任何一个字就能听。","Bunyi ini muncul dalam perkataan biasa di bawah. Ketik mana-mana perkataan untuk mendengarnya.")}</div>
       <div class="card block sc-list">${rows}</div>
-      <div class="fineprint">Hear the sound first, then say each word out loud. Replay as many times as you like.</div>
+      <div class="fineprint">${L("Hear the sound first, then say each word out loud. Replay as many times as you like.","先听那个音，再把每个字念出声。想听几次就听几次。","Dengar bunyinya dahulu, kemudian sebut setiap perkataan kuat-kuat. Ulang sebanyak mana pun.")}</div>
     </div>`;
 }
 
@@ -1666,9 +1835,9 @@ function renderNav(){
   const soundIc = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 9 4 15 8 15 13 19 13 5 8 9" fill="currentColor" stroke="none"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>';
   const userIc = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
   document.getElementById("nav").innerHTML = `
-    <button class="${learnOn?'on':''}" data-action="goMap"><span class="i">${mapIc}</span><span class="lbl">Learn</span></button>
-    <button class="${view.name==='sounds'?'on':''}" data-action="goSounds"><span class="i">${soundIc}</span><span class="lbl">Sounds</span></button>
-    <button class="${view.name==='profile'?'on':''}" data-action="goProfile"><span class="i">${userIc}</span><span class="lbl">Profile</span></button>`;
+    <button class="${learnOn?'on':''}" data-action="goMap"><span class="i">${mapIc}</span><span class="lbl">${L("Learn","学习","Belajar")}</span></button>
+    <button class="${view.name==='sounds'?'on':''}" data-action="goSounds"><span class="i">${soundIc}</span><span class="lbl">${L("Sounds","音标","Bunyi")}</span></button>
+    <button class="${view.name==='profile'?'on':''}" data-action="goProfile"><span class="i">${userIc}</span><span class="lbl">${L("Profile","我的","Profil")}</span></button>`;
 }
 
 /* ---------- 10a. STAGE MAP ---------- */
@@ -1683,7 +1852,7 @@ function renderMap(){
     const cls = done?"done":"open";          // adult system: no locked state
     const side = i%2===0 ? "c" : (i%4===1?"l":"r");
     const badgeDot = done && BADGES[s.reward.badge] ? `<span class="badge-dot">${badgeMedal(BADGES[s.reward.badge]).replace('class="medal ','class="medal sm ')}</span>` : "";
-    const start = (firstIncomplete && firstIncomplete.id===s.id) ? `<span class="start-flag">START</span>` : "";
+    const start = (firstIncomplete && firstIncomplete.id===s.id) ? `<span class="start-flag">${L("START","从这里","MULA")}</span>` : "";
     const checkSVG = '<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 18 19 6"/></svg>';
     const face = done ? checkSVG : s.icon;
     nodes += (i>0?`<div class="connector"></div>`:"") + `
@@ -1691,7 +1860,7 @@ function renderMap(){
         <div class="node ${cls}" data-action="openStage" data-id="${s.id}">
           ${start}${badgeDot}
           <div class="disc">${face}</div>
-          <div class="nm">${s.title}</div>
+          <div class="nm">${trStage(s.title)}</div>
         </div>
       </div>`;
   });
@@ -1707,35 +1876,41 @@ function renderMap(){
   const progressCard = `
     <div class="card course-progress">
       <div class="cp-top">
-        <div class="cp-label">Course Progress</div>
+        <div class="cp-label">${L("Course Progress","课程进度","Kemajuan Kursus")}</div>
         <div class="cp-icon">🎯</div>
       </div>
       <div class="cp-pct">${coursePct}<span>%</span></div>
-      <div class="cp-sub">Complete</div>
+      <div class="cp-sub">${L("Complete","完成","Selesai")}</div>
       <div class="cp-bar"><i style="width:${coursePct}%"></i></div>
       <div class="cp-stats">
-        <span><b>${S.xp}</b> XP earned</span>
-        <span><b>${doneStages}/${totalStages}</b> stages</span>
-        <span><b>🔥 ${S.streak}</b> day streak</span>
+        <span><b>${S.xp}</b> ${L("XP earned","XP 累积","XP dikumpul")}</span>
+        <span><b>${doneStages}/${totalStages}</b> ${L("stages","关","peringkat")}</span>
+        <span><b>🔥 ${S.streak}</b> ${L("day streak","天连续","hari berturut")}</span>
       </div>
     </div>`;
   const continueCard = `
     <div class="card continue-card" ${allDone?'':`data-action="openStage" data-id="${nextStage.id}"`}>
       <div class="cc-badge">${allDone?'🏆':nextStage.icon}</div>
       <div class="cc-meta">
-        <div class="cc-kicker">${allDone?'Course complete':'Continue learning'}</div>
-        <b>${nextStage.title}</b>
-        <span>${allDone?'You finished every stage — replay anytime.':(S.stages[nextStage.id]?.completed?'Review this stage':'Pick up where you left off')}</span>
+        <div class="cc-kicker">${allDone?L("Course complete","课程完成","Kursus selesai"):L("Continue learning","继续学","Sambung belajar")}</div>
+        <b>${trStage(nextStage.title)}</b>
+        <span>${allDone
+          ? L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")
+          : (S.stages[nextStage.id]?.completed
+              ? L("Review this stage","复习这一关","Ulang kaji peringkat ini")
+              : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti"))}</span>
       </div>
-      ${allDone?'':'<div class="cc-go">Continue</div>'}
+      ${allDone?'':`<div class="cc-go">${L("Continue","继续","Teruskan")}</div>`}
     </div>`;
   const goalCard = `
     <div class="card goal-card" data-action="cycleGoal">
       <div class="goal-ring" style="--g:${goalPct*3.6}deg"><span>${goalPct}%</span></div>
       <div class="goal-meta">
-        <b>Daily Goal · ${S.dailyGoal} XP</b>
-        <span>${S.todayXP>=S.dailyGoal?"Done for today — amazing! 🎉":`${S.dailyGoal-S.todayXP} XP to go today`}</span>
-        <small>Tap to change goal (20 / 50 / 100)</small>
+        <b>${L("Daily Goal","每日目标","Matlamat Harian")} · ${S.dailyGoal} XP</b>
+        <span>${S.todayXP>=S.dailyGoal
+          ? L("Done for today — amazing! 🎉","今天的目标达成了 —— 很棒！🎉","Selesai untuk hari ini — hebat! 🎉")
+          : `${S.dailyGoal-S.todayXP} ${L("XP to go today","XP 就达标了","XP lagi hari ini")}`}</span>
+        <small>${L("Tap to change goal (20 / 50 / 100)","点一下换目标（20 / 50 / 100）","Ketik untuk tukar matlamat (20 / 50 / 100)")}</small>
       </div>
     </div>`;
   // PRIORITY 3 — Today's Review card (shows a completed state when empty)
@@ -1744,27 +1919,27 @@ function renderMap(){
     <div class="card review-card" data-action="startReview">
       <div class="rv-ic">🔁</div>
       <div class="rv-meta">
-        <b>Today's Review</b>
-        <span>${reviewCount} sound${reviewCount>1?"s":""} to refresh — a quick 2-minute warm-up.</span>
+        <b>${L("Today\u2019s Review","今天的复习","Ulang Kaji Hari Ini")}</b>
+        <span>${reviewCount} ${L("sound","个音","bunyi")}${LANG==="en"&&reviewCount>1?"s":""} — ${L("a quick 2-minute warm-up.","两分钟热身。","pemanasan 2 minit.")}</span>
       </div>
       <div class="rv-go">▶</div>
     </div>` : `
     <div class="card review-card done">
       <div class="rv-ic">✓</div>
       <div class="rv-meta">
-        <b>Today's Review</b>
-        <span>All caught up — no review needed right now. Nice work!</span>
+        <b>${L("Today\u2019s Review","今天的复习","Ulang Kaji Hari Ini")}</b>
+        <span>${L("All caught up — no review needed right now. Nice work!","全部跟上了 —— 现在不用复习。做得好！","Semua sudah dikejar — tiada ulang kaji sekarang. Syabas!")}</span>
       </div>
     </div>`;
   $screen().innerHTML = `
     <div class="hero">
       <span class="logo">✦ TOUCH ENGLISH</span>
       <h1>IPA Pronunciation Course</h1>
-      <p>Speak clearly. Learn by playing. One sound at a time.</p>
+      <p>${L("Speak clearly. Learn by playing. One sound at a time.","把音发清楚。玩着学。一次一个音。","Sebut dengan jelas. Belajar sambil bermain. Satu bunyi pada satu masa.")}</p>
     </div>
     <div class="pad" style="padding-bottom:4px">${progressCard}${continueCard}${goalCard}${reviewCard}</div>
     <div class="path pad" style="padding-top:6px">${nodes}</div>
-    <div class="fineprint">Complete a stage to unlock the next • Progress saves automatically</div>`;
+    <div class="fineprint">${L("Progress saves automatically","进度会自动存起来","Kemajuan disimpan secara automatik")}</div>`;
 }
 
 /* ---------- 10b. STAGE FLOW (Video → Learn → Exercises → Reward) ---------- */
@@ -2091,9 +2266,9 @@ function ytFallback(frameId, id, title){
   const thumb = "https://img.youtube.com/vi/" + id + "/hqdefault.jpg";
   wrap.outerHTML =
     `<a class="video as-link" href="${watch}" target="_blank" rel="noopener" style="background-image:url('${thumb}')">
-       <span class="tag">▶ WATCH ON YOUTUBE</span>
+       <span class="tag">▶ ${L("WATCH ON YOUTUBE","去 YOUTUBE 看","TONTON DI YOUTUBE")}</span>
        <div class="play">▶</div>
-       <div class="vmeta"><b>${title||"Watch the lesson"}</b><span>Opens in YouTube</span></div>
+       <div class="vmeta"><b>${title || L("Watch the lesson","看这一课的影片","Tonton pelajaran ini")}</b><span>${L("Opens in YouTube","会开 YouTube","Dibuka dalam YouTube")}</span></div>
      </a>`;
 }
 function renderVideo(s){
@@ -2104,7 +2279,7 @@ function renderVideo(s){
     // No video for this stage in the current language (e.g. Welcome has no
     // English video). Show a gentle note instead of a teacher placeholder.
     player = `<div class="video">
-         <span class="tag">▶ VIDEO LESSON</span>
+         <span class="tag">▶ ${L("VIDEO LESSON","教学影片","VIDEO PELAJARAN")}</span>
          <div class="play">▶</div>
          <div class="vmeta"><b>${s.video.title}</b><span>${s.video.caption}</span></div>
        </div>`;
@@ -2114,11 +2289,11 @@ function renderVideo(s){
     if(embedUnsupported()){
       // local / sandboxed preview: show a tappable thumbnail that opens YouTube (avoids Error 153)
       player = `<a class="video as-link" href="${watch}" target="_blank" rel="noopener" style="background-image:url('${thumb}')">
-           <span class="tag">▶ WATCH ON YOUTUBE</span>
+           <span class="tag">▶ ${L("WATCH ON YOUTUBE","去 YOUTUBE 看","TONTON DI YOUTUBE")}</span>
            <div class="play">▶</div>
-           <div class="vmeta"><b>${s.video.title}</b><span>Opens in YouTube</span></div>
+           <div class="vmeta"><b>${s.video.title}</b><span>${L("Opens in YouTube","会开 YouTube","Dibuka dalam YouTube")}</span></div>
          </a>
-         <div class="placeholder-note">Embedded playback is blocked in local preview — opens on YouTube instead.</div>`;
+         <div class="placeholder-note">${L("Embedded playback is blocked in local preview — opens on YouTube instead.","这里不能内嵌播放，会改成开 YouTube。","Main terus disekat di sini — akan dibuka dalam YouTube.")}</div>`;
     } else {
       // normal responsive iframe + automatic fallback if it can't load
       const fid = "yt_"+id+"_"+Math.random().toString(36).slice(2,7);
@@ -2129,7 +2304,7 @@ function renderVideo(s){
              allowfullscreen
              onerror="ytFallback('${fid}','${id}','${(s.video.title||'').replace(/'/g,'')}')"></iframe>
          </div>
-         <div class="placeholder-note">Trouble playing here? <a href="${watch}" target="_blank" rel="noopener">Watch on YouTube ↗</a></div>`;
+         <div class="placeholder-note">${L("Trouble playing here?","这里播不出来？","Ada masalah main di sini?")} <a href="${watch}" target="_blank" rel="noopener">${L("Watch on YouTube ↗","去 YouTube 看 ↗","Tonton di YouTube ↗")}</a></div>`;
       // if the iframe hasn't reported load shortly, assume it's blocked and swap in the link card
       setTimeout(()=>{
         const f = document.getElementById(fid);
@@ -2145,12 +2320,12 @@ function renderVideo(s){
   $screen().innerHTML = `
     ${topbar(0)}
     <div class="pad">
-      <span class="sec-label">Step 1 · Watch</span>
-      <h2 class="sec-h">${s.title}</h2>
+      <span class="sec-label">${L("Step 1 · Watch","第 1 步 · 看","Langkah 1 · Tonton")}</span>
+      <h2 class="sec-h">${trStage(s.title)}</h2>
       <p class="sec-p">${s.video.caption}.</p>
       ${player}
       <div style="height:18px"></div>
-      <button class="btn" data-action="toLearn">I've watched it →</button>
+      <button class="btn" data-action="toLearn">${L("I\u2019ve watched it →","看完了 →","Saya sudah tonton →")}</button>
     </div>`;
 }
 
@@ -2164,26 +2339,26 @@ function ipaPills(items, cls){
     </div>`;}).join("")}</div>`;
 }
 function renderLearn(s){
-  const L=s.learn;
-  let body = `<p class="sec-p">${L.intro}</p>`;
-  if(L.bullets){
-    body += `<div class="card block"><h3>Why it matters</h3>${L.bullets.map(b=>`
+  const LN = s.learn;   // 不要叫 L —— 会遮盖全域的翻译函式 L(en,zh,ms)
+  let body = `<p class="sec-p">${trLearn(LN.intro)}</p>`;
+  if(LN.bullets){
+    body += `<div class="card block"><h3>${L("Why it matters","为什么这个重要","Kenapa ia penting")}</h3>${LN.bullets.map(b=>`
       <div style="display:flex;gap:11px;align-items:flex-start;margin:10px 0;font-weight:700;font-size:15px;line-height:1.4">
-        <span style="font-size:20px">${b[0]}</span><span>${b[1]}</span></div>`).join("")}</div>`;
+        <span style="font-size:20px">${b[0]}</span><span>${trLearn(b[1])}</span></div>`).join("")}</div>`;
   }
-  if(L.groups){
-    body += L.groups.map(g=>`<div class="card block"><h3>${g.title}</h3>${ipaPills(g.items,g.cls)}</div>`).join("");
+  if(LN.groups){
+    body += LN.groups.map(g=>`<div class="card block"><h3>${trLearn(g.title)}</h3>${ipaPills(g.items,g.cls)}</div>`).join("");
   }
-  if(L.note) body += `<div class="note">💡 <span>${L.note}</span></div>`;
-  if(L.quote) body += `<div class="quote">“${L.quote.cn}”<small>${L.quote.en}</small></div>`;
+  if(LN.note) body += `<div class="note">💡 <span>${trLearn(LN.note)}</span></div>`;
+  if(LN.quote) body += `<div class="quote">“${LN.quote.cn}”<small>${LN.quote.en}</small></div>`;
   $screen().innerHTML = `
     ${topbar(1)}
     <div class="pad">
-      <span class="sec-label">Step 2 · Learn</span>
-      <h2 class="sec-h">${L.heading}</h2>
+      <span class="sec-label">${L("Step 2 · Learn","第 2 步 · 学","Langkah 2 · Belajar")}</span>
+      <h2 class="sec-h">${trLearn(LN.heading)}</h2>
       ${body}
       <div style="height:18px"></div>
-      <button class="btn coral" data-action="toQuiz">Start exercises →</button>
+      <button class="btn coral" data-action="toQuiz">${L("Start exercises →","开始练习 →","Mula latihan →")}</button>
     </div>`;
 }
 
@@ -2204,21 +2379,21 @@ function renderExercise(s){
   let promptHTML="";
   if(q.variant==="fill"){
     const shown = q.prompt.replace(/_+/, `<span class="q-blank">&nbsp;?&nbsp;</span>`);
-    promptHTML = `<div class="q-sub">Complete the transcription of <b>“${q.word}”</b> ${speaker(q.word,q.audioSrc)}</div>
+    promptHTML = `<div class="q-sub">${L("Complete the transcription of","把这个字的音标补完整：","Lengkapkan transkripsi")} <b>“${q.word}”</b> ${speaker(q.word,q.audioSrc)}</div>
                   <div class="q-prompt"><span class="big ipaword ipa">${shown}</span></div>`;
   } else if(q.variant==="word"){
-    promptHTML = `<div class="q-sub">Which word is this?</div>
+    promptHTML = `<div class="q-sub">${L("Which word is this?","这是哪一个字？","Perkataan apakah ini?")}</div>
                   <div class="q-prompt"><span class="big ipaword ipa">${q.prompt}</span></div>`;
   } else if(q.variant==="identify"){
     const spk = isWordLabel(q.prompt) ? " "+speaker(q.prompt,q.audioSrc,"big") : "";
     promptHTML = `<div class="q-prompt"><span class="big ipaword ipa">${q.prompt}</span>${spk}</div>
-                  <div class="q-sub">${q.sub||"Which one?"}</div>`;
+                  <div class="q-sub">${q.sub ? trQ(q.sub, Q_SUB) : L("Which one?","是哪一个？","Yang mana satu?")}</div>`;
   } else if(q.variant==="listen"){
     // listening practice INSIDE the lesson: hear the word, then pick it
-    promptHTML = `<div class="q-sub">${q.sub||"Listen, then choose the word you hear"}</div>
-                  <div class="big-listen"><button class="listen-btn" data-action="listen" data-word="${q.word}"${q.audioSrc?` data-src="${q.audioSrc}"`:""}><span class="li-ic">${SPK_SVG}</span> Tap to listen</button></div>`;
+    promptHTML = `<div class="q-sub">${q.sub ? trQ(q.sub, Q_SUB) : L("Listen, then choose the word you hear","先听，再选你听到的字","Dengar, kemudian pilih perkataan yang anda dengar")}</div>
+                  <div class="big-listen"><button class="listen-btn" data-action="listen" data-word="${q.word}"${q.audioSrc?` data-src="${q.audioSrc}"`:""}><span class="li-ic">${SPK_SVG}</span> ${L("Tap to listen","点一下听","Ketik untuk dengar")}</button></div>`;
   } else { // choose IPA for a word
-    promptHTML = `<div class="q-sub">${q.sub||"Choose the correct IPA for"}</div>
+    promptHTML = `<div class="q-sub">${q.sub ? trQ(q.sub, Q_SUB) : L("Choose the correct IPA for","选出正确的音标：","Pilih IPA yang betul untuk")}</div>
                   <div class="q-prompt"><span class="big">${q.prompt}</span> ${speaker(q.prompt,q.audioSrc,"big")}</div>`;
   }
   const optsHTML = opts.map((o,idx)=>{
@@ -2233,7 +2408,7 @@ function renderExercise(s){
     ${topbar(2)}
     <div class="pad" style="position:relative">
       <div class="combo" id="comboMsg"></div>
-      <span class="q-kind">${q.kind} · ${session.qi+1}/${session.total}${q.lvl?` <span class="q-lvl ${q.lvl.toLowerCase()}">${q.lvl}</span>`:""}</span>
+      <span class="q-kind">${trQ(q.kind, Q_KIND)} · ${session.qi+1}/${session.total}${q.lvl?` <span class="q-lvl ${q.lvl.toLowerCase()}">${q.lvl}</span>`:""}</span>
       ${promptHTML}
       <div class="opts ${isChip?'wrap':''}" id="opts">${optsHTML}</div>
     </div>`;
@@ -2249,7 +2424,7 @@ function pickOption(idx){
 function showCheck(){
   const fb=document.getElementById("feedback");
   fb.className="show"; fb.innerHTML=`<div class="fb-inner" style="background:#fff;border-color:var(--line)">
-    <button class="btn" data-action="check">Check answer</button></div>`;
+    <button class="btn" data-action="check">${L("Check answer","检查答案","Semak jawapan")}</button></div>`;
 }
 
 function checkAnswer(){
@@ -2284,9 +2459,9 @@ function checkAnswer(){
     } else if(!isWordLabel(cl) && S.weak[cl]){
       S.weak[cl] = Math.max(0, S.weak[cl]-1);  // normal lesson: ease off a weak sound
     }
-    const okMsg = q.okMsg || pick(PRAISE);
+    const okMsg = q.okMsg || pick(praiseList());
     if(S.combo===5 && !S.badges.hot_streak){ S.badges.hot_streak=true; setTimeout(()=>miniBadge("hot_streak"),300); }
-    if(COMBO_LINES[S.combo]) comboFlash(COMBO_LINES[S.combo]);
+    if(comboLine(S.combo)) comboFlash(comboLine(S.combo));
     feedbackOK(okMsg, gain);
     const correctEl = els.find(e=>e.classList.contains("correct"));
     awardXP(gain, correctEl);
@@ -2349,10 +2524,16 @@ function feedbackOK(msg, gain){
   fb.className="ok show";
   fb.innerHTML=`<div class="fb-inner">
     <div class="fb-head"><span class="ic">✓</span><b>${msg}</b><span class="xpgain">+${gain} XP</span></div>
-    <button class="btn" data-action="next">Continue</button></div>`;
+    <button class="btn" data-action="next">${L("Continue","继续","Teruskan")}</button></div>`;
 }
-const GENTLE = ["Let's compare the two sounds","Listen for the difference","Worth a closer listen",
-  "Almost — here's the distinction","Tune your ear to this one","Compare them once more"];
+const GENTLE_ALL = {
+  en: ["Let's compare the two sounds","Listen for the difference","Worth a closer listen",
+  "Almost — here's the distinction","Tune your ear to this one","Compare them once more"],
+  zh: ["我们来比一比这两个音","听听看差在哪里","这个值得再听仔细一点",
+  "很接近了 —— 差别在这里","这个音把耳朵调一下","再比一次"],
+  ms: ["Mari bandingkan dua bunyi ini","Dengar bezanya","Berbaloi didengar sekali lagi",
+  "Hampir — inilah bezanya","Selaraskan telinga untuk yang ini","Bandingkan sekali lagi"]
+};
 // ===== TEACHING FEEDBACK: explain WHY the chosen sound differs from the answer =====
 const SOUND_DESC = {
   "ɪ":"short, relaxed ‘i’ (ship)","iː":"long, tense ‘ee’ (sheep)",
@@ -2382,26 +2563,28 @@ function whyDifferent(chosenLabel, correctLabel){
   if(!cDesc || !aDesc) return "";
   let why;
   if(LENGTH_PAIRS[a]===c){
-    why = "They differ in length — listen for how long the vowel is held.";
+    why = L("They differ in length — listen for how long the vowel is held.","差别在长短 —— 听母音拉多久。","Bezanya pada panjang — dengar berapa lama vokal itu ditahan.");
   } else if(VOICE_PAIRS[a]===c){
-    why = "Same mouth shape, but one is voiced (throat buzzes) and one is voiceless. Rest a finger on your throat to feel it.";
+    why = L("Same mouth shape, but one is voiced (throat buzzes) and one is voiceless. Rest a finger on your throat to feel it.","嘴型一样，但一个有声（喉咙会震），一个无声。手指按在喉咙上就摸得出来。","Bentuk mulut sama, tetapi satu bersuara (kerongkong bergetar) dan satu tidak. Letak jari pada kerongkong untuk merasainya.");
   } else {
-    why = "Different mouth position — say both slowly and notice where your tongue and lips move.";
+    why = L("Different mouth position — say both slowly and notice where your tongue and lips move.","嘴巴的位置不一样 —— 两个都慢慢念，注意舌头和嘴唇动到哪里。","Kedudukan mulut berbeza — sebut kedua-duanya perlahan dan perhatikan pergerakan lidah dan bibir.");
   }
-  return `You chose /${c}/ (${cDesc}). The answer is /${a}/ (${aDesc}). ${why}`;
+  return L(`You chose /${c}/ (${cDesc}). The answer is /${a}/ (${aDesc}). ${why}`,
+           `你选的是 /${c}/（${cDesc}），答案是 /${a}/（${aDesc}）。${why}`,
+           `Anda pilih /${c}/ (${cDesc}). Jawapannya /${a}/ (${aDesc}). ${why}`);
 }
 
 function feedbackNO(hint, compare){
   const fb=document.getElementById("feedback");
   fb.className="no show";
   const cmp = (compare && compare.a && compare.b)
-    ? `<button class="btn ghost" data-action="compareSounds" data-a="${compare.a}" data-b="${compare.b}" style="margin-bottom:8px">🔊 Hear both sounds</button>`
+    ? `<button class="btn ghost" data-action="compareSounds" data-a="${compare.a}" data-b="${compare.b}" style="margin-bottom:8px">🔊 ${L("Hear both sounds","两个音都听一次","Dengar kedua-dua bunyi")}</button>`
     : "";
   fb.innerHTML=`<div class="fb-inner">
-    <div class="fb-head"><span class="ic">↻</span><b>${pick(GENTLE)}</b></div>
-    <div class="fb-hint">💡 ${hint||"Tap 🔊 and listen for the small difference between the two words."}</div>
+    <div class="fb-head"><span class="ic">↻</span><b>${pick(gentleList())}</b></div>
+    <div class="fb-hint">💡 ${hint || L("Tap 🔊 and listen for the small difference between the two words.","点 🔊，听两个字之间那一点点差别。","Ketik 🔊 dan dengar beza kecil antara dua perkataan itu.")}</div>
     ${cmp}
-    <button class="btn" data-action="next">Got it, continue</button></div>`;
+    <button class="btn" data-action="next">${L("Got it, continue","懂了，继续","Faham, teruskan")}</button></div>`;
 }
 // play two example words back-to-back so the learner hears the contrast
 function compareSounds(aWord, bWord){
@@ -2456,15 +2639,17 @@ function renderReward(s){
     $screen().innerHTML = `
       <div class="reward">
         <div class="burst">🔁</div>
-        <h2>${pick(["Great refresher!","Nicely reviewed!","Your ear is sharpening!","Strong review!"])}</h2>
-        <div class="sub">${session.correct}/${session.total} this round · ${acc}% accuracy</div>
+        <h2>${pick(L(["Great refresher!","Nicely reviewed!","Your ear is sharpening!","Strong review!"],
+                     ["复习得好！","复习完成！","耳朵越来越准了！","这一轮很扎实！"],
+                     ["Ulang kaji yang baik!","Bagus, sudah diulang!","Telinga anda makin tajam!","Ulang kaji yang mantap!"]))}</h2>
+        <div class="sub">${session.correct}/${session.total} ${L("this round","这一轮","pusingan ini")} · ${acc}% ${L("accuracy","准确度","ketepatan")}</div>
         <div class="tally">
-          <div class="tally-row"><span class="ic">⚡</span><span class="lbl">XP earned</span><span class="val">+${session.earned}</span></div>
-          <div class="tally-row" style="animation-delay:.1s"><span class="ic">🎯</span><span class="lbl">Today's goal</span><span class="val">${Math.min(100,Math.round(S.todayXP/Math.max(1,S.dailyGoal)*100))}%</span></div>
+          <div class="tally-row"><span class="ic">⚡</span><span class="lbl">${L("XP earned","XP 累积","XP dikumpul")}</span><span class="val">+${session.earned}</span></div>
+          <div class="tally-row" style="animation-delay:.1s"><span class="ic">🎯</span><span class="lbl">${L("Today\u2019s goal","今天的目标","Matlamat hari ini")}</span><span class="val">${Math.min(100,Math.round(S.todayXP/Math.max(1,S.dailyGoal)*100))}%</span></div>
         </div>
         <div style="height:16px"></div>
-        ${reviewPoolCount()>0?`<button class="btn coral" data-action="startReview">Review more 🔁</button><div style="height:10px"></div>`:""}
-        <button class="btn ghost" data-action="goMap">Back to map</button>
+        ${reviewPoolCount()>0?`<button class="btn coral" data-action="startReview">${L("Review more 🔁","再复习几个 🔁","Ulang kaji lagi 🔁")}</button><div style="height:10px"></div>`:""}
+        <button class="btn ghost" data-action="goMap">${L("Back to map","回到地图","Kembali ke peta")}</button>
       </div>`;
     return;
   }
@@ -2474,23 +2659,23 @@ function renderReward(s){
   $screen().innerHTML = `
     <div class="reward">
       <div class="burst">${r.final?"🎉":"🌟"}</div>
-      <h2>${r.title}</h2>
-      <div class="sub">Stage complete${session.total?` · ${session.correct}/${session.total} first-try`:""}</div>
+      <h2>${trReward(r.title)}</h2>
+      <div class="sub">${L("Stage complete","这一关完成","Peringkat selesai")}${session.total?` · ${session.correct}/${session.total} ${L("first-try","一次答对","cubaan pertama")}`:""}</div>
 
-      ${r.badge?`<div class="badge-card">${badgeMedal(b)}<b>${b.name} Badge</b><span>${b.desc}</span></div>`:""}
+      ${r.badge?`<div class="badge-card">${badgeMedal(b)}<b>${badgeName(b)} ${L("Badge","徽章","Lencana")}</b><span>${badgeDesc(b)}</span></div>`:""}
 
       <div class="tally">
-        <div class="tally-row" style="animation-delay:.05s"><span class="ic">⚡</span><span class="lbl">XP this stage</span><span class="val">+${session.earned + (S.stages[s.id]?r.xp:0)}</span></div>
-        ${session.total?`<div class="tally-row" style="animation-delay:.15s"><span class="ic">🎯</span><span class="lbl">Accuracy</span><span class="val">${acc}%</span></div>`:""}
-        <div class="tally-row" style="animation-delay:.25s"><span class="ic">🔥</span><span class="lbl">Best combo</span><span class="val">${S.bestCombo}</span></div>
-        ${earnedFlawless?`<div class="tally-row" style="animation-delay:.35s"><span class="ic">💎</span><span class="lbl">Flawless bonus</span><span class="val">unlocked!</span></div>`:""}
+        <div class="tally-row" style="animation-delay:.05s"><span class="ic">⚡</span><span class="lbl">${L("XP this stage","这一关的 XP","XP peringkat ini")}</span><span class="val">+${session.earned + (S.stages[s.id]?r.xp:0)}</span></div>
+        ${session.total?`<div class="tally-row" style="animation-delay:.15s"><span class="ic">🎯</span><span class="lbl">${L("Accuracy","准确度","Ketepatan")}</span><span class="val">${acc}%</span></div>`:""}
+        <div class="tally-row" style="animation-delay:.25s"><span class="ic">🔥</span><span class="lbl">${L("Best combo","最佳连击","Kombo terbaik")}</span><span class="val">${S.bestCombo}</span></div>
+        ${earnedFlawless?`<div class="tally-row" style="animation-delay:.35s"><span class="ic">💎</span><span class="lbl">${L("Flawless bonus","全对奖励","Bonus tanpa silap")}</span><span class="val">${L("unlocked!","拿到了！","dibuka!")}</span></div>`:""}
       </div>
 
-      ${r.line?`<div class="unlock-toast"><span class="ut-ic">🔓</span><span class="ut-body"><span class="ut-tag">Unlocked</span><span class="ut-text">${r.line.replace(/^.*?Unlocked\s*[—-]\s*/i,"").trim()||r.line}</span></span></div>`:""}
+      ${r.line?`<div class="unlock-toast"><span class="ut-ic">🔓</span><span class="ut-body"><span class="ut-tag">${L("Unlocked","解锁","Dibuka")}</span><span class="ut-text">${trStage(r.line.replace(/^.*?Unlocked\s*[—-]\s*/i,"").trim()) || trReward(r.line)}</span></span></div>`:""}
       <div style="height:20px"></div>
       ${r.final
-        ? `<button class="btn sun" data-action="goDone">See your trophy 🏆</button>`
-        : `<button class="btn" data-action="goMap">Continue your journey →</button>`}
+        ? `<button class="btn sun" data-action="goDone">${L("See your trophy 🏆","看你的奖杯 🏆","Lihat trofi anda 🏆")}</button>`
+        : `<button class="btn" data-action="goMap">${L("Continue your journey →","继续下一关 →","Sambung perjalanan →")}</button>`}
     </div>`;
 }
 
@@ -2501,18 +2686,18 @@ function renderCourseComplete(){
   $screen().innerHTML = `
     <div class="reward">
       <div class="burst">👑</div>
-      <h2>TOUCH Pronunciation Master!</h2>
-      <div class="sub">You completed the entire course 🎓</div>
+      <h2>${L("TOUCH Pronunciation Master!","TOUCH 发音大师！","Sarjana Sebutan TOUCH!")}</h2>
+      <div class="sub">${L("You completed the entire course 🎓","整个课程你都走完了 🎓","Anda tamatkan seluruh kursus 🎓")}</div>
       <div class="badge-card" style="margin-top:14px">${badgeMedal(BADGES.master)}
-        <b>${BADGES.master.name}</b><span>The highest TOUCH honour</span></div>
+        <b>${badgeName(BADGES.master)}</b><span>${L("The highest TOUCH honour","TOUCH 的最高荣誉","Penghormatan tertinggi TOUCH")}</span></div>
       <div class="tally">
-        <div class="tally-row"><span class="ic">⚡</span><span class="lbl">Total XP</span><span class="val">${S.xp}</span></div>
-        <div class="tally-row" style="animation-delay:.1s"><span class="ic">🏅</span><span class="lbl">Badges earned</span><span class="val">${earned}/${totalB}</span></div>
-        <div class="tally-row" style="animation-delay:.2s"><span class="ic">📈</span><span class="lbl">Level</span><span class="val">${levelInfo(S.xp).lvl}</span></div>
+        <div class="tally-row"><span class="ic">⚡</span><span class="lbl">${L("Total XP","总 XP","Jumlah XP")}</span><span class="val">${S.xp}</span></div>
+        <div class="tally-row" style="animation-delay:.1s"><span class="ic">🏅</span><span class="lbl">${L("Badges earned","拿到的徽章","Lencana diperoleh")}</span><span class="val">${earned}/${totalB}</span></div>
+        <div class="tally-row" style="animation-delay:.2s"><span class="ic">📈</span><span class="lbl">${L("Level","等级","Tahap")}</span><span class="val">${levelInfo(S.xp).lvl}</span></div>
       </div>
-      <div class="quote" style="margin-top:4px">Consistency is more important than perfection.<small>Keep speaking — keep growing. 💚</small></div>
+      <div class="quote" style="margin-top:4px">${L("Consistency is more important than perfection.","持续，比完美更重要。","Konsisten lebih penting daripada sempurna.")}<small>${L("Keep speaking — keep growing. 💚","一直讲下去，就会一直进步。💚","Teruskan bercakap — teruskan berkembang. 💚")}</small></div>
       <div style="height:18px"></div>
-      <button class="btn ghost" data-action="goMap">Back to course map</button>
+      <button class="btn ghost" data-action="goMap">${L("Back to course map","回到课程地图","Kembali ke peta kursus")}</button>
     </div>`;
 }
 
@@ -2520,41 +2705,41 @@ function renderCourseComplete(){
 function renderProfile(){
   const li=levelInfo(S.xp);
   const stagesDone = COURSE.filter(s=>S.stages[s.id]?.completed).length;
-  const displayName = (S.name && S.name.trim()) ? S.name.trim() : "TOUCH Learner";
+  const displayName = (S.name && S.name.trim()) ? S.name.trim() : L("TOUCH Learner","TOUCH 学员","Pelajar TOUCH");
   const initials = displayName.split(/\s+/).map(w=>w[0]||"").slice(0,2).join("").toUpperCase() || "TL";
   const shelf = Object.keys(BADGES).map(id=>{
     const b=BADGES[id], have=!!S.badges[id];
-    return `<div class="bcell ${have?'':'locked'}">${badgeMedal(b, !have)}<div class="n">${b.name}</div></div>`;
+    return `<div class="bcell ${have?'':'locked'}">${badgeMedal(b, !have)}<div class="n">${badgeName(b)}</div></div>`;
   }).join("");
   $screen().innerHTML = `
     <div class="profile">
       <div class="pf-head">
-        <div class="av"><span class="av-initials">${initials}</span><span class="av-lv">Lv ${li.lvl}</span></div>
+        <div class="av"><span class="av-initials">${initials}</span><span class="av-lv">${L("Lv","等级","Tahap")} ${li.lvl}</span></div>
         <div class="pf-meta">
           <h2>${displayName}</h2>
-          <p>🔥 ${S.streak}-day streak</p>
+          <p>🔥 ${L(`${S.streak}-day streak`, `连续 ${S.streak} 天`, `${S.streak} hari berturut`)}</p>
           <div class="pf-bar"><i style="width:${(li.pct*100).toFixed(0)}%"></i></div>
-          <small>${li.into} / ${li.span} XP to Level ${li.lvl+1}</small>
+          <small>${li.into} / ${li.span} XP ${L("to Level","升到等级","ke Tahap")} ${li.lvl+1}</small>
         </div>
       </div>
       <div class="stat-grid">
-        <div class="stat"><div class="si streak">🔥</div><div class="v">${S.streak}</div><div class="l">Day streak</div></div>
-        <div class="stat"><div class="si xp">⚡</div><div class="v">${S.xp}</div><div class="l">Total XP</div></div>
-        <div class="stat"><div class="si done">✓</div><div class="v">${stagesDone}/${COURSE.length}</div><div class="l">Stages</div></div>
+        <div class="stat"><div class="si streak">🔥</div><div class="v">${S.streak}</div><div class="l">${L("Day streak","连续天数","Hari berturut")}</div></div>
+        <div class="stat"><div class="si xp">⚡</div><div class="v">${S.xp}</div><div class="l">${L("Total XP","总 XP","Jumlah XP")}</div></div>
+        <div class="stat"><div class="si done">✓</div><div class="v">${stagesDone}/${COURSE.length}</div><div class="l">${L("Stages","关卡","Peringkat")}</div></div>
       </div>
 
-      <div class="sect-title">🎯 Daily Goal</div>
+      <div class="sect-title">🎯 ${L("Daily Goal","每日目标","Matlamat Harian")}</div>
       <div class="goal-pick">
         ${[20,50,100].map(g=>`<button class="gp ${S.dailyGoal===g?'on':''}" data-action="setGoal" data-g="${g}">${g} XP</button>`).join("")}
       </div>
-      <div class="fineprint" style="text-align:left;padding:8px 4px">Today: ${S.todayXP} / ${S.dailyGoal} XP ${S.todayXP>=S.dailyGoal?"✓ reached!":""}</div>
+      <div class="fineprint" style="text-align:left;padding:8px 4px">${L("Today","今天","Hari ini")}: ${S.todayXP} / ${S.dailyGoal} XP ${S.todayXP>=S.dailyGoal?L("✓ reached!","✓ 达标了！","✓ tercapai!"):""}</div>
 
-      <div class="sect-title">🏅 Badge Collection (${Object.keys(S.badges).length}/${Object.keys(BADGES).length})</div>
+      <div class="sect-title">🏅 ${L("Badge Collection","徽章收藏","Koleksi Lencana")} (${Object.keys(S.badges).length}/${Object.keys(BADGES).length})</div>
       <div class="badge-shelf">${shelf}</div>
 
-      <div class="sect-title">⚙️ Settings</div>
-      <button class="btn ghost" data-action="resetCourse">Reset all progress</button>
-      <div class="fineprint">Progress saves automatically to this device.</div>
+      <div class="sect-title">⚙️ ${L("Settings","设定","Tetapan")}</div>
+      <button class="btn ghost" data-action="resetCourse">${L("Reset all progress","清空所有进度","Set semula semua kemajuan")}</button>
+      <div class="fineprint">${L("Progress saves automatically to this device.","进度会自动存在这台装置上。","Kemajuan disimpan secara automatik pada peranti ini.")}</div>
     </div>`;
 }
 
@@ -2616,7 +2801,7 @@ document.addEventListener("click", e=>{
     case "setLang": langMenuOpen=false; setLang(t.dataset.lang); break;
     case "closeLangMenu": langMenuOpen=false; renderLangMenu(); break;
     case "resetCourse":
-      if(confirm("Reset ALL progress, XP and badges? This can't be undone.")){
+      if(confirm(L("Reset ALL progress, XP and badges? This can\u2019t be undone.","确定要清空全部进度、XP 和徽章吗？清了就回不来。","Set semula SEMUA kemajuan, XP dan lencana? Ini tidak boleh dibatalkan."))){
         S=freshState(); save(); go({name:"map"});
       } break;
   }
