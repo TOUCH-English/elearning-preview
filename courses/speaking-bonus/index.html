@@ -37,6 +37,11 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--font-b);min-hei
 .chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-h);font-weight:600;font-size:12.5px;
   padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--brand-2)}
 .chip b{color:var(--brand);font-weight:700}
+.ltog{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:2px}
+.ltog button{border:0;background:transparent;cursor:pointer;font-family:var(--font-h);font-weight:600;
+  font-size:11px;color:var(--muted);padding:5px 8px;border-radius:7px}
+.ltog button.on{background:var(--brand);color:#fff}
+@media (max-width:380px){ .chips{gap:6px} .ltog button{padding:5px 6px;font-size:10.5px} }
 
 /* ---------- home ---------- */
 h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(26px,5.5vw,36px);line-height:1.15}
@@ -141,6 +146,7 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 <div class="wrap" id="app"></div>
 
 <script src="../../shared/storage.js"></script>
+<script src="../../shared/profile.js"></script>
 <script src="../../shared/record.js"></script>
 <script>
 /* DAYS:START */
@@ -4193,15 +4199,107 @@ const DAYS = [
 const store = TouchStore.open("speaking-bonus");
 const rec   = TouchRecord.open("speaking-bonus");
 
+/* 解释语言与学生资料走共用层（启动页选一次，7 个课程都读得到）。
+   载不到的时候（shared/ 被搬走）退回这个课程自己那一份，功能不会整个消失。 */
+const SP = globalThis.TouchProfile || null;
+
+/* =============================================================================
+   说明文字三语
+   -----------------------------------------------------------------------------
+   只有「跟学生解释怎么做」的字会换语言。英文教材（句型、例句、目标句）永远是
+   英文，按钮 Continue / Record / Check 也维持英文 —— 跟 Pre-Beg／L1／L2 同一个
+   规矩：「英文学习内容相同，只有解释语言不同。」
+============================================================================= */
+const L = {
+  askTitleNew: { zh: "开始前先认识你一下", ms: "Sebelum kita mula", en: "Before we start" },
+  askTitleEdit:{ zh: "我的资料", ms: "Maklumat saya", en: "My info" },
+  askSubNew:   { zh: "回答这四题，之後的练习句就会变成关于<b>你自己</b>的。",
+                 ms: "Jawab empat soalan ini — ayat latihan nanti akan tentang <b>diri anda</b>.",
+                 en: "Answer these and your practice sentences will be about <b>you</b>." },
+  askSubEdit:  { zh: "改了之後，练习句会跟着换。",
+                 ms: "Ubah bila-bila masa — ayat latihan akan ikut.",
+                 en: "Change these any time — your practice sentences follow." },
+  skipLater:   { zh: "Skip — 之後再填", ms: "Skip — isi kemudian", en: "Skip — fill this in later" },
+
+  qName:  { zh: "我们怎么称呼你？", ms: "Apa nama anda?", en: "What should we call you?" },
+  qPlace: { zh: "你来自哪里？", ms: "Anda dari mana?", en: "Where are you from?" },
+  qJob:   { zh: "你的工作是什么？", ms: "Apa pekerjaan anda?", en: "What is your job?" },
+  qGoal:  { zh: "你想用英文做到什么？", ms: "Apa matlamat Bahasa Inggeris anda?",
+            en: "What do you want to do with your English?" },
+
+  homeSub:  { zh: "看影片 → 拼句子 → 换成自己的 → 说出来并录音。",
+              ms: "Tonton video → susun ayat → tukar kepada maklumat anda → sebut dan rakam.",
+              en: "Watch, build the sentence, then say it out loud." },
+  myInfo:   { zh: "我的资料", ms: "Maklumat saya", en: "My info" },
+  addInfo:  { zh: "填我的资料 →", ms: "Isi maklumat saya →", en: "Add my info →" },
+  noVideo:  { zh: "这一天还没有影片连结。", ms: "Hari ini belum ada pautan video.",
+              en: "No video link for this day yet." },
+
+  stSee:  { zh: "看", ms: "Lihat", en: "See" },
+  stBuild:{ zh: "拼", ms: "Susun", en: "Build" },
+  stSwap: { zh: "换", ms: "Tukar", en: "Swap" },
+  stSay:  { zh: "说", ms: "Sebut", en: "Say" },
+
+  patHint:  { zh: "先看懂这个句型，等一下你要自己拼、自己说。",
+              ms: "Fahami corak ayat ini dahulu — nanti anda akan susun dan sebut sendiri.",
+              en: "Understand this pattern first — you will build it and say it yourself next." },
+  tagMine:  { zh: "已换成你的资料", ms: "Maklumat anda", en: "Your info" },
+  tagFirst: { zh: "你的答案在第一个", ms: "Jawapan anda dulu", en: "Yours first" },
+  tagYours: { zh: "你的句子", ms: "Ayat anda", en: "Your sentence" },
+
+  ordHint: { zh: "点字块，把句子照正确顺序排出来。",
+             ms: "Ketik perkataan dan susun ayat mengikut urutan yang betul.",
+             en: "Tap the words and put the sentence in the right order." },
+  ordPh:   { zh: "点下面的字块…", ms: "Ketik perkataan di bawah…", en: "Tap the words below…" },
+  ordOK:   { zh: "✓ 对了！", ms: "✓ Betul!", en: "✓ Correct!" },
+  ordNo:   { zh: "再看一次正确的顺序：", ms: "Lihat semula urutan yang betul:",
+             en: "Here is the correct order:" },
+
+  subHint: { zh: "同一个句型，换掉后面的资料就好。点一个看看 —— 没有标准答案。",
+             ms: "Corak yang sama — tukar maklumat di belakang sahaja. Ketik satu; tiada jawapan salah.",
+             en: "Same pattern — just change the information at the end. Tap one; there is no wrong answer." },
+
+  micNote: { zh: "录音只留在你自己的电脑，不会上传。",
+             ms: "Rakaman kekal dalam komputer anda sahaja. Tiada muat naik.",
+             en: "Recordings stay on your own device. Nothing is uploaded." },
+  noRec:   { zh: "这台浏览器不支援录音 —— 请改用 Chrome 或 Safari。你还是可以对着句子念出来。",
+             ms: "Pelayar ini tidak menyokong rakaman — sila guna Chrome atau Safari. Anda masih boleh sebut ayat itu.",
+             en: "This browser cannot record — please use Chrome or Safari. You can still say the sentence out loud." },
+  hadRec:  { zh: "这一句你之前录过了 —— 可以重听或重录。",
+             ms: "Anda pernah merakam ayat ini — dengar semula atau rakam sekali lagi.",
+             en: "You recorded this one before — play it back or record again." },
+  gotRec:  { zh: "录好了 —— 按 Play back 听听看自己讲得怎么样。",
+             ms: "Siap dirakam — tekan Play back untuk dengar sendiri.",
+             en: "Recorded — press Play back and listen to yourself." },
+  noMic:   { zh: "没有拿到麦克风权限。你还是可以念出来，然后按 Continue。",
+             ms: "Tiada kebenaran mikrofon. Anda masih boleh sebut ayat itu, kemudian tekan Continue.",
+             en: "No microphone permission. You can still say it out loud, then press Continue." },
+
+  finalHint: { zh: "把今天学的串起来，一次说完",
+               ms: "Gabungkan semua yang dipelajari hari ini — sebut sekali gus",
+               en: "Put today's patterns together and say it all at once" },
+  doneMsg:   { zh: "做得好，明天继续。", ms: "Syabas — sambung esok.", en: "Well done — see you tomorrow." }
+};
+const L_ = (k) => (SP ? SP.t(L[k]) : L[k].en);
+
+/* 学生资料：共用层优先，没有共用层就用这个课程自己存的 */
+function readProfile() {
+  if (SP) {
+    const p = SP.get();
+    return (p.name || p.place || p.job || p.goal) ? p : null;
+  }
+  return store.get("profile", null);
+}
+
 let S = {
   done:     store.get("done", {}),      // { "1": true }  哪几天完成了
   recorded: store.get("recorded", {}),  // { "1:3": true } 哪几个录音做过
   xp:       store.get("xp", 0),
-  profile:  store.get("profile", null), // { name, place, job, goal } — 开始前问的
-  asked:    store.get("asked", false)   // 问过了没（跳过也算问过）
+  profile:  readProfile(),              // { name, place, job, goal } — 启动页问过的
+  asked:    SP ? SP.asked() : store.get("asked", false)
 };
 const save = () => store.patch({ done: S.done, recorded: S.recorded, xp: S.xp,
-                                 profile: S.profile, asked: S.asked });
+                                 profile: SP ? null : S.profile, asked: S.asked });
 
 /* =============================================================================
    把示范句换成学生自己的资料
@@ -4264,56 +4362,61 @@ function topBar() {
     <span class="chips">
       <span class="chip">◆ <b id="xp">${S.xp}</b> XP</span>
       <span class="chip">✓ <b>${Object.keys(S.done).length}</b>/${DAYS.length}</span>
+      ${SP ? `<span class="ltog">${SP.LANGS.map((l) =>
+        `<button data-lang="${l}"${SP.effective() === l ? ' class="on"' : ""}>${
+          l === "zh" ? "中文" : l === "ms" ? "BM" : "EN"}</button>`).join("")}</span>` : ""}
     </span>
   </div>`;
 }
 
 /* ---------- 开始前：问四个问题 ---------- */
+/* 问题本身用学生的解释语言；例子留英文 —— 他要填的就是英文的答案 */
 const ASK = [
-  { k: "name",  q: "What should we call you?", cn: "我们怎么称呼你？",     ph: "e.g. Marco" },
-  { k: "place", q: "Where are you from?",      cn: "你来自哪里？",         ph: "e.g. Penang" },
-  { k: "job",   q: "What is your job?",        cn: "你的工作是什么？",     ph: "e.g. admin executive" },
-  { k: "goal",  q: "What do you want to do with your English?", cn: "你想用英文做到什么？", ph: "e.g. speak more confidently at work" }
+  { k: "name",  t: "qName",  ph: "e.g. Marco" },
+  { k: "place", t: "qPlace", ph: "e.g. Penang" },
+  { k: "job",   t: "qJob",   ph: "e.g. admin executive" },
+  { k: "goal",  t: "qGoal",  ph: "e.g. speak more confidently at work" }
 ];
 
 function renderAsk(isEdit) {
   const p = S.profile || {};
+  redraw = () => renderAsk(isEdit);
   app().innerHTML = `${topBar()}
-    <h1>${isEdit ? "My info" : "Before we start"}</h1>
-    <p class="sub">${isEdit
-      ? "改了之後，练习句会跟着换。<br>Change these any time — your practice sentences follow."
-      : "回答这四题，之後的练习句就会变成关于<b>你自己</b>的。<br>Answer these and your practice sentences will be about <b>you</b>."}</p>
+    <h1>${esc(L_(isEdit ? "askTitleEdit" : "askTitleNew"))}</h1>
+    <p class="sub">${L_(isEdit ? "askSubEdit" : "askSubNew")}</p>
     <div class="card">
       ${ASK.map((a) => `<div class="ask">
-        <label for="f_${a.k}">${esc(a.q)} <span>${esc(a.cn)}</span></label>
+        <label for="f_${a.k}">${esc(L_(a.t))}</label>
         <input id="f_${a.k}" type="text" autocomplete="off" placeholder="${esc(a.ph)}" value="${esc(p[a.k] || "")}">
       </div>`).join("")}
       <button class="btn btn-p" id="okb">${isEdit ? "Save" : "Start"}</button>
-      <button class="btn btn-g" id="skipb">${isEdit ? "Cancel" : "Skip — 之後再填"}</button>
+      <button class="btn btn-g" id="skipb">${isEdit ? "Cancel" : esc(L_("skipLater"))}</button>
     </div>`;
 
   $("okb").onclick = () => {
     const p2 = {};
     ASK.forEach((a) => { const v = $("f_" + a.k).value.trim(); if (v) p2[a.k] = v; });
+    if (SP) { SP.set(p2); SP.markAsked(); }
     S.profile = Object.keys(p2).length ? p2 : null;
     S.asked = true; save(); renderHome();
   };
-  $("skipb").onclick = () => { S.asked = true; save(); renderHome(); };
+  $("skipb").onclick = () => { if (SP) SP.markAsked(); S.asked = true; save(); renderHome(); };
   window.scrollTo(0, 0);
 }
 
 /* ---------- 首页 ---------- */
 function renderHome() {
   rec.stopAll();
+  redraw = renderHome;
   if (!S.asked) return renderAsk(false);
   const n = Object.keys(S.done).length;
   const pct = DAYS.length ? Math.round((n / DAYS.length) * 100) : 0;
   app().innerHTML = `${topBar()}
     <h1>Speaking Bonus${S.profile && S.profile.name ? `<span class="hi">, ${esc(S.profile.name)}</span>` : ""}</h1>
-    <p class="sub">Watch, build the sentence, then say it out loud.<br>看影片 → 拼句子 → 换成自己的 → 说出来并录音。</p>
+    <p class="sub">${esc(L_("homeSub"))}</p>
     <div class="bar"><i style="width:${pct}%"></i></div>
     <div class="barnote">${n} of ${DAYS.length} days complete · ${pct}%
-      <button class="link" id="edit">${S.profile ? "My info" : "Add my info →"}</button></div>
+      <button class="link" id="edit">${esc(L_(S.profile ? "myInfo" : "addInfo"))}</button></div>
     <div class="days" id="days"></div>`;
 
   $("days").innerHTML = DAYS.map((d) => {
@@ -4330,6 +4433,9 @@ function renderHome() {
   });
   window.scrollTo(0, 0);
 }
+
+/* 换语言时要把「现在这一屏」重画一次 —— 每个进入点自己登记怎么重画 */
+let redraw = () => renderHome();
 
 /* ---------- 单日 ---------- */
 let D = null, idx = 0;
@@ -4359,7 +4465,7 @@ function renderDay() {
               title="${esc(D.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerpolicy="strict-origin-when-cross-origin" loading="lazy" allowfullscreen></iframe></div>
              <p class="note">Video not loading? <a href="https://www.youtube.com/watch?v=${esc(v)}" target="_blank" rel="noopener noreferrer">Open on YouTube</a></p>`
-            : `<div class="card"><p class="hint">这一天还没有影片连结。</p></div>`}
+            : `<div class="card"><p class="hint">${esc(L_("noVideo"))}</p></div>`}
       ${D.covers && D.covers.length ? `<div class="card">
         <span class="lbl">In this video</span>
         <div class="wl">${D.covers.slice(0, 8).map((c) => `<span>${esc(c)}</span>`).join("")}</div></div>` : ""}
@@ -4370,6 +4476,7 @@ function renderDay() {
     return;
   }
 
+  redraw = renderDay;
   const steps = D.steps || [];
   const si = idx - 1;
 
@@ -4397,9 +4504,9 @@ const next = () => { idx++; renderDay(); };
 /* 看：句型卡 */
 function renderPatterns(box, st, pos) {
   box.innerHTML = `<div class="card">
-    <span class="lbl">${pos} · 看</span>
+    <span class="lbl">${pos} · ${esc(L_("stSee"))}</span>
     <div class="h2">Sentence pattern</div>
-    <p class="hint">先看懂这个句型，等一下你要自己拼、自己说。${isMine(st.examples ? st.examples.join(" ") : "") ? '<span class="mine">已换成你的资料</span>' : ""}</p>
+    <p class="hint">${esc(L_("patHint"))}${isMine(st.examples ? st.examples.join(" ") : "") ? `<span class="mine">${esc(L_("tagMine"))}</span>` : ""}</p>
     <div class="pat">
       <div class="tp">${esc(st.head).replace(/\+/g, "<b>+</b>")}</div>
       ${st.desc ? `<div class="nt">${esc(st.desc)}</div>` : ""}
@@ -4421,10 +4528,10 @@ function renderOrder(box, st, pos) {
     if (w.length <= 10) { answer = w; display = mineTxt; }
   }
   box.innerHTML = `<div class="card">
-    <span class="lbl">${pos} · 拼</span>
+    <span class="lbl">${pos} · ${esc(L_("stBuild"))}</span>
     <div class="h2">Build the sentence</div>
-    <p class="hint">点字块，把句子照正确顺序排出来。</p>
-    <div class="zone" id="zone" data-ph="点下面的字块…"></div>
+    <p class="hint">${esc(L_("ordHint"))}</p>
+    <div class="zone" id="zone" data-ph="${esc(L_("ordPh"))}"></div>
     <div class="bank" id="bank">${shuffle(answer).map((w, i) =>
       `<button class="chipw" data-i="${i}" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
     <div id="fb"></div>
@@ -4461,8 +4568,8 @@ function renderOrder(box, st, pos) {
       locked = true;
       sync();                      // 重画一次，把区块里字块的 onclick 拿掉
       $("fb").innerHTML = ok
-        ? `<div class="fb ok">✓ 对了！</div>`
-        : `<div class="fb no">再看一次正确的顺序：<span class="ans">${esc(display)}</span></div>`;
+        ? `<div class="fb ok">${esc(L_("ordOK"))}</div>`
+        : `<div class="fb no">${esc(L_("ordNo"))}<span class="ans">${esc(display)}</span></div>`;
       if (ok) addXP(5);
       go.disabled = false; go.textContent = "Continue"; go.onclick = next;
     };
@@ -4479,9 +4586,9 @@ function renderSubst(box, st, pos) {
               ? (field === "job" ? jobPhrase(S.profile[field]) : S.profile[field]) : "";
   const bank = own ? [own, ...st.bank.filter((b) => b.toLowerCase() !== own.toLowerCase())] : null;
   box.innerHTML = `<div class="card">
-    <span class="lbl">${pos} · 换</span>
+    <span class="lbl">${pos} · ${esc(L_("stSwap"))}</span>
     <div class="h2">Make it yours</div>
-    <p class="hint">同一个句型，换掉后面的资料就好。点一个看看 —— 没有标准答案。${own ? '<span class="mine">你的答案在第一个</span>' : ""}</p>
+    <p class="hint">${esc(L_("subHint"))}${own ? `<span class="mine">${esc(L_("tagFirst"))}</span>` : ""}</p>
     <div class="pat"><div class="tp" id="tpl">${esc(st.tpl).replace(/___/g, "<b>___</b>")}</div></div>
     <div class="bank" id="bank">${(bank || shuffle(st.bank)).map((w) =>
       `<button class="chipw" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
@@ -4505,10 +4612,10 @@ function renderSpeak(box, model, pos, key, head, opts) {
   const mine = isMine(model);
   model = me(model);
   box.innerHTML = `<div class="card">
-    <span class="lbl">${pos} · 说</span>
+    <span class="lbl">${pos} · ${esc(L_("stSay"))}</span>
     <div class="h2">Now say it</div>
     ${head ? `<p class="hint">${esc(head)}</p>` : ""}
-    <div class="model">${esc(model)}${mine ? '<span class="mine">你的句子</span>' : ""}</div>
+    <div class="model">${esc(model)}${mine ? `<span class="mine">${esc(L_("tagYours"))}</span>` : ""}</div>
     ${can ? `
       <div class="stat" id="stat"></div>
       <div class="btn-row">
@@ -4516,8 +4623,8 @@ function renderSpeak(box, model, pos, key, head, opts) {
         <button class="btn btn-p hidden" id="stopb">■ Stop</button>
         <button class="btn btn-g" id="playb" disabled>▶ Play back</button>
       </div>
-      <p class="mini" id="mini">录音只留在你自己的电脑，不会上传。</p>`
-    : `<p class="mini">这台浏览器不支援录音 —— 请改用 Chrome 或 Safari。你还是可以对着句子念出来。</p>`}
+      <p class="mini" id="mini">${esc(L_("micNote"))}</p>`
+    : `<p class="mini">${esc(L_("noRec"))}</p>`}
     <button class="btn ${opts && opts.goClass ? opts.goClass : "btn-g"}" id="go">${esc((opts && opts.goText) || "Continue")}</button></div>`;
 
   setTimeout(() => {
@@ -4533,7 +4640,7 @@ function renderSpeak(box, model, pos, key, head, opts) {
       playb.disabled = !blob; stat.textContent = ""; stat.classList.remove("go");
     };
 
-    rec.load(key).then((b) => { if (b && !blob) { blob = b; $("mini").textContent = "这一句你之前录过了 —— 可以重听或重录。"; idle(); } });
+    rec.load(key).then((b) => { if (b && !blob) { blob = b; $("mini").textContent = L_("hadRec"); idle(); } });
 
     recb.onclick = () => {
       recb.classList.add("hidden"); playb.disabled = true;
@@ -4546,10 +4653,10 @@ function renderSpeak(box, model, pos, key, head, opts) {
           blob = b;
           if (!S.recorded[key]) { S.recorded[key] = true; addXP(5); }
           save();
-          $("mini").textContent = "录好了 —— 按 Play back 听听看自己讲得怎么样。";
+          $("mini").textContent = L_("gotRec");
           idle();
         },
-        onDenied: () => { stat.textContent = ""; $("mini").textContent = "没有拿到麦克风权限。你还是可以念出来，然后按 Continue。"; idle(); }
+        onDenied: () => { stat.textContent = ""; $("mini").textContent = L_("noMic"); idle(); }
       });
     };
     stopb.onclick = () => { if (session) session.stop(); };
@@ -4566,7 +4673,7 @@ function renderFinal() {
        renderSpeak 是在 setTimeout(…, 0) 里接 #go 的 —— 从外面先设
        go.onclick，会被那个 setTimeout 盖成 next()，按下去等於按 Continue，
        画面原地重画一次，看起来就像「按了没反应」。 */
-    renderSpeak(box, D.finalSpeak, "Final", `${D.day}:final`, "把今天学的串起来，一次说完", {
+    renderSpeak(box, D.finalSpeak, "Final", `${D.day}:final`, L_("finalHint"), {
       goText : "Finish this day ✓",
       goClass: "btn-p",
       onGo   : () => { S.done[D.day] = true; addXP(10); save(); renderDone(); }
@@ -4586,7 +4693,7 @@ function renderDone() {
   app().innerHTML = dayShell(`<div class="card done-box">
       <div class="big">🎉</div>
       <h2>Day ${D.day} complete</h2>
-      <p class="hint">${esc(me(D.outcome) || "做得好，明天继续。")}</p>
+      <p class="hint">${esc(me(D.outcome) || L_("doneMsg"))}</p>
       ${nextDay ? `<button class="btn btn-p" id="nx">Next: Day ${nextDay.day} →</button>` : ""}
       <button class="btn btn-g" id="home">All days</button>
     </div>`);
@@ -4594,6 +4701,17 @@ function renderDone() {
   $("home").onclick = renderHome;
   if (nextDay) $("nx").onclick = () => openDay(nextDay.day);
   window.scrollTo(0, 0);
+}
+
+/* ---------- 语言切换 ----------
+   topBar() 每次 render 都重新产生，所以不逐个接 onclick，改用事件委派接在
+   document 上一次就好。 */
+if (SP) {
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest ? e.target.closest("[data-lang]") : null;
+    if (!b) return;
+    if (SP.setLang(b.dataset.lang)) redraw();
+  });
 }
 
 /* ---------- go ---------- */
