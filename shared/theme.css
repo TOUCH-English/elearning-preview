@@ -1,0 +1,94 @@
+/* =============================================================================
+   TOUCH E-learning — 共用设计系统  (shared/theme.css)
+   -----------------------------------------------------------------------------
+   为什么有这个档案：
+
+   原本 6 个课程长得不像同一间公司做的 —— pre-beginner / level-1 / level-2 / ipa
+   用深蓝 #1F3A5F + Fredoka/Nunito；grammar-full 用另一种蓝 #15357B + 红，字体是
+   Sora/Inter；grammar 颜色对但字体又是 Plus Jakarta Sans。学生从一个课程跳到
+   另一个会觉得「怎么像另一个网站」。
+
+   现在全部课程都指向这里的 --te-* 变数，改一次全部课程一起变。
+
+   -----------------------------------------------------------------------------
+   用法（课程 HTML 里，放在自己的 <style> 之前）：
+
+       <link rel="stylesheet" href="../../shared/theme.css">
+
+   然后课程自己的 :root 不要写死色码，改成指向共用变数、并留原本的色码当後备：
+
+       :root{
+         --brand: var(--te-brand, #1F3A5F);
+         --font-display: var(--te-font-display, 'Fredoka','Nunito',sans-serif);
+       }
+
+   -----------------------------------------------------------------------------
+   为什么每个地方都要留 fallback：
+
+   课程是给学生双击 file:// 打开的。万一这个档案没跟着一起被复制过去，
+   有 fallback 的话画面只是回到原本的样子，不会整页变成没有颜色的白纸。
+   这是刻意的保险，不要为了「乾净」把 fallback 拿掉。
+============================================================================= */
+
+:root {
+  /* ---------- 底色与文字 ---------- */
+  --te-canvas:        #F5F7FA;   /* 页面底色 */
+  --te-surface:       #FFFFFF;   /* 卡片底色 */
+  --te-ink:           #1B2433;   /* 主要文字 */
+  --te-muted:         #5C6675;   /* 次要文字 */
+  --te-subtle:        #98A2B3;   /* 更淡的说明文字 */
+  --te-line:          #DCE3EC;   /* 分隔线、外框 */
+
+  /* ---------- 品牌深蓝 ---------- */
+  --te-brand:         #1F3A5F;
+  --te-brand-d:       #19314F;
+  --te-brand-dd:      #142640;
+  --te-brand-2:       #2E5685;   /* 连结、次要强调 */
+  --te-brand-soft:    #E6ECF4;   /* 浅色底 */
+
+  /* ---------- 答对 ---------- */
+  --te-success:       #4FAE8A;
+  --te-success-d:     #3C8E6F;
+  --te-success-soft:  #E6F4EE;
+
+  /* ---------- 品牌红（TOUCH logo 的红，用在重点强调） ---------- */
+  --te-danger:        #8B1E3F;
+  --te-danger-d:      #6F1730;
+  --te-danger-soft:   #F3E1E6;
+
+  /* ---------- 答错（比品牌红亮，避免跟强调色混淆） ---------- */
+  --te-bad:           #C0405C;
+  --te-bad-d:         #9E2E47;
+  --te-bad-soft:      #F6E4E8;
+
+  /* ---------- 金色（XP、奖励、徽章） ---------- */
+  --te-gold:          #D9B56B;
+  --te-gold-deep:     #BE9648;
+  --te-gold-soft:     #F8EFDB;
+
+  /* ---------- 圆角与阴影 ---------- */
+  --te-hairline:      rgba(31,58,95,.08);
+  --te-radius:        18px;
+  --te-sh-sm:         0 1px 2px rgba(27,36,51,.05),0 3px 8px rgba(27,36,51,.07);
+  --te-sh-md:         0 1px 2px rgba(27,36,51,.05),0 8px 22px rgba(27,36,51,.10);
+  --te-sh-lg:         0 2px 4px rgba(27,36,51,.06),0 18px 40px rgba(27,36,51,.14);
+
+  /* ---------- 字体 ----------
+     Fredoka 当标题（圆润、亲切），Nunito 当内文（好读、字重齐全）。
+     中文没有对应的 webfont，交给系统字体处理。 */
+  --te-font-display:  'Fredoka','Nunito',-apple-system,'Segoe UI',sans-serif;
+  --te-font-body:     'Nunito',-apple-system,'Segoe UI','Noto Sans',sans-serif;
+  --te-font-cjk:      'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif;
+
+  /* ---------- 分类用的辅助色 ----------
+     只有 grammar-full 会用到（它的模组各有一个颜色）。
+     这些是刻意跟品牌色区隔开的，不要拿来做按钮或状态。 */
+  --te-ac-blue:       #3B82C4;
+  --te-ac-indigo:     #6366E0;
+  --te-ac-teal:       #1AA6B8;
+  --te-ac-green:      #16A394;
+  --te-ac-amber:      #E0922E;
+  --te-ac-red:        #E0483F;
+  --te-ac-purple:     #9B5FE0;
+  --te-ac-pink:       #D957A8;
+}

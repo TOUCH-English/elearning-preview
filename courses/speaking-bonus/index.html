@@ -1,0 +1,4603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Touch English — Speaking Bonus</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/theme.css">
+<style>
+:root{
+  --canvas: var(--te-canvas, #F5F7FA); --surface: var(--te-surface, #FFFFFF);
+  --ink: var(--te-ink, #1B2433); --muted: var(--te-muted, #5C6675); --subtle: var(--te-subtle, #98A2B3);
+  --line: var(--te-line, #DCE3EC); --brand: var(--te-brand, #1F3A5F); --brand-d: var(--te-brand-d, #19314F);
+  --brand-2: var(--te-brand-2, #2E5685); --brand-soft: var(--te-brand-soft, #E6ECF4);
+  --success: var(--te-success, #4FAE8A); --success-soft: var(--te-success-soft, #E6F4EE);
+  --bad: var(--te-bad, #C0405C); --bad-soft: var(--te-bad-soft, #F6E4E8);
+  --gold: var(--te-gold, #D9B56B); --gold-deep: var(--te-gold-deep, #BE9648); --gold-soft: var(--te-gold-soft, #F8EFDB);
+  --hairline: var(--te-hairline, rgba(31,58,95,.08)); --radius: var(--te-radius, 18px);
+  --sh-sm: var(--te-sh-sm, 0 1px 2px rgba(27,36,51,.05),0 3px 8px rgba(27,36,51,.07));
+  --sh-md: var(--te-sh-md, 0 1px 2px rgba(27,36,51,.05),0 8px 22px rgba(27,36,51,.10));
+  --font-h: var(--te-font-display, 'Fredoka','Nunito',sans-serif);
+  --font-b: var(--te-font-body, 'Nunito',-apple-system,'Segoe UI',sans-serif);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--canvas);color:var(--ink);font-family:var(--font-b);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:clamp(16px,4vw,32px) clamp(14px,4vw,24px) 64px}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.logo{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:15px;letter-spacing:.02em}
+.chips{margin-left:auto;display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-h);font-weight:600;font-size:12.5px;
+  padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--brand-2)}
+.chip b{color:var(--brand);font-weight:700}
+
+/* ---------- home ---------- */
+h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(26px,5.5vw,36px);line-height:1.15}
+.sub{margin-top:8px;color:var(--muted);font-size:15px;font-weight:600;line-height:1.5}
+.bar{height:9px;border-radius:99px;background:var(--brand-soft);overflow:hidden;margin:18px 0 6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand-2),var(--brand));border-radius:99px;transition:width .3s ease}
+.barnote{font-size:13px;color:var(--muted);font-weight:700}
+
+.days{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:24px}
+.day{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;cursor:pointer;font:inherit;color:inherit;transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+.day:hover,.day:focus-visible{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--brand-soft);outline:none}
+.day .n{font-family:var(--font-h);font-weight:600;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--subtle)}
+.day .t{margin-top:5px;font-size:13.5px;line-height:1.4;font-weight:700;color:var(--brand)}
+.day.done{border-color:var(--success);background:var(--success-soft)}
+.day.done .n::after{content:" ✓";color:var(--success);font-weight:800}
+.day.rev{background:var(--gold-soft);border-color:rgba(191,150,72,.35)}
+.day.rev .n{color:var(--gold-deep)}
+.day.rev.done{background:var(--success-soft);border-color:var(--success)}
+
+/* ---------- day view ---------- */
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;font:inherit;font-weight:700;
+  color:var(--brand-2);cursor:pointer;padding:6px 0;margin-bottom:10px;font-size:14px}
+.video{position:relative;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--sh-md);background:var(--brand-dd,#142640);margin:14px 0}
+.video iframe{width:100%;height:100%;border:0;display:block}
+.note{text-align:center;font-size:12.5px;color:var(--subtle);margin-top:10px;font-weight:700}
+.note a{color:var(--brand-2);text-decoration:none;border-bottom:1px solid transparent}
+.note a:hover{border-bottom-color:currentColor}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 18px;box-shadow:var(--sh-sm);margin-top:14px}
+.lbl{font-family:var(--font-h);font-weight:600;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle)}
+.h2{font-family:var(--font-h);font-weight:600;font-size:19px;color:var(--brand);margin-top:5px;line-height:1.25}
+.hint{margin-top:5px;color:var(--muted);font-size:13.5px;font-weight:600;line-height:1.5}
+
+.pat{background:var(--brand-soft);border:1px solid var(--hairline);border-radius:12px;padding:13px 15px;margin-top:12px}
+.pat .tp{font-family:var(--font-h);font-weight:600;font-size:16px;color:var(--brand)}
+.pat .tp b{color:var(--gold-deep)}
+.pat .nt{margin-top:4px;font-size:13px;color:var(--muted);font-weight:600;line-height:1.5}
+.pat .ex{margin-top:8px;font-size:14.5px;color:var(--ink);font-weight:700;line-height:1.55}
+.pat .ex span{display:block;padding-left:16px;position:relative}
+.pat .ex span::before{content:"›";position:absolute;left:0;color:var(--brand-2);font-weight:800}
+.wl{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.wl span{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:13.5px;font-weight:700}
+
+/* build / bank chips */
+.zone{min-height:56px;display:flex;flex-wrap:wrap;gap:7px;align-items:flex-start;
+  background:var(--canvas);border:2px dashed var(--line);border-radius:12px;padding:11px;margin-top:14px}
+.zone:empty::before{content:attr(data-ph);color:var(--subtle);font-size:13.5px;font-weight:700}
+.bank{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chipw{font:inherit;font-weight:700;font-size:14.5px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:10px;padding:8px 13px;cursor:pointer;box-shadow:var(--sh-sm);
+  transition:transform .1s ease,border-color .12s ease}
+.chipw:hover{border-color:var(--brand-2)}
+.chipw:active{transform:scale(.96)}
+.chipw.used{opacity:.32;pointer-events:none}
+.zone .chipw{background:var(--brand-soft);border-color:var(--hairline)}
+
+.fb{margin-top:12px;border-radius:11px;padding:11px 13px;font-size:14px;font-weight:700;line-height:1.5}
+.fb.ok{background:var(--success-soft);color:var(--success)}
+.fb.no{background:var(--bad-soft);color:var(--bad)}
+.fb .ans{display:block;margin-top:5px;color:var(--ink);font-weight:800}
+
+.btn{font:inherit;font-family:var(--font-h);font-weight:600;font-size:15.5px;border:0;border-radius:13px;
+  padding:13px 18px;cursor:pointer;width:100%;margin-top:14px;transition:filter .14s ease,transform .1s ease}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.42;cursor:default}
+.btn-p{background:var(--brand);color:#fff}
+.btn-p:hover:not([disabled]){filter:brightness(1.1)}
+.btn-g{background:var(--surface);color:var(--brand);border:1px solid var(--line)}
+.btn-row{display:flex;gap:9px}
+.btn-row .btn{margin-top:0}
+
+/* speak */
+.model{background:var(--gold-soft);border:1px solid rgba(191,150,72,.3);border-radius:12px;
+  padding:14px 16px;margin-top:14px;font-size:16.5px;font-weight:700;color:var(--ink);line-height:1.5}
+.stat{text-align:center;font-family:var(--font-h);font-weight:600;font-size:16px;color:var(--muted);
+  margin-top:14px;min-height:24px}
+.stat.go{color:var(--success)}
+.mini{text-align:center;font-size:12.5px;color:var(--subtle);font-weight:700;margin-top:8px;line-height:1.5}
+
+.ask{margin-bottom:16px}
+.ask label{display:block;font-family:var(--font-h);font-weight:600;font-size:15px;color:var(--brand);margin-bottom:6px}
+.ask label span{display:block;font-family:var(--font-b);font-weight:700;font-size:12.5px;color:var(--subtle);margin-top:2px}
+.ask input{width:100%;font:inherit;font-size:16px;font-weight:700;color:var(--ink);background:var(--canvas);
+  border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+.ask input:focus{outline:none;border-color:var(--brand-2);background:var(--surface)}
+.hi{color:var(--gold-deep)}
+.link{background:none;border:0;font:inherit;font-weight:800;font-size:13px;color:var(--brand-2);
+  cursor:pointer;padding:0;margin-left:10px;text-decoration:underline}
+.mine{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--gold-deep);background:var(--gold-soft);border-radius:999px;padding:3px 9px;margin-left:8px;vertical-align:middle}
+.done-box{text-align:center;padding:28px 18px}
+.done-box .big{font-size:44px}
+.done-box h2{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:24px;margin-top:10px}
+.hidden{display:none !important}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script src="../../shared/storage.js"></script>
+<script src="../../shared/record.js"></script>
+<script>
+/* DAYS:START */
+const DAYS = [
+ {
+  "day": 1,
+  "title": "How to Introduce Yourself in English",
+  "tagline": "Speak with Confidence",
+  "video": "nqnLqaj_xqU",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Introducing your name",
+   "Saying where you are from",
+   "Talking about your job",
+   "Using simple sentence templates",
+   "Practising a complete 3-sentence self-introduction",
+   "Building confidence to speak without worrying too much about mistakes"
+  ],
+  "outcome": "Hi, I am Sarah. I am from Penang. I work as an admin executive.",
+  "items": [
+   {
+    "head": "I am + name",
+    "desc": "",
+    "examples": [
+     "I am Wesley."
+    ],
+    "words": []
+   },
+   {
+    "head": "I am from + place",
+    "desc": "",
+    "examples": [
+     "I am from Malaysia."
+    ],
+    "words": []
+   },
+   {
+    "head": "I work as + job",
+    "desc": "",
+    "examples": [
+     "I work as a teacher."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I am + name",
+    "desc": "",
+    "examples": [
+     "I am Wesley."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "am",
+     "Wesley"
+    ],
+    "display": "I am Wesley."
+   },
+   {
+    "k": "subst",
+    "tpl": "I am ___.",
+    "slot": "name",
+    "bank": [
+     "Wesley",
+     "Sarah",
+     "Ahmad",
+     "Mei Ling",
+     "Kumar"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I am Wesley.",
+    "head": "I am + name"
+   },
+   {
+    "k": "patterns",
+    "head": "I am from + place",
+    "desc": "",
+    "examples": [
+     "I am from Malaysia."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "am",
+     "from",
+     "Malaysia"
+    ],
+    "display": "I am from Malaysia."
+   },
+   {
+    "k": "subst",
+    "tpl": "I am from ___.",
+    "slot": "place",
+    "bank": [
+     "Malaysia",
+     "Penang",
+     "Kuala Lumpur",
+     "Johor",
+     "Ipoh",
+     "Sabah"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I am from Malaysia.",
+    "head": "I am from + place"
+   },
+   {
+    "k": "patterns",
+    "head": "I work as + job",
+    "desc": "",
+    "examples": [
+     "I work as a teacher."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "work",
+     "as",
+     "a",
+     "teacher"
+    ],
+    "display": "I work as a teacher."
+   },
+   {
+    "k": "subst",
+    "tpl": "I work as ___.",
+    "slot": "job",
+    "bank": [
+     "a teacher",
+     "a doctor",
+     "an engineer",
+     "a nurse",
+     "an admin executive",
+     "a salesperson"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I work as a teacher.",
+    "head": "I work as + job"
+   }
+  ],
+  "finalSpeak": "Hi, I am Sarah. I am from Penang. I work as an admin executive."
+ },
+ {
+  "day": 2,
+  "title": "How to Talk About Your Daily Routine in English",
+  "tagline": "Speak More Naturally",
+  "video": "0yYTz2jarc4",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about your daily routine",
+   "Using “I usually” to describe something you often do",
+   "Understanding basic verbs / action words",
+   "Adding time to say when you do something",
+   "Adding place to say where you do something",
+   "Expanding short answers into clearer sentences",
+   "Using a simple speaking template to build more complete sentences",
+   "Practising the sentence slowly first, then saying it with more confidence"
+  ],
+  "outcome": "I usually wake up at 7:00 a.m. I usually have lunch in the office. I usually sleep late.",
+  "items": [
+   {
+    "head": "I usually + verb + time/place",
+    "desc": "",
+    "examples": [
+     "I usually wake up at 7:00 a.m.",
+     "I usually eat at home."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I usually + verb + time/place",
+    "desc": "",
+    "examples": [
+     "I usually wake up at 7:00 a.m.",
+     "I usually eat at home."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "usually",
+     "wake",
+     "up",
+     "at",
+     "700",
+     "am"
+    ],
+    "display": "I usually wake up at 7:00 a.m."
+   },
+   {
+    "k": "subst",
+    "tpl": "I usually ___.",
+    "slot": "verb + time/place",
+    "bank": [
+     "wake up at 7:00 a.m",
+     "eat at home",
+     "work in the office",
+     "take the bus to work",
+     "have lunch at 1 p.m"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I usually wake up at 7:00 a.m.",
+    "head": "I usually + verb + time/place"
+   }
+  ],
+  "finalSpeak": "I usually wake up at 7:00 a.m. I usually have lunch in the office. I usually sleep late."
+ },
+ {
+  "day": 3,
+  "title": "How to Talk About What You Like in English",
+  "tagline": "Express Your Interests",
+  "video": "XsLYLuYP-ZA",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about things you like",
+   "Talking about activities you enjoy doing",
+   "Understanding the basic difference between a noun and a verb",
+   "Using “I like + noun” for things",
+   "Using “I like to + verb” for actions",
+   "Comparing a thing with an action, such as “I like coffee” vs “I like to drink coffee”",
+   "Building simple and natural sentences about personal preferences",
+   "Encouraging learners to speak more and practise expressing what they like"
+  ],
+  "outcome": "I like music. I like coffee. I like to travel. I like to watch movies.",
+  "items": [
+   {
+    "head": "I like + noun",
+    "desc": "",
+    "examples": [
+     "I like coffee.",
+     "I like music."
+    ],
+    "words": []
+   },
+   {
+    "head": "I like to + verb",
+    "desc": "",
+    "examples": [
+     "I like to watch movies.",
+     "I like to drive."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I like + noun",
+    "desc": "",
+    "examples": [
+     "I like coffee.",
+     "I like music."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "like",
+     "coffee"
+    ],
+    "display": "I like coffee."
+   },
+   {
+    "k": "subst",
+    "tpl": "I like ___.",
+    "slot": "noun",
+    "bank": [
+     "coffee",
+     "music",
+     "spicy food",
+     "noise",
+     "a new phone",
+     "more time"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I like coffee.",
+    "head": "I like + noun"
+   },
+   {
+    "k": "patterns",
+    "head": "I like to + verb",
+    "desc": "",
+    "examples": [
+     "I like to watch movies.",
+     "I like to drive."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "like",
+     "to",
+     "watch",
+     "movies"
+    ],
+    "display": "I like to watch movies."
+   },
+   {
+    "k": "subst",
+    "tpl": "I like to ___.",
+    "slot": "verb",
+    "bank": [
+     "watch movies",
+     "drive",
+     "wake up early",
+     "wait too long",
+     "improve my English",
+     "find a better job"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I like to watch movies.",
+    "head": "I like to + verb"
+   }
+  ],
+  "finalSpeak": "I like music. I like coffee. I like to travel. I like to watch movies."
+ },
+ {
+  "day": 4,
+  "title": "How to Talk About What You Don’t Like in English",
+  "tagline": "Express Yourself Clearly",
+  "video": "e9YV05bkrLw",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about things you don’t like",
+   "Talking about activities or actions you don’t enjoy",
+   "Understanding the difference between a noun and a verb",
+   "Using “I don’t like + noun” for things",
+   "Using “I don’t like to + verb” for actions",
+   "Expressing personal preferences in everyday situations",
+   "Combining two dislikes into a longer response",
+   "Practising speaking slowly and clearly"
+  ],
+  "outcome": "I don’t like spicy food. I don’t like noise. I don’t like to wake up early. I don’t like to wait too long.",
+  "items": [
+   {
+    "head": "I don’t like + noun",
+    "desc": "",
+    "examples": [
+     "I don’t like spicy food.",
+     "I don’t like noise."
+    ],
+    "words": []
+   },
+   {
+    "head": "I don’t like to + verb",
+    "desc": "",
+    "examples": [
+     "I don’t like to wake up early.",
+     "I don’t like to wait too long."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I don’t like + noun",
+    "desc": "",
+    "examples": [
+     "I don’t like spicy food.",
+     "I don’t like noise."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "don’t",
+     "like",
+     "spicy",
+     "food"
+    ],
+    "display": "I don’t like spicy food."
+   },
+   {
+    "k": "subst",
+    "tpl": "I don’t like ___.",
+    "slot": "noun",
+    "bank": [
+     "spicy food",
+     "coffee",
+     "music",
+     "noise",
+     "a new phone",
+     "more time"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I don’t like spicy food.",
+    "head": "I don’t like + noun"
+   },
+   {
+    "k": "patterns",
+    "head": "I don’t like to + verb",
+    "desc": "",
+    "examples": [
+     "I don’t like to wake up early.",
+     "I don’t like to wait too long."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "don’t",
+     "like",
+     "to",
+     "wake",
+     "up",
+     "early"
+    ],
+    "display": "I don’t like to wake up early."
+   },
+   {
+    "k": "subst",
+    "tpl": "I don’t like to ___.",
+    "slot": "verb",
+    "bank": [
+     "wake up early",
+     "watch movies",
+     "drive",
+     "wait too long",
+     "improve my English",
+     "find a better job"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I don’t like to wake up early.",
+    "head": "I don’t like to + verb"
+   }
+  ],
+  "finalSpeak": "I don’t like spicy food. I don’t like noise. I don’t like to wake up early. I don’t like to wait too long."
+ },
+ {
+  "day": 5,
+  "title": "How to Talk About What You Want in English",
+  "tagline": "Speak with Confidence",
+  "video": "3kz-UJ3V2is",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about things you want",
+   "Talking about actions or goals you want to do",
+   "Understanding the meaning of “want”",
+   "Using “I want + noun” for things",
+   "Using “I want to + verb” for actions",
+   "Expressing personal goals and wishes",
+   "Turning simple words into complete sentences",
+   "Using speaking templates to communicate more clearly",
+   "Encouraging learners to practise the patterns repeatedly"
+  ],
+  "outcome": "I want a new phone. I want more time. I want to improve my English. I want to find a better job.",
+  "items": [
+   {
+    "head": "I want + noun",
+    "desc": "",
+    "examples": [
+     "I want a new phone.",
+     "I want more time."
+    ],
+    "words": []
+   },
+   {
+    "head": "I want to + verb",
+    "desc": "",
+    "examples": [
+     "I want to improve my English.",
+     "I want to find a better job."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I want + noun",
+    "desc": "",
+    "examples": [
+     "I want a new phone.",
+     "I want more time."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "want",
+     "a",
+     "new",
+     "phone"
+    ],
+    "display": "I want a new phone."
+   },
+   {
+    "k": "subst",
+    "tpl": "I want ___.",
+    "slot": "noun",
+    "bank": [
+     "a new phone",
+     "coffee",
+     "music",
+     "spicy food",
+     "noise",
+     "more time"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I want a new phone.",
+    "head": "I want + noun"
+   },
+   {
+    "k": "patterns",
+    "head": "I want to + verb",
+    "desc": "",
+    "examples": [
+     "I want to improve my English.",
+     "I want to find a better job."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "want",
+     "to",
+     "improve",
+     "my",
+     "English"
+    ],
+    "display": "I want to improve my English."
+   },
+   {
+    "k": "subst",
+    "tpl": "I want to ___.",
+    "slot": "verb",
+    "bank": [
+     "improve my English",
+     "watch movies",
+     "drive",
+     "wake up early",
+     "wait too long",
+     "find a better job"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my English.",
+    "head": "I want to + verb"
+   }
+  ],
+  "finalSpeak": "I want a new phone. I want more time. I want to improve my English. I want to find a better job."
+ },
+ {
+  "day": 6,
+  "title": "How to Talk About What You Need in English",
+  "tagline": "Everyday English Practice",
+  "video": "v_2h6h66TTw",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about things you need",
+   "Talking about actions you need to do",
+   "Understanding the meaning of “need”",
+   "Using “I need + noun” for things",
+   "Using “I need to + verb” for actions",
+   "Understanding the difference between “want” and “need”",
+   "Expressing something as more important or necessary",
+   "Turning simple ideas into complete sentences",
+   "Practising simple speaking templates with confidence"
+  ],
+  "outcome": "I need help. I need more practice. I need to study. I need to improve my speaking.",
+  "items": [
+   {
+    "head": "I need + noun",
+    "desc": "",
+    "examples": [
+     "I need help.",
+     "I need more practice."
+    ],
+    "words": []
+   },
+   {
+    "head": "I need to + verb",
+    "desc": "",
+    "examples": [
+     "I need to study.",
+     "I need to improve my speaking."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I need + noun",
+    "desc": "",
+    "examples": [
+     "I need help.",
+     "I need more practice."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "need",
+     "help"
+    ],
+    "display": "I need help."
+   },
+   {
+    "k": "subst",
+    "tpl": "I need ___.",
+    "slot": "noun",
+    "bank": [
+     "help",
+     "coffee",
+     "music",
+     "spicy food",
+     "noise",
+     "a new phone"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I need help.",
+    "head": "I need + noun"
+   },
+   {
+    "k": "patterns",
+    "head": "I need to + verb",
+    "desc": "",
+    "examples": [
+     "I need to study.",
+     "I need to improve my speaking."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "need",
+     "to",
+     "study"
+    ],
+    "display": "I need to study."
+   },
+   {
+    "k": "subst",
+    "tpl": "I need to ___.",
+    "slot": "verb",
+    "bank": [
+     "study",
+     "watch movies",
+     "drive",
+     "wake up early",
+     "wait too long",
+     "improve my English"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I need to study.",
+    "head": "I need to + verb"
+   }
+  ],
+  "finalSpeak": "I need help. I need more practice. I need to study. I need to improve my speaking."
+ },
+ {
+  "day": 7,
+  "title": "Review Day! Build Your Simple English Introduction",
+  "tagline": "DAY 1–6",
+  "video": "PWYD48J05ZY",
+  "review": true,
+  "formula": "",
+  "covers": [
+   "Reviewing the speaking patterns from Videos 1 to 6",
+   "Introducing your name",
+   "Saying where you are from",
+   "Talking about your job",
+   "Talking about things you like",
+   "Talking about things you want",
+   "Talking about things you need",
+   "Connecting several simple sentences together",
+   "Moving from one-sentence answers to a longer self-introduction",
+   "Using simple English to express more information",
+   "Repeating the complete introduction several times to build speaking confidence and fluency"
+  ],
+  "outcome": "Hi, I am Sarah. I am from Penang, Malaysia. I work as an admin assistant. I like music and coffee. I want to improve my English, and I need more speaking practice.",
+  "items": [
+   {
+    "head": "I am + name",
+    "desc": "",
+    "examples": [
+     "I am Wesley."
+    ],
+    "words": []
+   },
+   {
+    "head": "I am from + place",
+    "desc": "",
+    "examples": [
+     "I am from Malaysia."
+    ],
+    "words": []
+   },
+   {
+    "head": "I work as + job",
+    "desc": "",
+    "examples": [
+     "I work as a doctor."
+    ],
+    "words": []
+   },
+   {
+    "head": "I like + noun / I like to + verb",
+    "desc": "",
+    "examples": [
+     "I like music and coffee."
+    ],
+    "words": []
+   },
+   {
+    "head": "I want + noun / I want to + verb",
+    "desc": "",
+    "examples": [
+     "I want to improve my English."
+    ],
+    "words": []
+   },
+   {
+    "head": "I need + noun / I need to + verb",
+    "desc": "",
+    "examples": [
+     "I need more speaking practice."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I am + name",
+    "desc": "",
+    "examples": [
+     "I am Wesley."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "am",
+     "Wesley"
+    ],
+    "display": "I am Wesley."
+   },
+   {
+    "k": "subst",
+    "tpl": "I am ___.",
+    "slot": "name",
+    "bank": [
+     "Wesley",
+     "Sarah",
+     "Ahmad",
+     "Mei Ling",
+     "Kumar"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I am Wesley.",
+    "head": "I am + name"
+   },
+   {
+    "k": "patterns",
+    "head": "I am from + place",
+    "desc": "",
+    "examples": [
+     "I am from Malaysia."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "am",
+     "from",
+     "Malaysia"
+    ],
+    "display": "I am from Malaysia."
+   },
+   {
+    "k": "subst",
+    "tpl": "I am from ___.",
+    "slot": "place",
+    "bank": [
+     "Malaysia",
+     "Penang",
+     "Kuala Lumpur",
+     "Johor",
+     "Ipoh",
+     "Sabah"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I am from Malaysia.",
+    "head": "I am from + place"
+   },
+   {
+    "k": "patterns",
+    "head": "I work as + job",
+    "desc": "",
+    "examples": [
+     "I work as a doctor."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "work",
+     "as",
+     "a",
+     "doctor"
+    ],
+    "display": "I work as a doctor."
+   },
+   {
+    "k": "subst",
+    "tpl": "I work as ___.",
+    "slot": "job",
+    "bank": [
+     "a doctor",
+     "a teacher",
+     "an engineer",
+     "a nurse",
+     "an admin executive",
+     "a salesperson"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I work as a doctor.",
+    "head": "I work as + job"
+   },
+   {
+    "k": "patterns",
+    "head": "I like + noun / I like to + verb",
+    "desc": "",
+    "examples": [
+     "I like music and coffee."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "like",
+     "music",
+     "and",
+     "coffee"
+    ],
+    "display": "I like music and coffee."
+   },
+   {
+    "k": "subst",
+    "tpl": "I like ___.",
+    "slot": "noun / I like to + verb",
+    "bank": [
+     "music and coffee",
+     "cooking at home",
+     "travelling",
+     "watching football"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I like music and coffee.",
+    "head": "I like + noun / I like to + verb"
+   },
+   {
+    "k": "patterns",
+    "head": "I want + noun / I want to + verb",
+    "desc": "",
+    "examples": [
+     "I want to improve my English."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "want",
+     "to",
+     "improve",
+     "my",
+     "English"
+    ],
+    "display": "I want to improve my English."
+   },
+   {
+    "k": "subst",
+    "tpl": "I want ___.",
+    "slot": "noun / I want to + verb",
+    "bank": [
+     "to improve my English",
+     "to speak more confidently",
+     "to get a better job"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my English.",
+    "head": "I want + noun / I want to + verb"
+   },
+   {
+    "k": "patterns",
+    "head": "I need + noun / I need to + verb",
+    "desc": "",
+    "examples": [
+     "I need more speaking practice."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "need",
+     "more",
+     "speaking",
+     "practice"
+    ],
+    "display": "I need more speaking practice."
+   },
+   {
+    "k": "subst",
+    "tpl": "I need ___.",
+    "slot": "noun / I need to + verb",
+    "bank": [
+     "more speaking practice",
+     "more practice",
+     "to speak English at work"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I need more speaking practice.",
+    "head": "I need + noun / I need to + verb"
+   }
+  ],
+  "finalSpeak": "Hi, I am Sarah. I am from Penang, Malaysia. I work as an admin assistant. I like music and coffee. I want to improve my English, and I need more speaking practice."
+ },
+ {
+  "day": 8,
+  "title": "How to Ask Simple Questions in English",
+  "tagline": "Beginner English Practice",
+  "video": "o4JtdozGEHc",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Learning how to ask simple questions",
+   "Using the formula Question word + do you + base verb",
+   "Using “What” to ask for information",
+   "Using “Where” to ask about a place",
+   "Using “Why” to ask for a reason",
+   "Using “How” to ask about a way, method, or feeling",
+   "Using “When” to ask about time",
+   "Understanding and using base verbs",
+   "Building simple questions for everyday conversation",
+   "Practising questions slowly first, then saying them more naturally",
+   "Helping learners become more active in conversations instead of only answering"
+  ],
+  "outcome": "What do you do? Where do you live? Why do you study English? How do you go to work? When do you sleep?",
+  "items": [
+   {
+    "head": "Question word + do you + base verb",
+    "desc": "",
+    "examples": [
+     "What do you do?",
+     "Where do you live?",
+     "When do you sleep?"
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Question word + do you + base verb",
+    "desc": "",
+    "examples": [
+     "What do you do?",
+     "Where do you live?",
+     "When do you sleep?"
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "What",
+     "do",
+     "you",
+     "do"
+    ],
+    "display": "What do you do?"
+   },
+   {
+    "k": "speak",
+    "model": "What do you do?",
+    "head": "Question word + do you + base verb"
+   }
+  ],
+  "finalSpeak": "What do you do? Where do you live? Why do you study English? How do you go to work? When do you sleep?"
+ },
+ {
+  "day": 9,
+  "title": "How to Ask Yes or No Questions in English",
+  "tagline": "Speak with Confidence",
+  "video": "ARGOIZjGBbk",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Asking simple Yes/No questions",
+   "Using “Do you + base verb?” for routines and habits",
+   "Using “Can you + base verb?” for ability",
+   "Using “Are you + ...?” for condition, feeling, status, or identity",
+   "Understanding when to use Do you, Can you, and Are you",
+   "Answering Do you...? with Yes, I do / No, I don’t",
+   "Answering Can you...? with Yes, I can / No, I can’t",
+   "Answering Are you...? with Yes, I am / No, I’m not",
+   "Practising both asking and answering questions",
+   "Using simple questions in everyday conversations"
+  ],
+  "outcome": "Do you drink coffee? Yes, I do.",
+  "items": [
+   {
+    "head": "Do you + base verb?",
+    "desc": "",
+    "examples": [
+     "Do you work on weekends?",
+     "Do you drink coffee?"
+    ],
+    "words": []
+   },
+   {
+    "head": "Can you + base verb?",
+    "desc": "",
+    "examples": [
+     "Can you speak English?",
+     "Can you drive?"
+    ],
+    "words": []
+   },
+   {
+    "head": "Are you + ...?",
+    "desc": "",
+    "examples": [
+     "Are you busy?",
+     "Are you a student?"
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Do you + base verb?",
+    "desc": "",
+    "examples": [
+     "Do you work on weekends?",
+     "Do you drink coffee?"
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Do",
+     "you",
+     "work",
+     "on",
+     "weekends"
+    ],
+    "display": "Do you work on weekends?"
+   },
+   {
+    "k": "subst",
+    "tpl": "Do you ___.",
+    "slot": "base verb?",
+    "bank": [
+     "work on weekends?",
+     "drink coffee?",
+     "speak English?",
+     "drive?"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "Do you work on weekends?",
+    "head": "Do you + base verb?"
+   },
+   {
+    "k": "patterns",
+    "head": "Can you + base verb?",
+    "desc": "",
+    "examples": [
+     "Can you speak English?",
+     "Can you drive?"
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Can",
+     "you",
+     "speak",
+     "English"
+    ],
+    "display": "Can you speak English?"
+   },
+   {
+    "k": "subst",
+    "tpl": "Can you ___.",
+    "slot": "base verb?",
+    "bank": [
+     "speak English?",
+     "work on weekends?",
+     "drink coffee?",
+     "drive?"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "Can you speak English?",
+    "head": "Can you + base verb?"
+   },
+   {
+    "k": "patterns",
+    "head": "Are you + ...?",
+    "desc": "",
+    "examples": [
+     "Are you busy?",
+     "Are you a student?"
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Are",
+     "you",
+     "busy"
+    ],
+    "display": "Are you busy?"
+   },
+   {
+    "k": "subst",
+    "tpl": "Are you ___.",
+    "slot": "...?",
+    "bank": [
+     "busy?",
+     "a student?",
+     "free tomorrow?",
+     "from Penang?",
+     "new here?"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "Are you busy?",
+    "head": "Are you + ...?"
+   },
+   {
+    "k": "speak",
+    "model": "Can you drive? No, I can’t.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Are you busy now? Yes, I am.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "Do you drink coffee? Yes, I do."
+ },
+ {
+  "day": 10,
+  "title": "How to Give Reasons in English",
+  "tagline": "Explain Yourself Clearly",
+  "video": "BgBTJuGGaII",
+  "review": false,
+  "formula": "Main idea + because + reason",
+  "covers": [
+   "Giving a reason in English",
+   "Understanding the purpose of “because”",
+   "Using Main idea + because + reason",
+   "Answering “Why?” with a complete sentence",
+   "Expanding short answers into clearer responses",
+   "Giving reasons for things you like",
+   "Giving reasons for things you want",
+   "Giving reasons for things you need",
+   "Giving reasons for things you do",
+   "Making speaking sound clearer and more complete",
+   "Practising how to extend an idea instead of stopping after one short sentence"
+  ],
+  "outcome": "I study English because I want to speak more confidently.",
+  "items": [
+   {
+    "head": "Main idea + because + reason",
+    "desc": "",
+    "examples": [
+     "I want to improve my English because I need it for work.",
+     "I like online classes because they are flexible."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Main idea + because + reason",
+    "desc": "",
+    "examples": [
+     "I want to improve my English because I need it for work.",
+     "I like online classes because they are flexible."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my English because I need it for work.",
+    "head": "Main idea + because + reason"
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my English because I need it for work.",
+    "head": "Main idea + because + reason"
+   },
+   {
+    "k": "speak",
+    "model": "I like this class because it is practical.",
+    "head": "Main idea + because + reason"
+   }
+  ],
+  "finalSpeak": "I study English because I want to speak more confidently."
+ },
+ {
+  "day": 11,
+  "title": "How to Give Examples in English",
+  "tagline": "Make Your English Clearer",
+  "video": "rGtghnY3j98",
+  "review": false,
+  "formula": "Main idea + for example + example",
+  "covers": [
+   "Giving an example in English",
+   "Understanding the purpose of “for example”",
+   "Using Main idea + for example + example",
+   "Making general ideas more specific",
+   "Helping the listener picture and understand your meaning",
+   "Giving examples about work",
+   "Giving examples about English learning",
+   "Giving examples about daily life",
+   "Giving examples about feelings and speaking difficulties",
+   "Extending short answers into longer responses",
+   "Speaking more clearly and with more detail"
+  ],
+  "outcome": "I feel nervous when I speak English. For example, sometimes I know the idea but I don’t know how to say it.",
+  "items": [
+   {
+    "head": "Main idea + for example + example",
+    "desc": "",
+    "examples": [
+     "I use English at work. For example, I need to reply to my customers in English.",
+     "I want to improve my speaking. For example, I want to speak better during meetings."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Main idea + for example + example",
+    "desc": "",
+    "examples": [
+     "I use English at work. For example, I need to reply to my customers in English.",
+     "I want to improve my speaking. For example, I want to speak better during meetings."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I use English at work. For example, I need to reply to my customers in English.",
+    "head": "Main idea + for example + example"
+   },
+   {
+    "k": "speak",
+    "model": "I use English at work. For example, I reply to customers in English.",
+    "head": "Main idea + for example + example"
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my speaking. For example, I want to speak better during meetings.",
+    "head": "Main idea + for example + example"
+   }
+  ],
+  "finalSpeak": "I feel nervous when I speak English. For example, sometimes I know the idea but I don’t know how to say it."
+ },
+ {
+  "day": 12,
+  "title": "How to Use Connectors in English",
+  "tagline": "Connect Simple Ideas Clearly",
+  "video": "KwDsDZx1Svc",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Connecting two simple ideas",
+   "Understanding what a connector does",
+   "Using “and” for similar or related information",
+   "Using “but” for contrasting or opposite information",
+   "Using “so” to show a result",
+   "Combining short sentences into longer ones",
+   "Reducing broken or disconnected speaking",
+   "Making spoken English sound smoother and more natural",
+   "Expressing addition, contrast, and result",
+   "Practising simple sentence patterns using connectors"
+  ],
+  "outcome": "I can understand English, but I can’t speak fluently yet.",
+  "items": [
+   {
+    "head": "and",
+    "desc": "Used to connect similar or related ideas.",
+    "examples": [
+     "I work in sales and I talk to customers every day.",
+     "I want to improve my speaking and confidence."
+    ],
+    "words": []
+   },
+   {
+    "head": "but",
+    "desc": "Used to connect different or opposite ideas.",
+    "examples": [
+     "I can understand English, but I can’t speak fluently yet.",
+     "I want to practise more, but I have no time."
+    ],
+    "words": []
+   },
+   {
+    "head": "so",
+    "desc": "Used to show a result.",
+    "examples": [
+     "I need English for work, so I want to improve quickly.",
+     "I feel shy, so I don’t speak much."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "and",
+    "desc": "Used to connect similar or related ideas.",
+    "examples": [
+     "I work in sales and I talk to customers every day.",
+     "I want to improve my speaking and confidence."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I work in sales and I talk to customers every day.",
+    "head": "and"
+   },
+   {
+    "k": "patterns",
+    "head": "but",
+    "desc": "Used to connect different or opposite ideas.",
+    "examples": [
+     "I can understand English, but I can’t speak fluently yet.",
+     "I want to practise more, but I have no time."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "can",
+     "understand",
+     "English",
+     "but",
+     "I",
+     "can’t",
+     "speak",
+     "fluently",
+     "yet"
+    ],
+    "display": "I can understand English, but I can’t speak fluently yet."
+   },
+   {
+    "k": "speak",
+    "model": "I can understand English, but I can’t speak fluently yet.",
+    "head": "but"
+   },
+   {
+    "k": "patterns",
+    "head": "so",
+    "desc": "Used to show a result.",
+    "examples": [
+     "I need English for work, so I want to improve quickly.",
+     "I feel shy, so I don’t speak much."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I need English for work, so I want to improve quickly.",
+    "head": "so"
+   },
+   {
+    "k": "speak",
+    "model": "I work in sales and I talk to customers every day.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "I need English for work, so I want to improve quickly.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "I can understand English, but I can’t speak fluently yet."
+ },
+ {
+  "day": 13,
+  "title": "Review Day! Recap What You Learned from DAY 8–12",
+  "tagline": "",
+  "video": "pbUncIdeZDA",
+  "review": true,
+  "formula": "",
+  "covers": [
+   "Reviewing the skills learned in the previous videos",
+   "Asking and answering simple questions",
+   "Reviewing Yes/No questions",
+   "Giving a reason using “because”",
+   "Giving an example using “for example”",
+   "Connecting ideas using and, but, and so",
+   "Combining several speaking patterns in one response",
+   "Extending short answers into longer answers",
+   "Making ideas clearer and easier to understand",
+   "Making spoken English sound more natural",
+   "Practising common questions about work and English learning",
+   "Encouraging learners to review and reuse previously learned speaking patterns"
+  ],
+  "outcome": "I want to improve my English because I need it for work. For example, I need to talk to customers and join meetings. I can understand some English, but I still lack confidence, so I need more practice.",
+  "items": [
+   {
+    "head": "Asking simple questions",
+    "desc": "",
+    "examples": [
+     "What do you do?",
+     "Why do you want to improve your English?"
+    ],
+    "words": []
+   },
+   {
+    "head": "Asking Yes/No questions",
+    "desc": "",
+    "examples": [
+     "Do you use English at work?",
+     "Can you speak English?"
+    ],
+    "words": []
+   },
+   {
+    "head": "Giving reasons using “because”",
+    "desc": "",
+    "examples": [
+     "I want to improve my English because I need it for work."
+    ],
+    "words": []
+   },
+   {
+    "head": "Giving examples using “for example”",
+    "desc": "",
+    "examples": [
+     "For example, I need to talk to customers and join meetings."
+    ],
+    "words": []
+   },
+   {
+    "head": "Connecting ideas using “and,” “but,” and “so”",
+    "desc": "",
+    "examples": [
+     "I can understand a little, but I still lack confidence.",
+     "I need more practice, so I practise every day."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Asking simple questions",
+    "desc": "",
+    "examples": [
+     "What do you do?",
+     "Why do you want to improve your English?"
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "What",
+     "do",
+     "you",
+     "do"
+    ],
+    "display": "What do you do?"
+   },
+   {
+    "k": "speak",
+    "model": "What do you do?",
+    "head": "Asking simple questions"
+   },
+   {
+    "k": "patterns",
+    "head": "Asking Yes/No questions",
+    "desc": "",
+    "examples": [
+     "Do you use English at work?",
+     "Can you speak English?"
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Do",
+     "you",
+     "use",
+     "English",
+     "at",
+     "work"
+    ],
+    "display": "Do you use English at work?"
+   },
+   {
+    "k": "speak",
+    "model": "Do you use English at work?",
+    "head": "Asking Yes/No questions"
+   },
+   {
+    "k": "patterns",
+    "head": "Giving reasons using “because”",
+    "desc": "",
+    "examples": [
+     "I want to improve my English because I need it for work."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my English because I need it for work.",
+    "head": "Giving reasons using “because”"
+   },
+   {
+    "k": "patterns",
+    "head": "Giving examples using “for example”",
+    "desc": "",
+    "examples": [
+     "For example, I need to talk to customers and join meetings."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "For example, I need to talk to customers and join meetings.",
+    "head": "Giving examples using “for example”"
+   },
+   {
+    "k": "patterns",
+    "head": "Connecting ideas using “and,” “but,” and “so”",
+    "desc": "",
+    "examples": [
+     "I can understand a little, but I still lack confidence.",
+     "I need more practice, so I practise every day."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "can",
+     "understand",
+     "a",
+     "little",
+     "but",
+     "I",
+     "still",
+     "lack",
+     "confidence"
+    ],
+    "display": "I can understand a little, but I still lack confidence."
+   },
+   {
+    "k": "speak",
+    "model": "I can understand a little, but I still lack confidence.",
+    "head": "Connecting ideas using “and,” “but,” and “so”"
+   }
+  ],
+  "finalSpeak": "I want to improve my English because I need it for work. For example, I need to talk to customers and join meetings. I can understand some English, but I still lack confidence, so I need more practice."
+ },
+ {
+  "day": 14,
+  "title": "How to Share Your Opinion in English",
+  "tagline": "Speak with Confidence",
+  "video": "Q32Mp3NC0Wc",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Sharing a personal opinion",
+   "Avoiding very short answers such as “good,” “nice,” or “not bad”",
+   "Using “I think” for a natural opinion",
+   "Using “In my opinion” for a more structured or formal opinion",
+   "Using “My opinion is that” to clearly state a viewpoint",
+   "Using “I believe” for a stronger personal view",
+   "Using “I feel that” for a more personal or emotional opinion",
+   "Making opinions sound clearer and more organised",
+   "Using opinion starters in daily life and workplace communication",
+   "Practising opinions about topics such as online learning, speaking practice, and learning English step by step"
+  ],
+  "outcome": "In my opinion, practice is more important than memorising.",
+  "items": [
+   {
+    "head": "I think + idea",
+    "desc": "",
+    "examples": [
+     "I think this project is good.",
+     "I think speaking practice is very important."
+    ],
+    "words": []
+   },
+   {
+    "head": "In my opinion + idea",
+    "desc": "",
+    "examples": [
+     "In my opinion, practice is more important than memorising."
+    ],
+    "words": []
+   },
+   {
+    "head": "My opinion is that + idea",
+    "desc": "",
+    "examples": [
+     "My opinion is that confidence requires time."
+    ],
+    "words": []
+   },
+   {
+    "head": "I believe + idea",
+    "desc": "",
+    "examples": [
+     "I believe practice helps people improve faster."
+    ],
+    "words": []
+   },
+   {
+    "head": "I feel that + idea",
+    "desc": "",
+    "examples": [
+     "I feel that speaking every day is very helpful."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I think + idea",
+    "desc": "",
+    "examples": [
+     "I think this project is good.",
+     "I think speaking practice is very important."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "think",
+     "this",
+     "project",
+     "is",
+     "good"
+    ],
+    "display": "I think this project is good."
+   },
+   {
+    "k": "subst",
+    "tpl": "I think ___.",
+    "slot": "idea",
+    "bank": [
+     "this project is good",
+     "speaking practice is very important",
+     "practice is more important than memorising",
+     "confidence requires time",
+     "practice helps people improve faster",
+     "speaking every day is very helpful"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I think this project is good.",
+    "head": "I think + idea"
+   },
+   {
+    "k": "patterns",
+    "head": "In my opinion + idea",
+    "desc": "",
+    "examples": [
+     "In my opinion, practice is more important than memorising."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "In",
+     "my",
+     "opinion",
+     "practice",
+     "is",
+     "more",
+     "important",
+     "than",
+     "memorising"
+    ],
+    "display": "In my opinion, practice is more important than memorising."
+   },
+   {
+    "k": "subst",
+    "tpl": "In my opinion ___.",
+    "slot": "idea",
+    "bank": [
+     "practice is more important than memorising",
+     "this project is good",
+     "speaking practice is very important",
+     "confidence requires time",
+     "practice helps people improve faster",
+     "speaking every day is very helpful"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "In my opinion, practice is more important than memorising.",
+    "head": "In my opinion + idea"
+   },
+   {
+    "k": "patterns",
+    "head": "My opinion is that + idea",
+    "desc": "",
+    "examples": [
+     "My opinion is that confidence requires time."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "My",
+     "opinion",
+     "is",
+     "that",
+     "confidence",
+     "requires",
+     "time"
+    ],
+    "display": "My opinion is that confidence requires time."
+   },
+   {
+    "k": "subst",
+    "tpl": "My opinion is that ___.",
+    "slot": "idea",
+    "bank": [
+     "confidence requires time",
+     "this project is good",
+     "speaking practice is very important",
+     "practice is more important than memorising",
+     "practice helps people improve faster",
+     "speaking every day is very helpful"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "My opinion is that confidence requires time.",
+    "head": "My opinion is that + idea"
+   },
+   {
+    "k": "patterns",
+    "head": "I believe + idea",
+    "desc": "",
+    "examples": [
+     "I believe practice helps people improve faster."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "believe",
+     "practice",
+     "helps",
+     "people",
+     "improve",
+     "faster"
+    ],
+    "display": "I believe practice helps people improve faster."
+   },
+   {
+    "k": "subst",
+    "tpl": "I believe ___.",
+    "slot": "idea",
+    "bank": [
+     "practice helps people improve faster",
+     "this project is good",
+     "speaking practice is very important",
+     "practice is more important than memorising",
+     "confidence requires time",
+     "speaking every day is very helpful"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I believe practice helps people improve faster.",
+    "head": "I believe + idea"
+   },
+   {
+    "k": "patterns",
+    "head": "I feel that + idea",
+    "desc": "",
+    "examples": [
+     "I feel that speaking every day is very helpful."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "feel",
+     "that",
+     "speaking",
+     "every",
+     "day",
+     "is",
+     "very",
+     "helpful"
+    ],
+    "display": "I feel that speaking every day is very helpful."
+   },
+   {
+    "k": "subst",
+    "tpl": "I feel that ___.",
+    "slot": "idea",
+    "bank": [
+     "speaking every day is very helpful",
+     "this project is good",
+     "speaking practice is very important",
+     "practice is more important than memorising",
+     "confidence requires time",
+     "practice helps people improve faster"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I feel that speaking every day is very helpful.",
+    "head": "I feel that + idea"
+   },
+   {
+    "k": "speak",
+    "model": "I think speaking practice is very important.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "I believe confidence can be built step by step.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "I feel that speaking every day is very helpful.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "In my opinion, practice is more important than memorising."
+ },
+ {
+  "day": 15,
+  "title": "How to Give an Explanation in English",
+  "tagline": "Explain Your Ideas Clearly",
+  "video": "jh34Xiblnzg",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Giving a simple explanation",
+   "Extending an opinion with a reason",
+   "Using “The reason is…”",
+   "Using “This is because…”",
+   "Using “because” to explain why",
+   "Using “Now let me explain” to introduce an explanation",
+   "Combining opinion + reason",
+   "Making short opinions longer and clearer",
+   "Helping listeners understand why you have a certain opinion",
+   "Building more complete answers for daily life and workplace communication"
+  ],
+  "outcome": "In my opinion, speaking practice is important because it helps people become more confident.",
+  "items": [
+   {
+    "head": "Opinion + reason",
+    "desc": "",
+    "examples": [
+     "I think speaking practice is very important. The reason is it helps people build confidence."
+    ],
+    "words": []
+   },
+   {
+    "head": "The reason is + reason",
+    "desc": "",
+    "examples": [
+     "I think this class is useful. The reason is it is easy to follow."
+    ],
+    "words": []
+   },
+   {
+    "head": "This is because + reason",
+    "desc": "",
+    "examples": [
+     "I think online learning is convenient. This is because it is flexible and saves time."
+    ],
+    "words": []
+   },
+   {
+    "head": "Because + reason",
+    "desc": "",
+    "examples": [
+     "In my opinion, speaking practice is important because it helps people become more confident."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Opinion + reason",
+    "desc": "",
+    "examples": [
+     "I think speaking practice is very important. The reason is it helps people build confidence."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I think speaking practice is very important. The reason is it helps people build confidence.",
+    "head": "Opinion + reason"
+   },
+   {
+    "k": "patterns",
+    "head": "The reason is + reason",
+    "desc": "",
+    "examples": [
+     "I think this class is useful. The reason is it is easy to follow."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I think this class is useful. The reason is it is easy to follow.",
+    "head": "The reason is + reason"
+   },
+   {
+    "k": "patterns",
+    "head": "This is because + reason",
+    "desc": "",
+    "examples": [
+     "I think online learning is convenient. This is because it is flexible and saves time."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I think online learning is convenient. This is because it is flexible and saves time.",
+    "head": "This is because + reason"
+   },
+   {
+    "k": "patterns",
+    "head": "Because + reason",
+    "desc": "",
+    "examples": [
+     "In my opinion, speaking practice is important because it helps people become more confident."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "In my opinion, speaking practice is important because it helps people become more confident.",
+    "head": "Because + reason"
+   },
+   {
+    "k": "speak",
+    "model": "I think online learning is convenient. This is because it is flexible and saves time.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "I believe daily practice is important. The reason is it helps people improve step by step.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "In my opinion, speaking practice is important because it helps people become more confident."
+ },
+ {
+  "day": 16,
+  "title": "Give Examples After Your Opinion & Reason",
+  "tagline": "Make Your Ideas Clearer",
+  "video": "MfZwRM5Gx3o",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Giving an example after a reason",
+   "Using “One example is…”",
+   "Using “For example…”",
+   "Making general ideas more specific",
+   "Helping the listener understand your reason better",
+   "Combining an opinion + reason + example",
+   "Making answers clearer and more complete",
+   "Extending short responses into longer answers",
+   "Using examples related to work, English learning, and online learning",
+   "Revising and practising previously learned speaking patterns"
+  ],
+  "outcome": "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English.",
+  "items": [
+   {
+    "head": "Opinion + reason + example",
+    "desc": "",
+    "examples": [
+     "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English."
+    ],
+    "words": []
+   },
+   {
+    "head": "One example is + example",
+    "desc": "",
+    "examples": [
+     "One example is I need to speak to customers in English."
+    ],
+    "words": []
+   },
+   {
+    "head": "For example + example",
+    "desc": "",
+    "examples": [
+     "For example, I can join classes at home after work."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Opinion + reason + example",
+    "desc": "",
+    "examples": [
+     "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English.",
+    "head": "Opinion + reason + example"
+   },
+   {
+    "k": "patterns",
+    "head": "One example is + example",
+    "desc": "",
+    "examples": [
+     "One example is I need to speak to customers in English."
+    ],
+    "words": []
+   },
+   {
+    "k": "subst",
+    "tpl": "One example is ___.",
+    "slot": "example",
+    "bank": [
+     "I need to speak to customers in English",
+     "I can join classes at home after work",
+     "that I can answer questions better when I practise more"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "One example is I need to speak to customers in English.",
+    "head": "One example is + example"
+   },
+   {
+    "k": "patterns",
+    "head": "For example + example",
+    "desc": "",
+    "examples": [
+     "For example, I can join classes at home after work."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "For",
+     "example",
+     "I",
+     "can",
+     "join",
+     "classes",
+     "at",
+     "home",
+     "after",
+     "work"
+    ],
+    "display": "For example, I can join classes at home after work."
+   },
+   {
+    "k": "subst",
+    "tpl": "For example ___.",
+    "slot": "example",
+    "bank": [
+     "I can join classes at home after work",
+     "I need to speak to customers in English",
+     "that I can answer questions better when I practise more"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "For example, I can join classes at home after work.",
+    "head": "For example + example"
+   }
+  ],
+  "finalSpeak": "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English."
+ },
+ {
+  "day": 17,
+  "title": "How to Talk About Your Past in English",
+  "tagline": "Share Past Experiences",
+  "video": "UhpBOmLpl14",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about your past",
+   "Sharing a previous job",
+   "Talking about your studies",
+   "Describing your English ability before",
+   "Talking about your confidence before",
+   "Using “In the past…” for an old situation",
+   "Using “Before…” for an earlier situation",
+   "Answering simple questions about previous experiences",
+   "Comparing how things were before with how they are now",
+   "Building simple and clear sentences about the past",
+   "Practising 2 to 3 past-related topics at a time"
+  ],
+  "outcome": "In the past, I was not confident in English.",
+  "items": [
+   {
+    "head": "In the past + past situation",
+    "desc": "",
+    "examples": [
+     "In the past, I was very shy.",
+     "In the past, I worked in customer service."
+    ],
+    "words": []
+   },
+   {
+    "head": "Before + past situation",
+    "desc": "",
+    "examples": [
+     "Before, I studied marketing.",
+     "Before, I didn’t speak much English in class."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "In the past + past situation",
+    "desc": "",
+    "examples": [
+     "In the past, I was very shy.",
+     "In the past, I worked in customer service."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "In",
+     "the",
+     "past",
+     "I",
+     "was",
+     "very",
+     "shy"
+    ],
+    "display": "In the past, I was very shy."
+   },
+   {
+    "k": "subst",
+    "tpl": "In the past ___.",
+    "slot": "past situation",
+    "bank": [
+     "I was very shy",
+     "I worked in customer service",
+     "I studied marketing",
+     "I didn’t speak much English in class",
+     "was very shy and I did not speak much English"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "In the past, I was very shy.",
+    "head": "In the past + past situation"
+   },
+   {
+    "k": "patterns",
+    "head": "Before + past situation",
+    "desc": "",
+    "examples": [
+     "Before, I studied marketing.",
+     "Before, I didn’t speak much English in class."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Before",
+     "I",
+     "studied",
+     "marketing"
+    ],
+    "display": "Before, I studied marketing."
+   },
+   {
+    "k": "subst",
+    "tpl": "Before ___.",
+    "slot": "past situation",
+    "bank": [
+     "I studied marketing",
+     "I was very shy",
+     "I worked in customer service",
+     "I didn’t speak much English in class",
+     "was very shy and I did not speak much English"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "Before, I studied marketing.",
+    "head": "Before + past situation"
+   },
+   {
+    "k": "speak",
+    "model": "In the past, I worked in customer service.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Before, I studied marketing.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Before, I didn’t speak much in class.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "In the past, I was not confident in English."
+ },
+ {
+  "day": 18,
+  "title": "How to Talk about your Present Moment",
+  "tagline": "What You’re Doing Now",
+  "video": "-LIaHyHxCkM",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about your present situation",
+   "Describing how you are now",
+   "Talking about your current English ability",
+   "Talking about your current confidence",
+   "Describing your current habits",
+   "Talking about what you are improving recently",
+   "Using “Now…” for a current situation",
+   "Using “These days…” for something happening recently or during this period",
+   "Answering simple questions about your current life",
+   "Comparing your current situation with how you were before",
+   "Building clear and simple sentences about the present",
+   "Encouraging learners to combine previously learned speaking patterns"
+  ],
+  "outcome": "These days, I’m trying to speak in full sentences.",
+  "items": [
+   {
+    "head": "Now + present situation",
+    "desc": "",
+    "examples": [
+     "Now, I feel more confident.",
+     "Now, I speak more English in class."
+    ],
+    "words": []
+   },
+   {
+    "head": "These days + present situation",
+    "desc": "",
+    "examples": [
+     "These days, I’m practising English every day.",
+     "These days, I use English more at work."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Now + present situation",
+    "desc": "",
+    "examples": [
+     "Now, I feel more confident.",
+     "Now, I speak more English in class."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Now",
+     "I",
+     "feel",
+     "more",
+     "confident"
+    ],
+    "display": "Now, I feel more confident."
+   },
+   {
+    "k": "subst",
+    "tpl": "Now ___.",
+    "slot": "present situation",
+    "bank": [
+     "I feel more confident",
+     "I speak more English in class",
+     "I’m practising English every day",
+     "I use English more at work",
+     "try to use simple English every day"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "Now, I feel more confident.",
+    "head": "Now + present situation"
+   },
+   {
+    "k": "patterns",
+    "head": "These days + present situation",
+    "desc": "",
+    "examples": [
+     "These days, I’m practising English every day.",
+     "These days, I use English more at work."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "These",
+     "days",
+     "I’m",
+     "practising",
+     "English",
+     "every",
+     "day"
+    ],
+    "display": "These days, I’m practising English every day."
+   },
+   {
+    "k": "subst",
+    "tpl": "These days ___.",
+    "slot": "present situation",
+    "bank": [
+     "I’m practising English every day",
+     "I feel more confident",
+     "I speak more English in class",
+     "I use English more at work",
+     "try to use simple English every day"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "These days, I’m practising English every day.",
+    "head": "These days + present situation"
+   },
+   {
+    "k": "speak",
+    "model": "Now, I feel more confident.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Now, I understand more English.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "These days, I’m practising English every day.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "These days, I’m trying to speak in full sentences."
+ },
+ {
+  "day": 19,
+  "title": "How to Talk About Your Future in English",
+  "tagline": "Share Your Future Plans",
+  "video": "VbXctDC8KHk",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Talking about your future",
+   "Sharing your future goals",
+   "Talking about things you want to improve",
+   "Talking about things you want to achieve",
+   "Using “In the future…” for future goals",
+   "Using “I will…” for future actions or plans",
+   "Using “I want to…” for future desires or targets",
+   "Answering simple questions about future plans",
+   "Talking about future English-learning goals",
+   "Talking about future workplace goals",
+   "Building simple and clear sentences about the future",
+   "Connecting past, present, and future speaking skills from the previous lessons"
+  ],
+  "outcome": "I want to become more confident when I give a presentation.",
+  "items": [
+   {
+    "head": "In the future + future goal",
+    "desc": "",
+    "examples": [
+     "In the future, I want to speak English more confidently.",
+     "In the future, I want to use English better at work."
+    ],
+    "words": []
+   },
+   {
+    "head": "I will + action",
+    "desc": "",
+    "examples": [
+     "I will practise every day.",
+     "I will speak more in class."
+    ],
+    "words": []
+   },
+   {
+    "head": "I want to + goal",
+    "desc": "",
+    "examples": [
+     "I want to improve my speaking.",
+     "I want to become more confident."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "In the future + future goal",
+    "desc": "",
+    "examples": [
+     "In the future, I want to speak English more confidently.",
+     "In the future, I want to use English better at work."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "In",
+     "the",
+     "future",
+     "I",
+     "want",
+     "to",
+     "speak",
+     "English",
+     "more",
+     "confidently"
+    ],
+    "display": "In the future, I want to speak English more confidently."
+   },
+   {
+    "k": "subst",
+    "tpl": "In the future ___.",
+    "slot": "future goal",
+    "bank": [
+     "I want to speak English more confidently",
+     "I want to use English better at work",
+     "speak more confidently"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "In the future, I want to speak English more confidently.",
+    "head": "In the future + future goal"
+   },
+   {
+    "k": "patterns",
+    "head": "I will + action",
+    "desc": "",
+    "examples": [
+     "I will practise every day.",
+     "I will speak more in class."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "will",
+     "practise",
+     "every",
+     "day"
+    ],
+    "display": "I will practise every day."
+   },
+   {
+    "k": "subst",
+    "tpl": "I will ___.",
+    "slot": "action",
+    "bank": [
+     "practise every day",
+     "speak more in class",
+     "join a speaking group",
+     "record myself speaking",
+     "read out loud"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I will practise every day.",
+    "head": "I will + action"
+   },
+   {
+    "k": "patterns",
+    "head": "I want to + goal",
+    "desc": "",
+    "examples": [
+     "I want to improve my speaking.",
+     "I want to become more confident."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "want",
+     "to",
+     "improve",
+     "my",
+     "speaking"
+    ],
+    "display": "I want to improve my speaking."
+   },
+   {
+    "k": "subst",
+    "tpl": "I want to ___.",
+    "slot": "goal",
+    "bank": [
+     "improve my speaking",
+     "become more confident",
+     "pass my interview",
+     "speak with customers",
+     "get a better job"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I want to improve my speaking.",
+    "head": "I want to + goal"
+   },
+   {
+    "k": "speak",
+    "model": "In the future, I want to speak English more confidently.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "I will practise English every day.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "I want to become more confident when I give a presentation."
+ },
+ {
+  "day": 20,
+  "title": "Review Day! Recap What You Learned from DAY 14–19",
+  "tagline": "",
+  "video": "HJ87CKAUdkg",
+  "review": true,
+  "formula": "",
+  "covers": [
+   "Reviewing the speaking skills from the previous lessons",
+   "Giving an opinion",
+   "Explaining a reason",
+   "Giving an example",
+   "Talking about your past",
+   "Talking about your present",
+   "Talking about your future",
+   "Talking about a future action or plan",
+   "Combining different speaking patterns into one complete response",
+   "Moving from one short sentence to a longer explanation",
+   "Making spoken English sound clearer and more complete",
+   "Using a structured framework for daily life, workplace communication, and interviews"
+  ],
+  "outcome": "My opinion is that English practice is very important. The reason is it helps me improve slowly. One example is that I can answer better in class. In the past, I was not confident, but now I can speak more. In the future, I want to speak more fluently, so I will practise more every day.",
+  "items": [
+   {
+    "head": "My opinion is that + opinion",
+    "desc": "",
+    "examples": [
+     "My opinion is that speaking practice is very important."
+    ],
+    "words": []
+   },
+   {
+    "head": "The reason is + reason",
+    "desc": "",
+    "examples": [
+     "The reason is it helps me build confidence."
+    ],
+    "words": []
+   },
+   {
+    "head": "One example is + example",
+    "desc": "",
+    "examples": [
+     "One example is that I can answer questions better when I practise more."
+    ],
+    "words": []
+   },
+   {
+    "head": "In the past, I + past situation",
+    "desc": "",
+    "examples": [
+     "In the past, I was very shy and I did not speak much English."
+    ],
+    "words": []
+   },
+   {
+    "head": "But now, I + present situation",
+    "desc": "",
+    "examples": [
+     "But now, I try to use simple English every day."
+    ],
+    "words": []
+   },
+   {
+    "head": "In the future, I want to + future goal",
+    "desc": "",
+    "examples": [
+     "In the future, I want to speak more confidently."
+    ],
+    "words": []
+   },
+   {
+    "head": "I will + future action",
+    "desc": "",
+    "examples": [
+     "I will keep practising."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "My opinion is that + opinion",
+    "desc": "",
+    "examples": [
+     "My opinion is that speaking practice is very important."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "My",
+     "opinion",
+     "is",
+     "that",
+     "speaking",
+     "practice",
+     "is",
+     "very",
+     "important"
+    ],
+    "display": "My opinion is that speaking practice is very important."
+   },
+   {
+    "k": "subst",
+    "tpl": "My opinion is that ___.",
+    "slot": "opinion",
+    "bank": [
+     "speaking practice is very important",
+     "this class is useful",
+     "online learning is convenient"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "My opinion is that speaking practice is very important.",
+    "head": "My opinion is that + opinion"
+   },
+   {
+    "k": "patterns",
+    "head": "The reason is + reason",
+    "desc": "",
+    "examples": [
+     "The reason is it helps me build confidence."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "The",
+     "reason",
+     "is",
+     "it",
+     "helps",
+     "me",
+     "build",
+     "confidence"
+    ],
+    "display": "The reason is it helps me build confidence."
+   },
+   {
+    "k": "subst",
+    "tpl": "The reason is ___.",
+    "slot": "reason",
+    "bank": [
+     "it helps me build confidence",
+     "I need it for work",
+     "I want a better job",
+     "it helps me every day"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "The reason is it helps me build confidence.",
+    "head": "The reason is + reason"
+   },
+   {
+    "k": "patterns",
+    "head": "One example is + example",
+    "desc": "",
+    "examples": [
+     "One example is that I can answer questions better when I practise more."
+    ],
+    "words": []
+   },
+   {
+    "k": "subst",
+    "tpl": "One example is ___.",
+    "slot": "example",
+    "bank": [
+     "that I can answer questions better when I practise more",
+     "I need to speak to customers in English",
+     "I can join classes at home after work"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "One example is that I can answer questions better when I practise more.",
+    "head": "One example is + example"
+   },
+   {
+    "k": "patterns",
+    "head": "In the past, I + past situation",
+    "desc": "",
+    "examples": [
+     "In the past, I was very shy and I did not speak much English."
+    ],
+    "words": []
+   },
+   {
+    "k": "subst",
+    "tpl": "In the past, I ___.",
+    "slot": "past situation",
+    "bank": [
+     "was very shy and I did not speak much English",
+     "I was very shy",
+     "I worked in customer service",
+     "I studied marketing",
+     "I didn’t speak much English in class"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "In the past, I was very shy and I did not speak much English.",
+    "head": "In the past, I + past situation"
+   },
+   {
+    "k": "patterns",
+    "head": "But now, I + present situation",
+    "desc": "",
+    "examples": [
+     "But now, I try to use simple English every day."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "But",
+     "now",
+     "I",
+     "try",
+     "to",
+     "use",
+     "simple",
+     "English",
+     "every",
+     "day"
+    ],
+    "display": "But now, I try to use simple English every day."
+   },
+   {
+    "k": "subst",
+    "tpl": "But now, I ___.",
+    "slot": "present situation",
+    "bank": [
+     "try to use simple English every day",
+     "I feel more confident",
+     "I speak more English in class",
+     "I’m practising English every day",
+     "I use English more at work"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "But now, I try to use simple English every day.",
+    "head": "But now, I + present situation"
+   },
+   {
+    "k": "patterns",
+    "head": "In the future, I want to + future goal",
+    "desc": "",
+    "examples": [
+     "In the future, I want to speak more confidently."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "In",
+     "the",
+     "future",
+     "I",
+     "want",
+     "to",
+     "speak",
+     "more",
+     "confidently"
+    ],
+    "display": "In the future, I want to speak more confidently."
+   },
+   {
+    "k": "subst",
+    "tpl": "In the future, I want to ___.",
+    "slot": "future goal",
+    "bank": [
+     "speak more confidently",
+     "I want to speak English more confidently",
+     "I want to use English better at work"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "In the future, I want to speak more confidently.",
+    "head": "In the future, I want to + future goal"
+   },
+   {
+    "k": "patterns",
+    "head": "I will + future action",
+    "desc": "",
+    "examples": [
+     "I will keep practising."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "I",
+     "will",
+     "keep",
+     "practising"
+    ],
+    "display": "I will keep practising."
+   },
+   {
+    "k": "subst",
+    "tpl": "I will ___.",
+    "slot": "future action",
+    "bank": [
+     "keep practising",
+     "join more classes",
+     "speak English every day"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I will keep practising.",
+    "head": "I will + future action"
+   }
+  ],
+  "finalSpeak": "My opinion is that English practice is very important. The reason is it helps me improve slowly. One example is that I can answer better in class. In the past, I was not confident, but now I can speak more. In the future, I want to speak more fluently, so I will practise more every day."
+ },
+ {
+  "day": 21,
+  "title": "How to Start Speaking in a Presentation",
+  "tagline": "Simple English Presentation Tips",
+  "video": "-AnK7QcQ4yM",
+  "review": false,
+  "formula": "Greeting + Topic + Main Points",
+  "covers": [
+   "How to start a presentation",
+   "Greeting the audience",
+   "Introducing the presentation topic",
+   "Telling the audience the main points",
+   "Using simple presentation sentence starters",
+   "Using First, Then, Lastly to organise ideas",
+   "Avoiding nervousness at the beginning of a presentation",
+   "Making the opening sound more organised and professional",
+   "Helping the audience understand what the presentation will cover",
+   "Building confidence without using difficult English",
+   "Practising presentation openings using simple topics such as online learning, English learning, healthy lifestyle, time management, and dream jobs"
+  ],
+  "outcome": "Good morning, everyone. Today, I’m going to talk about online learning. First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion.",
+  "items": [
+   {
+    "head": "Greeting",
+    "desc": "",
+    "examples": [
+     "Good morning, everyone.",
+     "Hello, everyone."
+    ],
+    "words": []
+   },
+   {
+    "head": "Introduce your topic",
+    "desc": "",
+    "examples": [
+     "Today, I’m going to talk about online learning.",
+     "The topic of my presentation today is how to communicate effectively at work."
+    ],
+    "words": []
+   },
+   {
+    "head": "Introduce your main points",
+    "desc": "",
+    "examples": [
+     "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Greeting",
+    "desc": "",
+    "examples": [
+     "Good morning, everyone.",
+     "Hello, everyone."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Good",
+     "morning",
+     "everyone"
+    ],
+    "display": "Good morning, everyone."
+   },
+   {
+    "k": "speak",
+    "model": "Good morning, everyone.",
+    "head": "Greeting"
+   },
+   {
+    "k": "patterns",
+    "head": "Introduce your topic",
+    "desc": "",
+    "examples": [
+     "Today, I’m going to talk about online learning.",
+     "The topic of my presentation today is how to communicate effectively at work."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Today",
+     "I’m",
+     "going",
+     "to",
+     "talk",
+     "about",
+     "online",
+     "learning"
+    ],
+    "display": "Today, I’m going to talk about online learning."
+   },
+   {
+    "k": "speak",
+    "model": "Today, I’m going to talk about online learning.",
+    "head": "Introduce your topic"
+   },
+   {
+    "k": "patterns",
+    "head": "Introduce your main points",
+    "desc": "",
+    "examples": [
+     "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion.",
+    "head": "Introduce your main points"
+   }
+  ],
+  "finalSpeak": "Good morning, everyone. Today, I’m going to talk about online learning. First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion."
+ },
+ {
+  "day": 22,
+  "title": "How to Organize Your Main Points for a Presentation",
+  "tagline": "Speak Clearly",
+  "video": "DG3dNilCQM8",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Organising the main points of a presentation",
+   "Keeping a presentation to around 3 to 4 main points",
+   "Using linking words to create a clearer flow",
+   "Using “First of all” to introduce the first point",
+   "Using “First and foremost” for a stronger or slightly more formal first point",
+   "Using “Next” to move to another point",
+   "Using “Besides that” to add related information",
+   "Using “Another point is...” to introduce an additional point",
+   "Using “Lastly” and “Finally” for the final point",
+   "Moving beyond basic first, second, third",
+   "Making a presentation sound smoother and more organised",
+   "Helping the audience follow the presentation more easily"
+  ],
+  "outcome": "First of all, I would like to talk about the importance of English.",
+  "items": [
+   {
+    "head": "First of all / First and foremost",
+    "desc": "Used to introduce the first main point.",
+    "examples": [
+     "First of all, I would like to explain why speaking practice is important.",
+     "First and foremost, I would like to talk about the main problem."
+    ],
+    "words": []
+   },
+   {
+    "head": "Next / Besides that / Another point is...",
+    "desc": "Used to introduce the next or additional point.",
+    "examples": [
+     "Next, I will talk about the common speaking problems learners face.",
+     "Besides that, I will share some simple ways to improve.",
+     "Another point is the importance of regular practice."
+    ],
+    "words": []
+   },
+   {
+    "head": "Lastly / Finally",
+    "desc": "Used to introduce the final point.",
+    "examples": [
+     "Lastly, I will share my conclusion.",
+     "Finally, I will talk about what we can do next."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "First of all / First and foremost",
+    "desc": "Used to introduce the first main point.",
+    "examples": [
+     "First of all, I would like to explain why speaking practice is important.",
+     "First and foremost, I would like to talk about the main problem."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "First of all, I would like to explain why speaking practice is important.",
+    "head": "First of all / First and foremost"
+   },
+   {
+    "k": "patterns",
+    "head": "Next / Besides that / Another point is...",
+    "desc": "Used to introduce the next or additional point.",
+    "examples": [
+     "Next, I will talk about the common speaking problems learners face.",
+     "Besides that, I will share some simple ways to improve.",
+     "Another point is the importance of regular practice."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Next, I will talk about the common speaking problems learners face.",
+    "head": "Next / Besides that / Another point is..."
+   },
+   {
+    "k": "patterns",
+    "head": "Lastly / Finally",
+    "desc": "Used to introduce the final point.",
+    "examples": [
+     "Lastly, I will share my conclusion.",
+     "Finally, I will talk about what we can do next."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Lastly",
+     "I",
+     "will",
+     "share",
+     "my",
+     "conclusion"
+    ],
+    "display": "Lastly, I will share my conclusion."
+   },
+   {
+    "k": "speak",
+    "model": "Lastly, I will share my conclusion.",
+    "head": "Lastly / Finally"
+   },
+   {
+    "k": "speak",
+    "model": "Next, I will explain the common problems learners face.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Besides that, I will share some ways to improve.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Lastly, I will give my conclusion.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "First of all, I would like to talk about the importance of English."
+ },
+ {
+  "day": 23,
+  "title": "How to Explain Your Ideas Clearly in a Presentation",
+  "tagline": "Speak with Clarity",
+  "video": "fSQcAWYNFqg",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Explaining a main point more clearly",
+   "Avoiding short or incomplete explanations",
+   "Using “This means…” to simplify an idea",
+   "Using “In other words…” to rephrase an idea",
+   "Using “Let me explain…” to introduce more detail",
+   "Using “What I mean is…” to clarify a point directly",
+   "Elaborating after giving a presentation point",
+   "Helping the audience understand the speaker’s meaning",
+   "Rephrasing the same idea in different ways",
+   "Making presentations sound clearer, smoother, and longer",
+   "Reducing confusion and misunderstanding",
+   "Building on the previous presentation skills of starting a presentation and organising main points"
+  ],
+  "outcome": "Speaking practice is very important. In other words, learners should not only study English but also practise speaking it.",
+  "items": [
+   {
+    "head": "This means + explanation",
+    "desc": "Used to explain the meaning of an idea in a simpler way.",
+    "examples": [
+     "Speaking practice is very important. This means learners need to use English more often and not only study it."
+    ],
+    "words": []
+   },
+   {
+    "head": "In other words + rephrased idea",
+    "desc": "Used to say the same idea again in a different and easier way.",
+    "examples": [
+     "Online learning is convenient. In other words, learners can study from home and save more time."
+    ],
+    "words": []
+   },
+   {
+    "head": "Let me explain + fuller explanation",
+    "desc": "Used when you want to introduce a longer or more detailed explanation.",
+    "examples": [
+     "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve."
+    ],
+    "words": []
+   },
+   {
+    "head": "What I mean is + clarification",
+    "desc": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
+    "examples": [
+     "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "This means + explanation",
+    "desc": "Used to explain the meaning of an idea in a simpler way.",
+    "examples": [
+     "Speaking practice is very important. This means learners need to use English more often and not only study it."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is very important. This means learners need to use English more often and not only study it.",
+    "head": "This means + explanation"
+   },
+   {
+    "k": "patterns",
+    "head": "In other words + rephrased idea",
+    "desc": "Used to say the same idea again in a different and easier way.",
+    "examples": [
+     "Online learning is convenient. In other words, learners can study from home and save more time."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Online learning is convenient. In other words, learners can study from home and save more time.",
+    "head": "In other words + rephrased idea"
+   },
+   {
+    "k": "patterns",
+    "head": "Let me explain + fuller explanation",
+    "desc": "Used when you want to introduce a longer or more detailed explanation.",
+    "examples": [
+     "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve.",
+    "head": "Let me explain + fuller explanation"
+   },
+   {
+    "k": "patterns",
+    "head": "What I mean is + clarification",
+    "desc": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
+    "examples": [
+     "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English.",
+    "head": "What I mean is + clarification"
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is very important. This means learners need to use English more often.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is very important. Let me explain. When learners speak more, they gradually become more confident.",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is very important. What I mean is learners need to actually use English, not only memorise words.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "Speaking practice is very important. In other words, learners should not only study English but also practise speaking it."
+ },
+ {
+  "day": 24,
+  "title": "How to Stop Giving Short Answers",
+  "tagline": "Speak More & Express Yourself Better",
+  "video": "7tSRI9imG1A",
+  "review": false,
+  "formula": "Yes / No + because + one example",
+  "covers": [
+   "Avoiding one-word or very short answers",
+   "Extending Yes/No answers",
+   "Giving a clear reason using “because”",
+   "Adding a specific example",
+   "Using “One example is...”",
+   "Using “For example...”",
+   "Helping the listener understand your answer better",
+   "Making answers longer, clearer, and more natural",
+   "Using the structure in daily conversations",
+   "Using the structure in workplace communication",
+   "Using the structure for questions such as “Do you...?” and “Can you...?”",
+   "Moving from a direct answer to a more complete explanation"
+  ],
+  "outcome": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near.",
+  "items": [
+   {
+    "head": "Yes / No + because + one example",
+    "desc": "",
+    "examples": [
+     "Yes, I do because it is flexible. One example is I can join class from home after work."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Yes / No + because + one example",
+    "desc": "",
+    "examples": [
+     "Yes, I do because it is flexible. One example is I can join class from home after work."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Yes, I do because it is flexible. One example is I can join class from home after work.",
+    "head": "Yes / No + because + one example"
+   },
+   {
+    "k": "speak",
+    "model": "Yes, I do because it is flexible. One example is I can join class from home after work.",
+    "head": "Yes / No + because + one example"
+   }
+  ],
+  "finalSpeak": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near."
+ },
+ {
+  "day": 25,
+  "title": "How to Build Simple Speaking Paragraphs",
+  "tagline": "Organize Your Ideas Clearly",
+  "video": "J2xOj-8S1gI",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Building a simple speaking paragraph",
+   "Moving beyond one-sentence answers",
+   "Using the PREE formula",
+   "Giving a clear Point",
+   "Adding a Reason",
+   "Supporting the idea with an Example",
+   "Finishing with a simple Ending",
+   "Extending short answers into complete responses",
+   "Making ideas clearer and easier to understand",
+   "Speaking in a more organised way",
+   "Using the formula for questions, opinions, classroom speaking, and presentations",
+   "Building more confidence when speaking"
+  ],
+  "outcome": "Speaking practice is important because learners need to use English more often. For example, they can answer simple questions in class or speak in daily conversations. So speaking practice can help learners become more confident.",
+  "items": [
+   {
+    "head": "P = Point",
+    "desc": "Say your main idea.",
+    "examples": [
+     "Speaking practice is important."
+    ],
+    "words": []
+   },
+   {
+    "head": "R = Reason",
+    "desc": "Explain why.",
+    "examples": [
+     "Speaking practice is important because learners need to use English more often."
+    ],
+    "words": []
+   },
+   {
+    "head": "E = Example",
+    "desc": "Give one example to make the idea clearer.",
+    "examples": [
+     "For example, they can answer simple questions in class or speak in daily conversations."
+    ],
+    "words": []
+   },
+   {
+    "head": "E = Ending",
+    "desc": "Give a simple closing sentence.",
+    "examples": [
+     "So speaking practice can help learners become more confident."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "P = Point",
+    "desc": "Say your main idea.",
+    "examples": [
+     "Speaking practice is important."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "Speaking",
+     "practice",
+     "is",
+     "important"
+    ],
+    "display": "Speaking practice is important."
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is important.",
+    "head": "P = Point"
+   },
+   {
+    "k": "patterns",
+    "head": "R = Reason",
+    "desc": "Explain why.",
+    "examples": [
+     "Speaking practice is important because learners need to use English more often."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Speaking practice is important because learners need to use English more often.",
+    "head": "R = Reason"
+   },
+   {
+    "k": "patterns",
+    "head": "E = Example",
+    "desc": "Give one example to make the idea clearer.",
+    "examples": [
+     "For example, they can answer simple questions in class or speak in daily conversations."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "For example, they can answer simple questions in class or speak in daily conversations.",
+    "head": "E = Example"
+   },
+   {
+    "k": "patterns",
+    "head": "E = Ending",
+    "desc": "Give a simple closing sentence.",
+    "examples": [
+     "So speaking practice can help learners become more confident."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "words": [
+     "So",
+     "speaking",
+     "practice",
+     "can",
+     "help",
+     "learners",
+     "become",
+     "more",
+     "confident"
+    ],
+    "display": "So speaking practice can help learners become more confident."
+   },
+   {
+    "k": "speak",
+    "model": "So speaking practice can help learners become more confident.",
+    "head": "E = Ending"
+   }
+  ],
+  "finalSpeak": "Speaking practice is important because learners need to use English more often. For example, they can answer simple questions in class or speak in daily conversations. So speaking practice can help learners become more confident."
+ },
+ {
+  "day": 26,
+  "title": "How to Structure Your Job Interview Answers Using the STAR Formula",
+  "tagline": "",
+  "video": "H-f80Y8zY_c",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Structuring answers for job interviews",
+   "Using the STAR method",
+   "Explaining the Situation",
+   "Describing your Task or responsibility",
+   "Explaining the Action you took",
+   "Sharing the final Result",
+   "Answering questions about past work experiences",
+   "Organising ideas before speaking",
+   "Avoiding messy or rambling answers",
+   "Including important details in the correct order",
+   "Making interview answers sound clearer and more professional",
+   "Building confidence by knowing what to say and when to say it"
+  ],
+  "outcome": "In my previous job, a customer was unhappy because an order was delayed. My task was to solve the issue quickly. First, I listened to the customer and checked the order status. Then, I contacted the delivery team and updated the customer. In the end, the customer accepted the solution and the problem was solved successfully.",
+  "items": [
+   {
+    "head": "S = Situation",
+    "desc": "Explain what happened and give the background.",
+    "examples": [
+     "In my previous job, one customer was unhappy because the order was delayed."
+    ],
+    "words": []
+   },
+   {
+    "head": "T = Task",
+    "desc": "Explain what you needed to do or what your responsibility was.",
+    "examples": [
+     "My task was to handle the customer and solve the issue quickly."
+    ],
+    "words": []
+   },
+   {
+    "head": "A = Action",
+    "desc": "Explain what you actually did to handle the situation.",
+    "examples": [
+     "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team."
+    ],
+    "words": []
+   },
+   {
+    "head": "R = Result",
+    "desc": "Explain what happened in the end.",
+    "examples": [
+     "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "S = Situation",
+    "desc": "Explain what happened and give the background.",
+    "examples": [
+     "In my previous job, one customer was unhappy because the order was delayed."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "In my previous job, one customer was unhappy because the order was delayed.",
+    "head": "S = Situation"
+   },
+   {
+    "k": "patterns",
+    "head": "T = Task",
+    "desc": "Explain what you needed to do or what your responsibility was.",
+    "examples": [
+     "My task was to handle the customer and solve the issue quickly."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "My task was to handle the customer and solve the issue quickly.",
+    "head": "T = Task"
+   },
+   {
+    "k": "patterns",
+    "head": "A = Action",
+    "desc": "Explain what you actually did to handle the situation.",
+    "examples": [
+     "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team.",
+    "head": "A = Action"
+   },
+   {
+    "k": "patterns",
+    "head": "R = Result",
+    "desc": "Explain what happened in the end.",
+    "examples": [
+     "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly."
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly.",
+    "head": "R = Result"
+   }
+  ],
+  "finalSpeak": "In my previous job, a customer was unhappy because an order was delayed. My task was to solve the issue quickly. First, I listened to the customer and checked the order status. Then, I contacted the delivery team and updated the customer. In the end, the customer accepted the solution and the problem was solved successfully."
+ },
+ {
+  "day": 27,
+  "title": "How to Describe People, Things & Ideas Using Simple Adjectives",
+  "tagline": "",
+  "video": "iD0EFJw5eek",
+  "review": false,
+  "formula": "Person / Thing / Idea + is + adjective",
+  "covers": [
+   "Understanding what an adjective is",
+   "Describing people",
+   "Describing things and objects",
+   "Describing ideas",
+   "Learning common adjectives for everyday communication",
+   "Using Person / Thing / Idea + is + adjective",
+   "Using adjectives such as friendly, helpful, confident, useful, simple, interesting, important, and practical",
+   "Combining two adjectives using “and”",
+   "Making simple sentences more descriptive",
+   "Using adjectives in daily life, workplace communication, discussions, and presentations",
+   "Building vocabulary to express descriptions and opinions more clearly"
+  ],
+  "outcome": "Speaking practice is very important for beginners.",
+  "items": [
+   {
+    "head": "Adjectives to describe people",
+    "desc": "",
+    "examples": [],
+    "words": [
+     "friendly",
+     "kind",
+     "helpful",
+     "hardworking",
+     "quiet",
+     "confident"
+    ]
+   },
+   {
+    "head": "Adjectives to describe things",
+    "desc": "",
+    "examples": [],
+    "words": [
+     "useful",
+     "easy",
+     "difficult",
+     "simple",
+     "expensive",
+     "cheap",
+     "beautiful"
+    ]
+   },
+   {
+    "head": "Adjectives to describe ideas",
+    "desc": "",
+    "examples": [],
+    "words": [
+     "good",
+     "bad",
+     "interesting",
+     "important",
+     "practical",
+     "clear"
+    ]
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Adjectives to describe people",
+    "desc": "",
+    "examples": [],
+    "words": [
+     "friendly",
+     "kind",
+     "helpful",
+     "hardworking",
+     "quiet",
+     "confident"
+    ]
+   },
+   {
+    "k": "patterns",
+    "head": "Adjectives to describe things",
+    "desc": "",
+    "examples": [],
+    "words": [
+     "useful",
+     "easy",
+     "difficult",
+     "simple",
+     "expensive",
+     "cheap",
+     "beautiful"
+    ]
+   },
+   {
+    "k": "patterns",
+    "head": "Adjectives to describe ideas",
+    "desc": "",
+    "examples": [],
+    "words": [
+     "good",
+     "bad",
+     "interesting",
+     "important",
+     "practical",
+     "clear"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "My teacher is helpful and kind.",
+    "head": "Person / Thing / Idea + is + adjective"
+   },
+   {
+    "k": "speak",
+    "model": "This book is simple and useful.",
+    "head": "Person / Thing / Idea + is + adjective"
+   },
+   {
+    "k": "speak",
+    "model": "This idea is interesting.",
+    "head": "Person / Thing / Idea + is + adjective"
+   }
+  ],
+  "finalSpeak": "Speaking practice is very important for beginners."
+ },
+ {
+  "day": 28,
+  "title": "How to Ask for & Give Directions in English",
+  "tagline": "Everyday English",
+  "video": "Azz4sJLyQ-0",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Asking for directions",
+   "Giving simple directions",
+   "Starting politely with “Excuse me”",
+   "Using “Can you tell me the way to...?”",
+   "Using “Do you know how to get to...?”",
+   "Using turn left / go left",
+   "Using turn right / go right",
+   "Using go straight ahead / go straight on",
+   "Using It’s on your left / right",
+   "Giving simple step-by-step directions",
+   "Asking for places such as toilets, bus stops, clinics, train stations, and shopping centres",
+   "Practising a short real-life direction conversation"
+  ],
+  "outcome": "Go straight ahead, then turn right. The bus stop is on your left.",
+  "items": [
+   {
+    "head": "Can you tell me the way to + place?",
+    "desc": "",
+    "examples": [
+     "Excuse me, can you tell me the way to the nearest toilet?",
+     "Excuse me, can you tell me the way to the train station?"
+    ],
+    "words": []
+   },
+   {
+    "head": "Do you know how to get to + place?",
+    "desc": "",
+    "examples": [
+     "Excuse me, do you know how to get to the shopping centre?",
+     "Excuse me, do you know how to get to the nearest MRT station?"
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "Can you tell me the way to + place?",
+    "desc": "",
+    "examples": [
+     "Excuse me, can you tell me the way to the nearest toilet?",
+     "Excuse me, can you tell me the way to the train station?"
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Excuse me, can you tell me the way to the nearest toilet?",
+    "head": "Can you tell me the way to + place?"
+   },
+   {
+    "k": "patterns",
+    "head": "Do you know how to get to + place?",
+    "desc": "",
+    "examples": [
+     "Excuse me, do you know how to get to the shopping centre?",
+     "Excuse me, do you know how to get to the nearest MRT station?"
+    ],
+    "words": []
+   },
+   {
+    "k": "speak",
+    "model": "Excuse me, do you know how to get to the shopping centre?",
+    "head": "Do you know how to get to + place?"
+   },
+   {
+    "k": "speak",
+    "model": "Excuse me, can you tell me the way to the bus stop?",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "Go straight ahead, then turn right. The bus stop is on your left."
+ },
+ {
+  "day": 29,
+  "title": "How to Make Appointments in English",
+  "tagline": "Simple Everyday English",
+  "video": "80U-qBcftGM",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Making an appointment in English",
+   "Using “I would like to book an appointment...”",
+   "Using “to see” when talking about a person",
+   "Using “at” when talking about a place",
+   "Understanding the difference between person and place",
+   "Booking appointments with doctors, dentists, lawyers, teachers, and office staff",
+   "Using polite questions such as “Can I...?”",
+   "Using “May I...?” for a polite request",
+   "Using “Is it possible...?” to ask more politely",
+   "Asking about an available day",
+   "Asking about an available time",
+   "Confirming the appointment details"
+  ],
+  "outcome": "I would like to book an appointment to see the doctor, please.",
+  "items": [
+   {
+    "head": "I would like to book an appointment to see + person, please.",
+    "desc": "",
+    "examples": [
+     "I would like to book an appointment to see the doctor, please.",
+     "I would like to book an appointment to see Mr. Lim, please."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I would like to book an appointment to see + person, please.",
+    "desc": "",
+    "examples": [
+     "I would like to book an appointment to see the doctor, please.",
+     "I would like to book an appointment to see Mr. Lim, please."
+    ],
+    "words": []
+   },
+   {
+    "k": "subst",
+    "tpl": "I would like to book an appointment to see ___.",
+    "slot": "person, please.",
+    "bank": [
+     "the doctor, please",
+     "Mr. Lim, please",
+     "the manager, please",
+     "Ms. Tan, please",
+     "my teacher, please"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I would like to book an appointment to see the doctor, please.",
+    "head": "I would like to book an appointment to see + person, please."
+   },
+   {
+    "k": "speak",
+    "model": "Is it possible for me to come on Tuesday?",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "May I know what time is available?",
+    "head": ""
+   },
+   {
+    "k": "speak",
+    "model": "Thank you. I will arrange for Tuesday at 2:00 p.m.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "I would like to book an appointment to see the doctor, please."
+ },
+ {
+  "day": 30,
+  "title": "How to Make a Reservation in English",
+  "tagline": "Book a Table, Room & More",
+  "video": "BOMp_RYWBj8",
+  "review": false,
+  "formula": "",
+  "covers": [
+   "Understanding the difference between appointment and reservation",
+   "Using appointment when meeting a person",
+   "Using reservation when booking a table, room, seat, or place",
+   "Using “I would like to make a reservation, please.”",
+   "Making a restaurant reservation",
+   "Adding the number of people",
+   "Adding the day and time",
+   "Making a hotel or resort booking",
+   "Using “I would like to book a room...”",
+   "Adding the number of nights and date",
+   "Making booking requests sound polite",
+   "Starting with simple English and gradually adding more details"
+  ],
+  "outcome": "I would like to make a reservation for four people this Sunday at 7:00 p.m., please.",
+  "items": [
+   {
+    "head": "I would like to make a reservation for + people / group, please.",
+    "desc": "",
+    "examples": [
+     "I would like to make a reservation for two people, please.",
+     "I would like to make a reservation for my family, please."
+    ],
+    "words": []
+   }
+  ],
+  "steps": [
+   {
+    "k": "patterns",
+    "head": "I would like to make a reservation for + people / group, please.",
+    "desc": "",
+    "examples": [
+     "I would like to make a reservation for two people, please.",
+     "I would like to make a reservation for my family, please."
+    ],
+    "words": []
+   },
+   {
+    "k": "subst",
+    "tpl": "I would like to make a reservation for ___.",
+    "slot": "people / group, please.",
+    "bank": [
+     "two people, please",
+     "my family, please",
+     "four people, please",
+     "our team, please",
+     "just me, please"
+    ]
+   },
+   {
+    "k": "speak",
+    "model": "I would like to make a reservation for two people, please.",
+    "head": "I would like to make a reservation for + people / group, please."
+   },
+   {
+    "k": "speak",
+    "model": "I would like to book a room for two nights on Saturday, 23rd May, please.",
+    "head": ""
+   }
+  ],
+  "finalSpeak": "I would like to make a reservation for four people this Sunday at 7:00 p.m., please."
+ }
+];
+/* DAYS:END */
+</script>
+<script>
+"use strict";
+/* =============================================================================
+   Speaking Bonus — 30 天口说训练
+   每个句型跑「看 → 拼 → 换 → 说」四步，最後录一次完整目标句。
+   DAYS 资料由 tools/build-content.mjs 从 Google Sheet 产生，不要手改。
+============================================================================= */
+
+const store = TouchStore.open("speaking-bonus");
+const rec   = TouchRecord.open("speaking-bonus");
+
+let S = {
+  done:     store.get("done", {}),      // { "1": true }  哪几天完成了
+  recorded: store.get("recorded", {}),  // { "1:3": true } 哪几个录音做过
+  xp:       store.get("xp", 0),
+  profile:  store.get("profile", null), // { name, place, job, goal } — 开始前问的
+  asked:    store.get("asked", false)   // 问过了没（跳过也算问过）
+};
+const save = () => store.patch({ done: S.done, recorded: S.recorded, xp: S.xp,
+                                 profile: S.profile, asked: S.asked });
+
+/* =============================================================================
+   把示范句换成学生自己的资料
+   -----------------------------------------------------------------------------
+   影片教的就是「用固定模板，换掉後面的资料」，所以练习本身也应该是关于他自己的。
+   开始前问四个问题（名字／地方／工作／目标），之後 DAY 1、2、7、19、20 的示范句
+   会自动换成他的答案 —— 那几天正好是自我介绍与目标，印象最深的地方。
+
+   ⚠️ 一定要「长的先换」：DAY 7 有「I am from Penang, Malaysia.」，
+      如果先换掉 Penang 再换 Malaysia，会变成「Johor, Johor」。
+============================================================================= */
+function jobPhrase(raw) {
+  const j = String(raw || "").trim().replace(/^(an?)\s+/i, "");
+  if (!j) return "";
+  return (/^[aeiou]/i.test(j) ? "an " : "a ") + j;
+}
+
+function replacements() {
+  const p = S.profile;
+  if (!p) return [];
+  const r = [];
+  if (p.place) {                                   // 长的先，短的後
+    r.push([/\bPenang,\s*Malaysia\b/gi, p.place], [/\bYong Peng,\s*Malaysia\b/gi, p.place],
+           [/\bPenang\b/gi, p.place], [/\bMalaysia\b/gi, p.place]);
+  }
+  if (p.job) {
+    const j = jobPhrase(p.job);
+    r.push([/\ban admin executive\b/gi, j], [/\ban admin assistant\b/gi, j],
+           [/\ba teacher\b/gi, j], [/\ba doctor\b/gi, j]);
+  }
+  if (p.name) r.push([/\bWesley\b/g, p.name], [/\bSarah\b/g, p.name]);
+  return r;
+}
+
+/* 把一段文字换成学生的资料。没填资料就原样回传。 */
+function me(text) {
+  if (!text) return text;
+  let out = String(text);
+  for (const [re, val] of replacements()) out = out.replace(re, val);
+  return out;
+}
+const isMine = (text) => S.profile && me(text) !== text;
+
+/* slot 名称 → 学生资料的哪个栏位 */
+const SLOT_FIELD = { "name": "name", "place": "place", "place?": "place",
+                     "job": "job", "goal": "goal", "future goal": "goal" };
+
+const $  = (id) => document.getElementById(id);
+const app = () => $("app");
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const norm = (s) => String(s).toLowerCase().replace(/[.,!?;:'"]/g, "").replace(/\s+/g, " ").trim();
+const addXP = (n) => { S.xp += n; save(); const c = $("xp"); if (c) c.textContent = S.xp; };
+
+/* ---------- 顶栏 ---------- */
+function topBar() {
+  return `<div class="top">
+    <span class="logo">TOUCH English</span>
+    <span class="chips">
+      <span class="chip">◆ <b id="xp">${S.xp}</b> XP</span>
+      <span class="chip">✓ <b>${Object.keys(S.done).length}</b>/${DAYS.length}</span>
+    </span>
+  </div>`;
+}
+
+/* ---------- 开始前：问四个问题 ---------- */
+const ASK = [
+  { k: "name",  q: "What should we call you?", cn: "我们怎么称呼你？",     ph: "e.g. Marco" },
+  { k: "place", q: "Where are you from?",      cn: "你来自哪里？",         ph: "e.g. Penang" },
+  { k: "job",   q: "What is your job?",        cn: "你的工作是什么？",     ph: "e.g. admin executive" },
+  { k: "goal",  q: "What do you want to do with your English?", cn: "你想用英文做到什么？", ph: "e.g. speak more confidently at work" }
+];
+
+function renderAsk(isEdit) {
+  const p = S.profile || {};
+  app().innerHTML = `${topBar()}
+    <h1>${isEdit ? "My info" : "Before we start"}</h1>
+    <p class="sub">${isEdit
+      ? "改了之後，练习句会跟着换。<br>Change these any time — your practice sentences follow."
+      : "回答这四题，之後的练习句就会变成关于<b>你自己</b>的。<br>Answer these and your practice sentences will be about <b>you</b>."}</p>
+    <div class="card">
+      ${ASK.map((a) => `<div class="ask">
+        <label for="f_${a.k}">${esc(a.q)} <span>${esc(a.cn)}</span></label>
+        <input id="f_${a.k}" type="text" autocomplete="off" placeholder="${esc(a.ph)}" value="${esc(p[a.k] || "")}">
+      </div>`).join("")}
+      <button class="btn btn-p" id="okb">${isEdit ? "Save" : "Start"}</button>
+      <button class="btn btn-g" id="skipb">${isEdit ? "Cancel" : "Skip — 之後再填"}</button>
+    </div>`;
+
+  $("okb").onclick = () => {
+    const p2 = {};
+    ASK.forEach((a) => { const v = $("f_" + a.k).value.trim(); if (v) p2[a.k] = v; });
+    S.profile = Object.keys(p2).length ? p2 : null;
+    S.asked = true; save(); renderHome();
+  };
+  $("skipb").onclick = () => { S.asked = true; save(); renderHome(); };
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 首页 ---------- */
+function renderHome() {
+  rec.stopAll();
+  if (!S.asked) return renderAsk(false);
+  const n = Object.keys(S.done).length;
+  const pct = DAYS.length ? Math.round((n / DAYS.length) * 100) : 0;
+  app().innerHTML = `${topBar()}
+    <h1>Speaking Bonus${S.profile && S.profile.name ? `<span class="hi">, ${esc(S.profile.name)}</span>` : ""}</h1>
+    <p class="sub">Watch, build the sentence, then say it out loud.<br>看影片 → 拼句子 → 换成自己的 → 说出来并录音。</p>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="barnote">${n} of ${DAYS.length} days complete · ${pct}%
+      <button class="link" id="edit">${S.profile ? "My info" : "Add my info →"}</button></div>
+    <div class="days" id="days"></div>`;
+
+  $("days").innerHTML = DAYS.map((d) => {
+    const cls = ["day", S.done[d.day] ? "done" : "", d.review ? "rev" : ""].filter(Boolean).join(" ");
+    return `<button class="${cls}" data-d="${d.day}">
+      <span class="n">${d.review ? "Review · " : ""}Day ${d.day}</span>
+      <span class="t">${esc(d.title)}</span>
+    </button>`;
+  }).join("");
+
+  $("edit").onclick = () => renderAsk(true);
+  $("days").querySelectorAll(".day").forEach((b) => {
+    b.onclick = () => openDay(parseInt(b.dataset.d, 10));
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 单日 ---------- */
+let D = null, idx = 0;
+
+function openDay(dayNo) {
+  D = DAYS.find((x) => x.day === dayNo);
+  if (!D) return renderHome();
+  idx = 0;
+  renderDay();
+}
+
+function dayShell(inner) {
+  return `${topBar()}
+    <button class="back" id="back">‹ All days</button>
+    <span class="lbl">${D.review ? "Review · " : ""}Day ${D.day}${D.tagline ? " · " + esc(D.tagline) : ""}</span>
+    <h1 style="font-size:clamp(22px,4.6vw,29px);margin-top:4px">${esc(D.title)}</h1>
+    ${inner}`;
+}
+
+function renderDay() {
+  rec.stopAll();
+  /* 第一屏：影片 */
+  if (idx === 0) {
+    const v = D.video;
+    app().innerHTML = dayShell(`
+      ${v ? `<div class="video"><iframe src="https://www.youtube.com/embed/${esc(v)}"
+              title="${esc(D.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin" loading="lazy" allowfullscreen></iframe></div>
+             <p class="note">Video not loading? <a href="https://www.youtube.com/watch?v=${esc(v)}" target="_blank" rel="noopener noreferrer">Open on YouTube</a></p>`
+            : `<div class="card"><p class="hint">这一天还没有影片连结。</p></div>`}
+      ${D.covers && D.covers.length ? `<div class="card">
+        <span class="lbl">In this video</span>
+        <div class="wl">${D.covers.slice(0, 8).map((c) => `<span>${esc(c)}</span>`).join("")}</div></div>` : ""}
+      <button class="btn btn-p" id="go">Start practising →</button>`);
+    $("back").onclick = renderHome;
+    $("go").onclick = () => { idx = 1; renderDay(); };
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  const steps = D.steps || [];
+  const si = idx - 1;
+
+  /* 最後一屏：完整目标句录音 + 完成 */
+  if (si >= steps.length) return renderFinal();
+
+  const st = steps[si];
+  const pos = `Step ${si + 1} / ${steps.length + (D.finalSpeak ? 1 : 0)}`;
+  const box = document.createElement("div");
+
+  if (st.k === "patterns")  renderPatterns(box, st, pos);
+  else if (st.k === "order") renderOrder(box, st, pos);
+  else if (st.k === "subst") renderSubst(box, st, pos);
+  else if (st.k === "speak") renderSpeak(box, st.model, pos, `${D.day}:${si}`, st.head);
+  else { idx++; return renderDay(); }
+
+  app().innerHTML = dayShell("");
+  app().appendChild(box);
+  $("back").onclick = renderHome;
+  window.scrollTo(0, 0);
+}
+
+const next = () => { idx++; renderDay(); };
+
+/* 看：句型卡 */
+function renderPatterns(box, st, pos) {
+  box.innerHTML = `<div class="card">
+    <span class="lbl">${pos} · 看</span>
+    <div class="h2">Sentence pattern</div>
+    <p class="hint">先看懂这个句型，等一下你要自己拼、自己说。${isMine(st.examples ? st.examples.join(" ") : "") ? '<span class="mine">已换成你的资料</span>' : ""}</p>
+    <div class="pat">
+      <div class="tp">${esc(st.head).replace(/\+/g, "<b>+</b>")}</div>
+      ${st.desc ? `<div class="nt">${esc(st.desc)}</div>` : ""}
+      ${st.examples && st.examples.length ? `<div class="ex">${st.examples.map((e) => `<span>${esc(me(e))}</span>`).join("")}</div>` : ""}
+      ${st.words && st.words.length ? `<div class="wl">${st.words.map((w) => `<span>${esc(w)}</span>`).join("")}</div>` : ""}
+    </div>
+    <button class="btn btn-p" id="go">Continue</button></div>`;
+  setTimeout(() => { $("go").onclick = () => { addXP(2); next(); }; }, 0);
+}
+
+/* 拼：拆句重组 —— 记忆点在这里 */
+function renderOrder(box, st, pos) {
+  /* 换成他自己的句子；但换完太长的话（例如工作名称很长）就退回原句，
+     不然字块会多到不好玩。 */
+  let answer = st.words, display = st.display || st.words.join(" ");
+  const mineTxt = me(display);
+  if (mineTxt !== display) {
+    const w = mineTxt.replace(/[.,!?;:]/g, "").split(" ").filter(Boolean);
+    if (w.length <= 10) { answer = w; display = mineTxt; }
+  }
+  box.innerHTML = `<div class="card">
+    <span class="lbl">${pos} · 拼</span>
+    <div class="h2">Build the sentence</div>
+    <p class="hint">点字块，把句子照正确顺序排出来。</p>
+    <div class="zone" id="zone" data-ph="点下面的字块…"></div>
+    <div class="bank" id="bank">${shuffle(answer).map((w, i) =>
+      `<button class="chipw" data-i="${i}" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
+    <div id="fb"></div>
+    <button class="btn btn-p" id="go" disabled>Check</button></div>`;
+
+  setTimeout(() => {
+    const placed = [];
+    const zone = $("zone"), bank = $("bank"), go = $("go");
+    let locked = false;          // 按过 Check 之後就锁住，不然学生再动字块会把 Continue 变回 disabled 卡死
+
+    const sync = () => {
+      zone.innerHTML = placed.map((p, i) => `<button class="chipw" data-p="${i}">${esc(p.v)}</button>`).join("");
+      if (!locked) {
+        zone.querySelectorAll("[data-p]").forEach((b) => {
+          b.onclick = () => { const p = placed.splice(parseInt(b.dataset.p, 10), 1)[0];
+            bank.querySelector(`[data-i="${p.i}"]`).classList.remove("used"); sync(); };
+        });
+        go.disabled = placed.length !== answer.length;
+      }
+    };
+
+    bank.querySelectorAll(".chipw").forEach((b) => {
+      /* 也要在处理函式里挡掉 —— CSS 的 pointer-events 挡不住程式点击，
+         触控装置上连点两下也可能重复触发。 */
+      b.onclick = () => {
+        if (locked || b.classList.contains("used")) return;
+        b.classList.add("used"); placed.push({ i: b.dataset.i, v: b.dataset.v }); sync();
+      };
+    });
+
+    go.onclick = () => {
+      const got = placed.map((p) => p.v).join(" ");
+      const ok = norm(got) === norm(answer.join(" "));
+      locked = true;
+      sync();                      // 重画一次，把区块里字块的 onclick 拿掉
+      $("fb").innerHTML = ok
+        ? `<div class="fb ok">✓ 对了！</div>`
+        : `<div class="fb no">再看一次正确的顺序：<span class="ans">${esc(display)}</span></div>`;
+      if (ok) addXP(5);
+      go.disabled = false; go.textContent = "Continue"; go.onclick = next;
+    };
+    sync();
+  }, 0);
+}
+
+/* 换：替换练习 —— 同一个模板，换成自己的资料 */
+function renderSubst(box, st, pos) {
+  /* 如果这个 slot 正好是开始前问过的（名字／地方／工作／目标），
+     就把他自己的答案放在第一个 —— 练的是关于自己的句子。 */
+  const field = SLOT_FIELD[String(st.slot || "").toLowerCase()];
+  const own = field && S.profile && S.profile[field]
+              ? (field === "job" ? jobPhrase(S.profile[field]) : S.profile[field]) : "";
+  const bank = own ? [own, ...st.bank.filter((b) => b.toLowerCase() !== own.toLowerCase())] : null;
+  box.innerHTML = `<div class="card">
+    <span class="lbl">${pos} · 换</span>
+    <div class="h2">Make it yours</div>
+    <p class="hint">同一个句型，换掉后面的资料就好。点一个看看 —— 没有标准答案。${own ? '<span class="mine">你的答案在第一个</span>' : ""}</p>
+    <div class="pat"><div class="tp" id="tpl">${esc(st.tpl).replace(/___/g, "<b>___</b>")}</div></div>
+    <div class="bank" id="bank">${(bank || shuffle(st.bank)).map((w) =>
+      `<button class="chipw" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
+    <button class="btn btn-p" id="go" disabled>Continue</button></div>`;
+
+  setTimeout(() => {
+    let picked = false;
+    $("bank").querySelectorAll(".chipw").forEach((b) => {
+      b.onclick = () => {
+        $("tpl").innerHTML = esc(st.tpl).replace(/___/g, `<b>${esc(b.dataset.v)}</b>`);
+        if (!picked) { picked = true; addXP(3); $("go").disabled = false; }
+      };
+    });
+    $("go").onclick = next;
+  }, 0);
+}
+
+/* 说：录音 */
+function renderSpeak(box, model, pos, key, head, opts) {
+  const can = rec.available;
+  const mine = isMine(model);
+  model = me(model);
+  box.innerHTML = `<div class="card">
+    <span class="lbl">${pos} · 说</span>
+    <div class="h2">Now say it</div>
+    ${head ? `<p class="hint">${esc(head)}</p>` : ""}
+    <div class="model">${esc(model)}${mine ? '<span class="mine">你的句子</span>' : ""}</div>
+    ${can ? `
+      <div class="stat" id="stat"></div>
+      <div class="btn-row">
+        <button class="btn btn-p" id="recb">● Record</button>
+        <button class="btn btn-p hidden" id="stopb">■ Stop</button>
+        <button class="btn btn-g" id="playb" disabled>▶ Play back</button>
+      </div>
+      <p class="mini" id="mini">录音只留在你自己的电脑，不会上传。</p>`
+    : `<p class="mini">这台浏览器不支援录音 —— 请改用 Chrome 或 Safari。你还是可以对着句子念出来。</p>`}
+    <button class="btn ${opts && opts.goClass ? opts.goClass : "btn-g"}" id="go">${esc((opts && opts.goText) || "Continue")}</button></div>`;
+
+  setTimeout(() => {
+    $("go").onclick = (opts && opts.onGo) || next;
+    if (!can) return;
+
+    const stat = $("stat"), recb = $("recb"), stopb = $("stopb"), playb = $("playb");
+    let blob = null, session = null;
+
+    const idle = () => {
+      recb.classList.remove("hidden"); stopb.classList.add("hidden"); stopb.disabled = false;
+      recb.textContent = blob ? "↻ Record again" : "● Record";
+      playb.disabled = !blob; stat.textContent = ""; stat.classList.remove("go");
+    };
+
+    rec.load(key).then((b) => { if (b && !blob) { blob = b; $("mini").textContent = "这一句你之前录过了 —— 可以重听或重录。"; idle(); } });
+
+    recb.onclick = () => {
+      recb.classList.add("hidden"); playb.disabled = true;
+      session = rec.capture({
+        saveAs: key,
+        onCountdown: (n) => { stat.classList.remove("go"); stat.textContent = "Get ready… " + n; },
+        onSpeakNow: () => { stat.classList.add("go"); stat.textContent = "🟢 Speak now"; stopb.classList.remove("hidden"); },
+        onSaving:   () => { stat.classList.remove("go"); stat.textContent = "Saving…"; stopb.disabled = true; },
+        onDone: (b) => {
+          blob = b;
+          if (!S.recorded[key]) { S.recorded[key] = true; addXP(5); }
+          save();
+          $("mini").textContent = "录好了 —— 按 Play back 听听看自己讲得怎么样。";
+          idle();
+        },
+        onDenied: () => { stat.textContent = ""; $("mini").textContent = "没有拿到麦克风权限。你还是可以念出来，然后按 Continue。"; idle(); }
+      });
+    };
+    stopb.onclick = () => { if (session) session.stop(); };
+    playb.onclick = () => { if (blob) rec.play(blob); };
+    idle();
+  }, 0);
+}
+
+/* ---------- 最後：完整目标句 + 完成 ---------- */
+function renderFinal() {
+  if (D.finalSpeak && !S.done[D.day]) {
+    const box = document.createElement("div");
+    /* 「Finish this day」一定要透过 opts 交给 renderSpeak 自己接。
+       renderSpeak 是在 setTimeout(…, 0) 里接 #go 的 —— 从外面先设
+       go.onclick，会被那个 setTimeout 盖成 next()，按下去等於按 Continue，
+       画面原地重画一次，看起来就像「按了没反应」。 */
+    renderSpeak(box, D.finalSpeak, "Final", `${D.day}:final`, "把今天学的串起来，一次说完", {
+      goText : "Finish this day ✓",
+      goClass: "btn-p",
+      onGo   : () => { S.done[D.day] = true; addXP(10); save(); renderDone(); }
+    });
+    app().innerHTML = dayShell("");
+    app().appendChild(box);
+    $("back").onclick = renderHome;
+    window.scrollTo(0, 0);
+    return;
+  }
+  S.done[D.day] = true; save();
+  renderDone();
+}
+
+function renderDone() {
+  const nextDay = DAYS.find((x) => x.day > D.day);
+  app().innerHTML = dayShell(`<div class="card done-box">
+      <div class="big">🎉</div>
+      <h2>Day ${D.day} complete</h2>
+      <p class="hint">${esc(me(D.outcome) || "做得好，明天继续。")}</p>
+      ${nextDay ? `<button class="btn btn-p" id="nx">Next: Day ${nextDay.day} →</button>` : ""}
+      <button class="btn btn-g" id="home">All days</button>
+    </div>`);
+  $("back").onclick = renderHome;
+  $("home").onclick = renderHome;
+  if (nextDay) $("nx").onclick = () => openDay(nextDay.day);
+  window.scrollTo(0, 0);
+}
+
+/* ---------- go ---------- */
+renderHome();
+</script>
+</body>
+</html>

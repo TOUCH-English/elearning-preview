@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TOUCH English — E-learning</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+:root{
+  --canvas: var(--te-canvas, #F5F7FA); --surface: var(--te-surface, #FFFFFF);
+  --ink: var(--te-ink, #1B2433); --muted: var(--te-muted, #5C6675); --subtle: var(--te-subtle, #98A2B3);
+  --line: var(--te-line, #DCE3EC); --brand: var(--te-brand, #1F3A5F); --brand-d: var(--te-brand-d, #19314F);
+  --brand-2: var(--te-brand-2, #2E5685); --brand-soft: var(--te-brand-soft, #E6ECF4);
+  --success: var(--te-success, #4FAE8A); --gold: var(--te-gold, #D9B56B); --gold-deep: var(--te-gold-deep, #BE9648);
+  --hairline: var(--te-hairline, rgba(31,58,95,.08)); --radius: var(--te-radius, 18px);
+  --sh:0 1px 2px rgba(27,36,51,.05), 0 6px 20px rgba(27,36,51,.07);
+  --sh-hi:0 2px 6px rgba(27,36,51,.07), 0 14px 34px rgba(31,58,95,.16);
+  --font-h: var(--te-font-display, "Fredoka","Nunito",system-ui,-apple-system,"Segoe UI",sans-serif);
+  --font-b: var(--te-font-body, "Nunito",system-ui,-apple-system,"Segoe UI",sans-serif);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--canvas); color:var(--ink); font-family:var(--font-b);
+  min-height:100vh; padding:clamp(24px,5vw,64px) clamp(18px,5vw,40px);
+  display:flex; flex-direction:column; align-items:center;
+}
+.wrap{width:100%; max-width:1180px}
+
+header{text-align:center; margin-bottom:clamp(28px,5vw,46px)}
+.mark{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--font-h); font-weight:700; letter-spacing:.14em;
+  font-size:12.5px; text-transform:uppercase; color:var(--brand-2);
+  background:var(--brand-soft); border:1px solid var(--hairline);
+  padding:8px 16px; border-radius:999px; margin-bottom:18px;
+}
+.mark::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--gold)}
+h1{
+  font-family:var(--font-h); font-weight:700; color:var(--brand);
+  font-size:clamp(30px,6vw,46px); line-height:1.12; letter-spacing:-.01em;
+}
+.sub{margin-top:12px; color:var(--muted); font-size:clamp(15px,2.4vw,17px); font-weight:600}
+
+.grid{
+  display:grid; gap:clamp(14px,2.2vw,20px);
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  align-items:stretch;
+}
+
+.card{
+  display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:24px 24px 20px; text-decoration:none; color:inherit;
+  box-shadow:var(--sh); position:relative; overflow:hidden;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.card::before{
+  content:""; position:absolute; inset:0 auto 0 0; width:4px;
+  background:linear-gradient(180deg,var(--brand-2),var(--brand));
+  opacity:0; transition:opacity .18s ease;
+}
+.card:hover,.card:focus-visible{
+  transform:translateY(-3px); box-shadow:var(--sh-hi);
+  border-color:var(--brand-soft); outline:none;
+}
+.card:hover::before,.card:focus-visible::before{opacity:1}
+.card:focus-visible{box-shadow:var(--sh-hi),0 0 0 3px var(--brand-soft)}
+
+/* 谁该上这个课程 */
+.tag{
+  align-self:flex-start; font-family:var(--font-h); font-weight:600;
+  font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+  padding:5px 11px; border-radius:999px; margin-bottom:14px;
+  background:var(--brand-soft); color:var(--brand-2); border:1px solid var(--hairline);
+}
+.tag.all{background:#F1F4F8; color:var(--muted)}
+.tag.todo{background:var(--te-gold-soft,#F8EFDB); color:var(--gold-deep); border-color:rgba(191,150,72,.28)}
+
+.name{font-family:var(--font-h); font-weight:600; font-size:23px; color:var(--brand); line-height:1.2}
+.desc{margin-top:7px; color:var(--muted); font-size:14.5px; line-height:1.55; font-weight:600}
+
+.points{list-style:none; margin:16px 0 0; padding:14px 0 0; border-top:1px solid var(--line)}
+.points li{
+  display:flex; gap:9px; align-items:flex-start;
+  font-size:13.5px; line-height:1.5; color:var(--ink); font-weight:600;
+  padding:4px 0;
+}
+.points li::before{
+  content:"✓"; flex:none; color:var(--success); font-weight:800; font-size:13px; line-height:1.5;
+}
+
+.note{
+  margin-top:12px; font-size:12.5px; line-height:1.45; color:var(--subtle); font-weight:700;
+  display:flex; gap:7px; align-items:flex-start;
+}
+.note::before{content:"▸"; flex:none; color:var(--gold-deep)}
+
+.go{
+  margin-top:auto; padding-top:16px;
+  font-family:var(--font-h); font-weight:600; font-size:14.5px; color:var(--brand-2);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.go::after{content:"→"; transition:transform .18s ease}
+.card:hover .go::after{transform:translateX(4px)}
+
+footer{
+  margin-top:clamp(32px,5vw,52px); text-align:center;
+  color:var(--subtle); font-size:13.5px; line-height:1.7; font-weight:600;
+  border-top:1px solid var(--line); padding-top:22px; width:100%;
+}
+footer b{color:var(--muted); font-weight:800}
+
+@media (prefers-reduced-motion:reduce){
+  .card,.go::after{transition:none}
+  .card:hover,.card:focus-visible{transform:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mark">Touch English</div>
+    <h1>E-learning 课程</h1>
+    <p class="sub">选你的课程开始 · Pick your course to begin</p>
+  </header>
+
+  <main class="grid">
+
+    <a class="card" href="courses/pre-beginner/index.html">
+      <span class="tag">Pre-Beg only</span>
+      <span class="name">Pre-Beginner</span>
+      <span class="desc">Learn to repeat. Build speaking confidence from zero.</span>
+      <ul class="points">
+        <li>177 words &amp; phrases</li>
+        <li>Speak, record &amp; listen back</li>
+        <li>5 modules · 25 lessons</li>
+      </ul>
+      <span class="go">开始</span>
+    </a>
+
+    <a class="card" href="courses/level-1/index.html">
+      <span class="tag">Level 1 only</span>
+      <span class="name">Level 1</span>
+      <span class="desc">Speak, ask &amp; answer. Handle everyday English with confidence.</span>
+      <ul class="points">
+        <li>240 words &amp; phrases</li>
+        <li>Speak, record &amp; listen back</li>
+        <li>5 modules · 25 lessons</li>
+      </ul>
+      <span class="go">开始</span>
+    </a>
+
+    <a class="card" href="courses/level-2/index.html">
+      <span class="tag">Level 2 only</span>
+      <span class="name">Level 2</span>
+      <span class="desc">Learn to communicate. Share experiences, express ideas &amp; hold real conversations.</span>
+      <ul class="points">
+        <li>210+ words &amp; phrases</li>
+        <li>Speak 4–5 connected sentences, record &amp; listen back</li>
+        <li>5 modules · 25 lessons</li>
+      </ul>
+      <span class="go">开始</span>
+    </a>
+
+    <a class="card" href="courses/speaking-bonus/index.html">
+      <span class="tag">Level 1 &amp; 2 · Bonus</span>
+      <span class="name">Speaking Bonus</span>
+      <span class="desc">Watch, build the sentence, then say it out loud. 30 days of daily speaking practice.</span>
+      <ul class="points">
+        <li>30 daily videos · 3 review days</li>
+        <li>84 speaking patterns to build and say</li>
+        <li>Record yourself &amp; listen back</li>
+      </ul>
+      <span class="go">开始</span>
+    </a>
+
+    <a class="card" href="courses/ipa/index.html">
+      <span class="tag all">All levels</span>
+      <span class="name">IPA Pronunciation</span>
+      <span class="desc">See it. Hear it. Say it. Master all 44 English sounds.</span>
+      <ul class="points">
+        <li>44 IPA sounds · 300+ practice words</li>
+        <li>Hear each sound, then spot it in real words</li>
+        <li>5 stages · easy-to-hard sound practice</li>
+      </ul>
+      <span class="go">开始</span>
+    </a>
+
+    <a class="card" href="courses/grammar/index.html">
+      <span class="tag all">All levels · CN</span>
+      <span class="name">Grammar Course</span>
+      <span class="desc">Learn the rules. Build correct English sentences with confidence.</span>
+      <ul class="points">
+        <li>595 practice questions</li>
+        <li>Watch, practice &amp; review mistakes</li>
+        <li>8 modules · 17 lessons</li>
+      </ul>
+      <!-- 介面是英文，但 17 支教学影片是华语讲解 —— 不懂中文的学生看不懂影片，
+           所以在这里讲明。不需要的话把这一行删掉即可。 -->
+      <span class="note">Video lessons are taught in Chinese</span>
+      <span class="go">开始</span>
+    </a>
+
+    <!-- 适用级别已确认为全级别；title / subtitle / 重点还是暂用课程实际内容描述，等 Marco 给正式文案 -->
+    <a class="card" href="courses/grammar-full/index.html">
+      <span class="tag all">All levels</span>
+      <span class="name">Grammar Path</span>
+      <span class="desc">完整文法大纲：词性、子句、句型、时态。中 / 英 / BM 三语可切换。</span>
+      <ul class="points">
+        <li>词性到子句的完整文法路径</li>
+        <li>错题自动进复习本，按间隔重练</li>
+        <li>每日目标 · 连续天数</li>
+      </ul>
+      <span class="go">开始</span>
+    </a>
+
+  </main>
+
+  <footer>
+    进度存在这台电脑的浏览器里 —— <b>换电脑或清除浏览器资料就会归零</b>。<br>
+    请保持整个资料夹的结构完整，不要单独搬走某一个课程资料夹。
+  </footer>
+
+</div>
+</body>
+</html>

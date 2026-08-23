@@ -1,0 +1,2635 @@
+<!-- TOUCH English — IPA Pronunciation Course
+     A data-driven, gamified learning engine.
+     ARCHITECTURE OVERVIEW (see JS sections):
+       1. CONTENT MODEL .... pure data: stages + exercises (the only thing you edit to add content)
+       2. PERSISTENCE ...... saves/loads progress (browser localStorage + in-memory fallback)
+       3. STATE STORE ...... single source of truth for the learner
+       4. XP / LEVEL SYSTEM
+       5. BADGE SYSTEM
+       6. PROGRESSION SYSTEM (locking / unlocking)
+       7. FEEDBACK SYSTEM (encouragement + hints + sound + confetti)
+       8. REWARD SYSTEM (stage payouts)
+       9. EXERCISE ENGINE (one reusable renderer for every question type)
+      10. SCREEN ROUTER + STAGE TEMPLATE (Video → Learn → Exercises → Reward)
+-->
+<meta charset="utf-8">
+<title>Touch English — IPA Pronunciation</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../shared/theme.css">
+<style>
+:root{
+  /* ===== Touch English Booking System theme =====
+     Variable NAMES are unchanged so every existing rule re-themes automatically.
+     teal* = Navy (primary/active) · coral* = Maroon (secondary) ·
+     sun*  = Gold (premium/XP)     · good*  = Green (completed) */
+  --cream: var(--te-canvas, #F5F7FA); --cream-2:#E9EEF5; --ink: var(--te-ink, #1B2433); --ink-soft: var(--te-muted, #5C6675);
+  --line: var(--te-line, #DCE3EC);
+  --teal: var(--te-brand, #1F3A5F); --teal-d: var(--te-brand-d, #19314F); --teal-dd: var(--te-brand-dd, #142640);          /* Navy (primary) */
+  --coral: var(--te-danger, #8B1E3F); --coral-d: var(--te-danger-d, #6F1730);                            /* Maroon (secondary) */
+  --sun: var(--te-gold, #D9B56B); --sun-d: var(--te-gold-deep, #BE9648);                                /* Premium Gold */
+  --sky:#3E6FA0; --sky-d:#2C5480;                                /* muted navy-blue accent */
+  --plum: var(--te-danger, #8B1E3F); --plum-d: var(--te-danger-d, #6F1730);                              /* fold accent into maroon */
+  --good: var(--te-success, #4FAE8A); --good-d: var(--te-success-d, #3C8E6F);                              /* Success green (completed) */
+  --bad: var(--te-bad, #C0405C); --bad-d: var(--te-bad-d, #9E2E47);                                /* soft maroon-red for "try again" */
+  --white: var(--te-surface, #FFFFFF);
+  /* Apple-inspired elevation: soft, diffuse, low-contrast (never chunky) */
+  --shadow:0 6px 0;
+  --soft:0 1px 1px rgba(27,36,51,.04), 0 6px 18px rgba(27,36,51,.07);
+  --soft-lg:0 1px 2px rgba(27,36,51,.05), 0 14px 38px rgba(27,36,51,.11);
+  --soft-sm:0 1px 1px rgba(27,36,51,.04), 0 2px 8px rgba(27,36,51,.06);
+  --hair:rgba(27,36,51,.08);            /* hairline border */
+  --r:22px; --r-lg:20px; --r-md:16px; --r-sm:12px;
+  font-family:'Nunito',-apple-system,'Segoe UI','Noto Sans',sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:
+    radial-gradient(120% 90% at 0% -10%, #FBFCFE 0%, rgba(251,252,254,0) 45%),
+    radial-gradient(120% 90% at 100% 0%, #E9EEF5 0%, rgba(233,238,245,0) 50%),
+    var(--cream);
+  color:var(--ink);
+  display:flex;justify-content:center;
+  font-size:16px;-webkit-font-smoothing:antialiased;
+}
+/* phone frame on desktop, edge-to-edge on mobile */
+#app{
+  width:100%;max-width:470px;min-height:100vh;position:relative;
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg, #FFFFFF 0%, #F5F7FA 100%);
+  box-shadow:0 0 0 1px var(--line), 0 30px 80px rgba(70,45,10,.16);
+  overflow:visible;            /* let the page scroll vertically (iOS Safari fix) */
+  overflow-x:clip;             /* still hide any horizontal overspill */
+}
+@media(min-width:520px){ #app{margin:0 0;border-radius:0} body{align-items:stretch} }
+
+h1,h2,h3,.disp{font-family:'Fredoka',sans-serif;font-weight:700;letter-spacing:.2px;margin:0}
+.ipa{font-family:'Nunito','Segoe UI','Noto Sans',sans-serif;font-weight:800;letter-spacing:.5px}
+
+/* ---------- HUD ---------- */
+#hud{
+  position:sticky;top:0;z-index:30;
+  padding:12px 16px 10px;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.hud-row{display:flex;align-items:center;gap:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:14px;
+  padding:6px 11px;border-radius:999px;background:var(--white);
+  border:1px solid var(--line);box-shadow:var(--soft-sm);
+}
+.chip .ic{font-size:15px;line-height:1}
+.chip.streak{color:var(--coral-d)} .chip.xp{color:var(--sun-d)}
+.lvl{
+  display:flex;align-items:center;gap:9px;margin-left:auto;
+}
+.lvl .ring{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--teal) var(--p,0deg), #E4E9F0 0deg);
+  flex:none;
+}
+.lvl .ring i{width:26px;height:26px;border-radius:50%;background:var(--white);display:grid;place-items:center;
+  font-family:'Fredoka';font-weight:700;font-size:13px;color:var(--teal-dd);font-style:normal}
+.xpbar{height:10px;border-radius:99px;background:#E4E9F0;margin-top:9px;overflow:hidden;border:1px solid var(--line)}
+.xpbar > i{display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,var(--sun),var(--sun-d));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.xptxt{font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:4px;text-align:right}
+.sound-btn{margin-left:6px;background:none;border:none;font-size:17px;cursor:pointer;opacity:.7}
+
+/* ---------- generic ---------- */
+#screen{flex:1;display:flex;flex-direction:column;animation:fade .35s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pad{padding:18px 18px 28px}
+/* ===== TOUCH Button System v1.0 — 3D candy buttons ===== */
+.btn{--bb:#16314F;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  font-family:'Fredoka';font-weight:700;font-size:16px;letter-spacing:.3px;color:#fff;cursor:pointer;position:relative;overflow:hidden;
+  padding:15px 20px;border:none;border-radius:16px;
+  background:linear-gradient(180deg,#3A6094 0%,#2A4A72 55%,var(--teal) 100%);
+  box-shadow:0 5px 0 var(--bb),0 12px 20px rgba(20,38,64,.22);
+  transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s cubic-bezier(.34,1.56,.64,1), filter .15s;
+  -webkit-tap-highlight-color:transparent}
+.btn::before{content:"";position:absolute;left:5%;right:5%;top:3px;height:46%;border-radius:14px 14px 18px 18px/14px 14px 30px 30px;
+  background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.05) 85%,rgba(255,255,255,0));pointer-events:none}
+.btn::after{content:"";position:absolute;top:-30%;bottom:-30%;left:-80%;width:45%;transform:skewX(-22deg);
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.5) 50%,rgba(255,255,255,0));
+  animation:btnshine 3s linear infinite;pointer-events:none}
+@keyframes btnshine{0%,72%{left:-80%}92%,100%{left:160%}}
+.btn:active,.btn.pressed{transform:translateY(4px) scale(1.015,.96);box-shadow:0 1px 0 var(--bb),0 4px 8px rgba(20,38,64,.18)}
+.btn.coral{--bb:#6F1730;background:linear-gradient(180deg,#B23A5A 0%,#9B2A4A 55%,var(--coral) 100%);
+  box-shadow:0 5px 0 var(--bb),0 12px 20px rgba(111,23,48,.26)}
+.btn.bad{--bb:#9E2E47;background:linear-gradient(180deg,#D46078 0%,#C9536C 55%,var(--bad) 100%);
+  box-shadow:0 5px 0 var(--bb),0 12px 20px rgba(158,46,71,.26)}
+.btn.sun{--bb:#9A7836;background:linear-gradient(180deg,#F0D89B 0%,#E2C27E 50%,var(--sun) 100%);color:#5A3A1E;
+  box-shadow:0 5px 0 var(--bb),0 12px 20px rgba(190,150,72,.26);animation:btnbreathe 2.4s ease-in-out infinite}
+.btn.sun:active,.btn.sun.pressed{animation:none}
+@keyframes btnbreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.btn.ghost{--bb:#CBD6E4;background:linear-gradient(180deg,#FFFFFF,#F3F6FA);color:var(--teal);border:1.5px solid var(--line);
+  box-shadow:0 4px 0 var(--bb),0 8px 14px rgba(27,36,51,.08)}
+.btn.ghost::after{display:none}
+.btn.ghost:active,.btn.ghost.pressed{transform:translateY(3px) scale(1.01,.97);box-shadow:0 1px 0 var(--bb)}
+.btn[disabled]{filter:grayscale(.5) opacity(.45);pointer-events:none;animation:none}
+.btn[disabled]::after{display:none}
+@media (hover:hover) and (pointer:fine){
+  .btn:hover{transform:translateY(-2px);filter:brightness(1.07);box-shadow:0 7px 0 var(--bb),0 16px 26px rgba(20,38,64,.26)}
+  .btn.sun:hover{animation:none}
+  .btn:hover:active{transform:translateY(4px) scale(1.015,.96);filter:brightness(1);box-shadow:0 1px 0 var(--bb),0 4px 8px rgba(20,38,64,.18)}
+  .btn.ghost:hover{box-shadow:0 6px 0 var(--bb),0 12px 18px rgba(27,36,51,.10);transform:translateY(-2px)}}
+
+.card{background:var(--white);border:1px solid var(--hair);border-radius:var(--r-md);box-shadow:var(--soft)}
+
+/* ---------- STAGE MAP ---------- */
+.hero{padding:22px 18px 6px;text-align:center}
+.hero .logo{display:inline-flex;align-items:center;gap:8px;font-family:'Fredoka';font-weight:700;
+  font-size:13px;letter-spacing:2px;color:var(--teal-dd);text-transform:uppercase;
+  background:#E6ECF4;border:1px solid #C5D2E2;padding:5px 12px;border-radius:99px}
+.hero h1{font-size:27px;margin:12px 0 4px;line-height:1.1}
+.hero p{color:var(--ink-soft);font-weight:600;margin:0;font-size:14px}
+.path{position:relative;padding:22px 0 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.node-wrap{position:relative;width:100%;display:flex;justify-content:center}
+.node-wrap[data-side="l"]{justify-content:flex-start;padding-left:22%}
+.node-wrap[data-side="r"]{justify-content:flex-end;padding-right:22%}
+.node{
+  width:96px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
+  text-align:center;position:relative;
+}
+.node .disc{
+  width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:34px;position:relative;
+  background:linear-gradient(160deg,#FFFFFF,#EEF3FA);border:2px solid var(--line);
+  box-shadow:0 5px 0 #D6DEEA,0 10px 18px rgba(27,36,51,.14),inset 0 2px 0 rgba(255,255,255,.7);
+  transition:transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .14s cubic-bezier(.34,1.56,.64,1);
+}
+.node:active .disc{transform:translateY(4px);box-shadow:0 1px 0 #D6DEEA,0 4px 8px rgba(27,36,51,.16),inset 0 2px 0 rgba(255,255,255,.7)}
+.node.open .disc{border:none;color:#fff;
+  background:linear-gradient(160deg,#3A6094 0%,#2A4A72 55%,#1F3A5F 100%);
+  box-shadow:0 5px 0 #16314F,0 11px 20px rgba(31,58,95,.30),inset 0 2px 0 rgba(255,255,255,.22)}
+.node.open:active .disc{transform:translateY(4px);box-shadow:0 1px 0 #16314F,0 4px 9px rgba(31,58,95,.26),inset 0 2px 0 rgba(255,255,255,.22)}
+.node.done .disc{border:none;color:#fff;
+  background:linear-gradient(160deg,#5BBE9B 0%,#4FAE8A 55%,#3C8E6F 100%);
+  box-shadow:0 5px 0 #2E7459,0 11px 20px rgba(43,108,80,.28),inset 0 2px 0 rgba(255,255,255,.30),0 0 0 4px #D9B56B}
+.node.done:active .disc{transform:translateY(4px);box-shadow:0 1px 0 #2E7459,0 4px 9px rgba(43,108,80,.24),inset 0 2px 0 rgba(255,255,255,.30),0 0 0 4px #D9B56B}
+.node .nm{font-family:'Fredoka';font-weight:600;font-size:13px;line-height:1.15;color:var(--ink);margin-top:2px}
+.node .badge-dot{position:absolute;top:-8px;right:-2px}
+.connector{width:4px;height:30px;border-radius:9px;background:repeating-linear-gradient(180deg,var(--line) 0 6px,transparent 6px 12px)}
+.start-flag{position:absolute;left:50%;transform:translateX(-50%);top:-2px;
+  background:var(--teal);color:#fff;font-family:'Fredoka';font-weight:700;font-size:11px;
+  padding:5px 13px;border-radius:99px;box-shadow:0 2px 6px rgba(31,58,95,.28);letter-spacing:.6px;z-index:10}
+
+/* ---------- STAGE INTRO / SECTIONS ---------- */
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 16px 4px}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;
+  font-size:20px;cursor:pointer;flex:none;box-shadow:var(--soft-sm)}
+.iconbtn:active{transform:translateY(1px);box-shadow:var(--soft-sm)}
+.steps{display:flex;gap:6px;flex:1}
+.steps i{height:8px;flex:1;border-radius:9px;background:#E4E9F0}
+.steps i.on{background:var(--teal)} .steps i.cur{background:var(--coral)}
+.sec-label{display:inline-flex;align-items:center;gap:7px;font-family:'Fredoka';font-weight:700;
+  font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--coral-d);
+  background:#F3E1E6;border:1px solid #E3C4CD;padding:5px 12px;border-radius:99px}
+.sec-h{font-size:23px;margin:12px 0 6px;line-height:1.15}
+.sec-p{color:var(--ink-soft);font-weight:600;line-height:1.5;font-size:15px}
+
+/* video */
+.video{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;
+  background:linear-gradient(135deg,#1f2937,#0b1220);display:grid;place-items:center;color:#fff;
+  border:1px solid var(--line);box-shadow:var(--soft);margin-top:14px}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video .play{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.92);
+  display:grid;place-items:center;font-size:24px;color:#111;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.video .vmeta{position:absolute;left:14px;bottom:12px;right:14px;text-align:left}
+.video .vmeta b{font-family:'Fredoka';display:block;font-size:15px}
+.video .vmeta span{font-size:12px;opacity:.8}
+.video .tag{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.45);font-size:11px;
+  padding:4px 9px;border-radius:99px;font-weight:700}
+.video.as-link{text-decoration:none;background-size:cover;background-position:center;cursor:pointer}
+.video.as-link::after{content:"";position:absolute;inset:0;background:rgba(10,15,25,.42)}
+.video.as-link .play,.video.as-link .tag,.video.as-link .vmeta{position:relative;z-index:1}
+.video.as-link .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.placeholder-note{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:8px;font-weight:600}
+.placeholder-note a{color:var(--sky-d);font-weight:800}
+
+/* learn blocks */
+.block{margin-top:14px;padding:16px}
+.block h3{font-size:16px;margin-bottom:10px;color:var(--ink)}
+.ipa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ipa-pill{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:14px 6px 11px;border-radius:var(--r-md);background:linear-gradient(180deg,#FFFFFF,#FAFBFD);border:1px solid var(--hair);
+  box-shadow:var(--soft-sm);cursor:pointer;transition:transform .18s cubic-bezier(.33,1,.68,1), box-shadow .18s}
+.ipa-pill:hover{transform:translateY(-1px);box-shadow:var(--soft)}
+.ipa-pill:active{transform:translateY(0);box-shadow:var(--soft-sm)}
+.ipa-pill b{font-size:22px;color:var(--coral);line-height:1.1;letter-spacing:-.3px} .ipa-pill .w{font-size:13px;color:var(--ink);font-weight:800}
+.ipa-pill .sp{font-size:12px;color:var(--sky-d);opacity:.7;margin-top:2px}
+.ipa-pill.voiced b{color:var(--plum-d)} .ipa-pill.voiceless b{color:var(--sky-d)}
+@media (max-width:380px){ .ipa-grid{grid-template-columns:repeat(3,1fr)} }
+.note{margin-top:12px;background:#F8EFDB;border:1px solid #E9D4A3;border-radius:14px;padding:12px 14px;
+  font-size:14px;font-weight:700;color:#6F4A12;display:flex;gap:9px;align-items:flex-start}
+.quote{margin-top:16px;text-align:center;font-family:'Fredoka';font-weight:600;font-size:20px;color:var(--teal-dd);
+  padding:16px;background:#E6F4EE;border:1px dashed var(--teal);border-radius:18px}
+.quote small{display:block;font-family:'Nunito';font-weight:700;font-size:12px;color:var(--ink-soft);margin-top:6px}
+
+/* ---------- EXERCISE ENGINE ---------- */
+.q-kind{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft)}
+/* language picker (first run) */
+.lang-pick{text-align:center;padding-top:48px}
+.lang-logo{font-family:'Fredoka';font-weight:700;color:var(--coral);letter-spacing:1px;font-size:14px;margin-bottom:24px}
+.lang-title{font-family:'Fredoka';font-weight:700;color:var(--ink);font-size:26px;margin:0 0 6px}
+.lang-sub{color:var(--ink-soft);font-weight:600;margin:0 0 28px}
+.lang-list{display:flex;flex-direction:column;gap:14px;max-width:320px;margin:0 auto}
+.btn.lang-opt{justify-content:flex-start;gap:14px;font-size:18px;padding:18px 22px}
+.name-wrap{display:flex;flex-direction:column;gap:14px;max-width:320px;margin:0 auto}
+.name-input{font-family:'Fredoka';font-size:18px;font-weight:600;color:var(--ink);text-align:center;
+  padding:16px 18px;border:2px solid var(--line);border-radius:16px;background:#fff;outline:none;transition:border-color .15s}
+.name-input:focus{border-color:var(--coral)}
+.name-input::placeholder{color:#AEB8C6;font-weight:500}
+/* top-right switcher + dropdown */
+.lang-btn{margin-left:2px}
+#langMenu{position:relative;z-index:50}
+.lang-menu-backdrop{position:fixed;inset:0;z-index:49}
+.lang-menu{position:absolute;right:14px;top:2px;z-index:50;background:#fff;border:1px solid var(--line);
+  border-radius:14px;box-shadow:0 10px 30px rgba(27,36,51,.20);padding:6px;min-width:190px}
+.lang-menu-item{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;cursor:pointer;
+  font-family:'Fredoka';font-weight:600;font-size:15px;color:var(--ink);padding:11px 12px;border-radius:10px;text-align:left}
+.lang-menu-item:hover{background:#F1F5FA}
+.lang-menu-item.on{color:var(--coral)}
+.q-lvl{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:99px;font-size:10px;letter-spacing:.5px;color:#fff;vertical-align:middle}
+.q-lvl.easy{background:#4FAE8A}.q-lvl.medium{background:#3E6FA0}.q-lvl.hard{background:#8B1E3F}
+.q-prompt{text-align:center;margin:14px 0 4px}
+.q-prompt .big{font-family:'Fredoka';font-weight:700;font-size:34px;line-height:1.1}
+.q-prompt .big.ipaword{color:var(--teal-dd)}
+.q-sub{text-align:center;color:var(--ink-soft);font-weight:700;font-size:14px;margin-bottom:4px}
+.q-blank{display:inline-block;min-width:34px;border-bottom:4px solid var(--coral);margin:0 2px}
+.opts{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+.opts.wrap{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.opt{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:#fff;border:2px solid var(--line);border-radius:16px;padding:15px 16px;
+  box-shadow:var(--soft-sm);transition:transform .08s,border-color .12s,box-shadow .08s;
+  font-weight:800;font-size:18px;color:var(--ink);
+}
+.opt:active{transform:translateY(1px);box-shadow:var(--soft-sm)}
+.opt .key{width:30px;height:30px;border-radius:9px;background:var(--cream);border:1px solid var(--line);
+  display:grid;place-items:center;font-family:'Fredoka';font-size:14px;color:var(--ink-soft);flex:none}
+.opt.sel{border-color:var(--sky);box-shadow:0 1px 4px rgba(62,111,160,.28);background:#E6EDF5}
+.opt.sel .key{background:var(--sky);color:#fff;border-color:var(--sky-d)}
+.opt.correct{border-color:var(--good);box-shadow:0 1px 4px rgba(79,174,138,.30);background:#E6F4EE;animation:correctPop .4s cubic-bezier(.2,.7,.3,1)}
+.opt.correct .key{background:var(--good);color:#fff;border-color:var(--good-d)}
+@keyframes correctPop{0%{transform:scale(1)}40%{transform:scale(1.025)}100%{transform:scale(1)}}
+.opt.wrong{border-color:var(--bad);box-shadow:0 1px 4px rgba(192,64,92,.28);background:#F6E4E8}
+.opt.wrong .key{background:var(--bad);color:#fff;border-color:var(--bad-d)}
+.opt.chipopt{width:auto;flex:0 0 auto;font-size:20px;justify-content:center}
+.opt.chipopt .key{display:none}
+.opt.shake{animation:shake .4s}
+/* after answering: option body is settled (default cursor, no press lift),
+   but the speaker button inside stays fully tappable so learners can replay
+   and compare both sounds freely. */
+.opt.answered{cursor:default}
+.opt.answered:active{transform:none}
+.opt.answered .opt-spk{cursor:pointer}
+.opt.answered .opt-spk .spk{filter:none;opacity:1}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.combo{position:absolute;top:54px;left:50%;transform:translateX(-50%);font-family:'Fredoka';font-weight:700;
+  color:var(--coral-d);font-size:14px;opacity:0;pointer-events:none}
+.combo.show{animation:comboPop 1s ease}
+@keyframes comboPop{0%{opacity:0;transform:translateX(-50%) scale(.6)}25%{opacity:1;transform:translateX(-50%) scale(1.1)}100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}
+
+/* feedback footer */
+#feedback{position:sticky;bottom:0;z-index:20;transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+#feedback.show{transform:none}
+.fb-inner{padding:16px 18px calc(18px + env(safe-area-inset-bottom));border-top:1px solid;}
+#feedback.ok .fb-inner{background:#E6F4EE;border-color:#C2E2D4}
+#feedback.no .fb-inner{background:#F6E4E8;border-color:#E6C2CB}
+.fb-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.fb-head .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;color:#fff;flex:none}
+#feedback.ok .fb-head .ic{background:var(--good)} #feedback.no .fb-head .ic{background:var(--bad)}
+.fb-head b{font-family:'Fredoka';font-size:18px}
+#feedback.ok .fb-head b{color:var(--good-d)} #feedback.no .fb-head b{color:var(--bad-d)}
+.fb-head .xpgain{margin-left:auto;font-family:'Fredoka';font-weight:700;color:var(--sun-d);font-size:15px}
+.fb-hint{font-size:14px;font-weight:700;color:#8B1E3F;margin-bottom:10px}
+#feedback.ok .btn{background:var(--good);box-shadow:var(--shadow) var(--good-d)}
+#feedback.no .btn{background:var(--bad);box-shadow:var(--shadow) var(--bad-d)}
+
+/* ---------- REWARD / CELEBRATION ---------- */
+.reward{padding:30px 22px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.reward .burst{font-size:74px;animation:pop .6s cubic-bezier(.2,.7,.3,1) both}
+@keyframes pop{from{transform:scale(0) rotate(-25deg)}to{transform:scale(1) rotate(0)}}
+.reward h2{font-size:26px;margin-top:8px}
+.reward .sub{color:var(--ink-soft);font-weight:700}
+.reward .tally{width:100%;margin:18px 0;display:flex;flex-direction:column;gap:10px}
+.tally-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);
+  border-radius:14px;padding:13px 15px;box-shadow:var(--soft-sm);animation:slideIn .5s both}
+.tally-row .ic{font-size:22px}.tally-row .lbl{font-weight:800}.tally-row .val{margin-left:auto;font-family:'Fredoka';font-weight:700;font-size:18px;color:var(--teal-dd)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.badge-card{background:linear-gradient(160deg,#FBF3DE,#F1E0B8);border:1px solid #D9B56B;border-radius:20px;
+  padding:20px;width:100%;box-shadow:var(--soft);animation:pop .6s .2s cubic-bezier(.2,.7,.3,1) both}
+.badge-card .medal{width:78px;height:78px;margin-bottom:6px}
+.badge-card .medal svg{width:32px;height:32px}
+.badge-card b{display:block;font-family:'Fredoka';font-size:20px;color:#8B1E3F;margin-top:6px}
+.badge-card span{font-size:13px;color:#7A4A2E;font-weight:700}
+/* unlocked = STATUS label, not a button: soft tint, thin border, no raised
+   shadow, default cursor — clearly subordinate to the Continue CTA below it. */
+.unlock-toast{width:100%;margin-top:6px;display:flex;align-items:center;gap:10px;
+  background:#E6F4EE;color:var(--teal-dd);border:1px solid #C5D2E2;border-radius:14px;
+  padding:11px 13px;cursor:default;text-align:left;animation:slideIn .5s .35s both}
+.unlock-toast .ut-ic{font-size:17px;flex:none;opacity:.9}
+.unlock-toast .ut-body{display:flex;flex-direction:column;line-height:1.25}
+.unlock-toast .ut-tag{font-family:'Nunito';font-weight:800;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--teal);opacity:.85}
+.unlock-toast .ut-text{font-family:'Nunito';font-weight:700;font-size:13.5px;color:var(--ink)}
+
+/* ---------- PROFILE ---------- */
+.profile{padding:18px}
+.pf-head{display:flex;align-items:center;gap:16px;padding:20px;border-radius:var(--r-lg);position:relative;overflow:hidden;
+  background:linear-gradient(150deg,#274973,#1F3A5F 65%,#172B4C);color:#fff;
+  box-shadow:0 1px 2px rgba(20,38,64,.16), 0 14px 34px rgba(20,38,64,.24)}
+.pf-head::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0) 40%);pointer-events:none}
+.pf-head .av{position:relative;width:70px;height:70px;border-radius:50%;flex:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.26),rgba(255,255,255,.12));display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5), inset 0 2px 6px rgba(255,255,255,.25), 0 4px 12px rgba(0,0,0,.2)}
+.pf-head .av-initials{font-family:'Fredoka';font-weight:700;font-size:25px;color:#fff;letter-spacing:.5px}
+.pf-head .av-lv{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(180deg,#E2C27E,var(--sun));color:#5A3A1E;font-family:'Fredoka';font-weight:700;font-size:10.5px;
+  padding:2.5px 10px;border-radius:99px;box-shadow:0 2px 6px rgba(20,38,64,.3),inset 0 1px 0 rgba(255,255,255,.4);white-space:nowrap}
+.pf-meta{flex:1;min-width:0;position:relative}
+.pf-head h2{font-size:21px;line-height:1.1;letter-spacing:-.3px}
+.pf-head p{font-weight:600;opacity:.92;font-size:13px;margin:3px 0 10px}
+.pf-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden;box-shadow:inset 0 1px 1px rgba(0,0,0,.15)}
+.pf-bar > i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#E9C988,#D9B56B);transition:width .7s cubic-bezier(.33,1,.68,1)}
+.pf-head small{display:block;font-size:11px;opacity:.85;font-weight:600;margin-top:6px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:16px}
+.stat{background:#fff;border:1px solid var(--hair);border-radius:var(--r-md);padding:15px 8px 13px;text-align:center;box-shadow:var(--soft-sm)}
+.stat .si{width:36px;height:36px;margin:0 auto 7px;border-radius:11px;display:grid;place-items:center;font-size:17px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.stat .si.streak{background:linear-gradient(160deg,#FBEDF0,#F3E1E6);color:var(--coral-d)} .stat .si.xp{background:linear-gradient(160deg,#FCF4E1,#F8EFDB);color:var(--sun-d)} .stat .si.done{background:linear-gradient(160deg,#EEF3F9,#E6ECF4);color:var(--teal-dd)}
+.stat .v{font-family:'Fredoka';font-weight:700;font-size:21px;color:var(--ink);letter-spacing:-.3px}
+.stat .l{font-size:10px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.sect-title{font-family:'Fredoka';font-weight:700;font-size:15px;margin:20px 4px 10px;color:var(--ink)}
+.badge-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.bcell{background:transparent;border:none;padding:4px 2px;text-align:center;box-shadow:none}
+.bcell .n{font-size:11px;font-weight:800;margin-top:7px;line-height:1.15;color:var(--ink)}
+.bcell.locked{opacity:.55}
+@media (max-width:380px){ .badge-shelf{grid-template-columns:repeat(3,1fr)} }
+/* reusable medallion (profile shelf, reward card, map node) — premium, soft depth */
+.medal{width:54px;height:54px;margin:0 auto;border-radius:50%;display:grid;place-items:center;color:#fff;
+  box-shadow:0 0 0 1.5px #D9B56B, 0 3px 9px rgba(27,36,51,.18), inset 0 1px 2px rgba(255,255,255,.28);
+  position:relative;overflow:hidden;flex:none}
+.medal::after{content:"";position:absolute;top:0;left:0;right:0;height:48%;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0));pointer-events:none}
+.medal.teal{background:radial-gradient(circle at 36% 30%,#3A5C86,#1F3A5F 72%,#172B4C)}
+.medal.coral{background:radial-gradient(circle at 36% 30%,#A8344F,#8B1E3F 72%,#6F1730)}
+.medal.sky{background:radial-gradient(circle at 36% 30%,#4A7BAC,#2C5480 72%,#1F3E60)}
+.medal.navy{background:radial-gradient(circle at 36% 30%,#3A5C86,#1F3A5F 72%,#13243E)}
+.medal.locked{background:radial-gradient(circle at 36% 30%,#EDF1F6,#DCE3EC);box-shadow:0 0 0 1.5px #CBD4E0,0 2px 6px rgba(27,36,51,.08);color:#AEB7C4}
+.medal.locked::after{display:none}
+.medal.lg{width:78px;height:78px} .medal.lg svg{width:32px;height:32px}
+.medal.sm{width:30px;height:30px;box-shadow:0 0 0 1.25px #D9B56B,0 2px 5px rgba(27,36,51,.22),inset 0 1px 2px rgba(255,255,255,.25)}
+.medal.sm svg{width:15px;height:15px}
+
+/* bottom nav */
+#nav{position:sticky;bottom:0;z-index:25;display:flex;gap:8px;padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-top:1px solid var(--hair)}
+#nav button{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 0 7px;border-radius:16px;color:var(--ink-soft);transition:color .15s, background .15s;min-height:54px;justify-content:center}
+#nav button .i{display:grid;place-items:center;width:46px;height:32px;border-radius:12px;transition:background .15s, transform .12s}
+#nav button .lbl{font-family:'Fredoka';font-weight:600;font-size:11.5px;letter-spacing:.2px}
+#nav button:active .i{transform:scale(.9)}
+#nav button.on{color:var(--teal-dd)}
+#nav button.on .i{background:#E6ECF4}
+
+/* confetti + xp float */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.confetti{position:absolute;width:10px;height:14px;border-radius:2px;will-change:transform,opacity}
+.xpfloat{position:fixed;font-family:'Fredoka';font-weight:700;color:var(--sun-d);font-size:20px;
+  z-index:61;pointer-events:none;animation:xpf 1s ease-out forwards;text-shadow:0 1px 2px #fff}
+@keyframes xpf{0%{opacity:0;transform:translateY(0) scale(.6)}20%{opacity:1;transform:translateY(-12px) scale(1.05)}100%{opacity:0;transform:translateY(-64px) scale(1.05)}}
+.lvlup{position:fixed;left:50%;top:42%;transform:translateX(-50%);z-index:62;background:var(--plum);color:#fff;
+  font-family:'Fredoka';font-weight:700;padding:14px 22px;border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.3);
+  animation:pop .5s cubic-bezier(.2,.7,.3,1) both;pointer-events:none}
+.center-msg{padding:60px 24px;text-align:center;color:var(--ink-soft);font-weight:700}
+.fineprint{font-size:11px;color:var(--ink-soft);text-align:center;padding:14px;font-weight:600;opacity:.8}
+/* ---- Sound Reference Card ---- */
+.topbar-title{font-weight:800;color:var(--ink);font-size:15px;flex:1;text-align:center}
+.sc-hero{display:flex;flex-direction:column;align-items:center;gap:12px;padding:26px 16px 22px;
+  background:linear-gradient(180deg,#F4F8FD,#E9F0F8);border:1px solid var(--line);border-radius:20px;margin-bottom:14px}
+.sc-hero.voiced{background:linear-gradient(180deg,#FBF3F7,#F3E6EE)}
+.sc-hero.voiceless{background:linear-gradient(180deg,#F1F6FC,#E4ECF6)}
+.sc-ipa-big{font-size:64px;line-height:1;font-weight:800;color:var(--ink);letter-spacing:1px}
+.sc-hero.voiced .sc-ipa-big{color:var(--plum-d)} .sc-hero.voiceless .sc-ipa-big{color:var(--sky-d)}
+.sc-listen{display:inline-flex;align-items:center;gap:8px;padding:11px 26px;font-size:16px;border-radius:999px;width:auto}
+.sc-listen svg{width:20px;height:20px}
+.sc-group{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px}
+.sc-lead{font-size:13px;color:var(--ink-soft);font-weight:600;text-align:center;margin:4px 2px 12px}
+.sc-list{padding:6px}
+.sc-row{display:flex;align-items:center;gap:12px;padding:13px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:10px}
+.sc-row:last-child{border-bottom:none}
+.sc-row:active{background:#EEF3FA}
+.sc-word{font-size:17px;font-weight:700;color:var(--ink);flex:0 0 38%}
+.sc-ipa{font-size:16px;color:var(--sky-d);font-weight:600;flex:1}
+.sc-ipa .tgt{color:#C0392B;font-weight:800}   /* target sound: bold + restrained red */
+.sc-spk{color:var(--sky-d);display:inline-flex}.sc-spk svg{width:20px;height:20px}
+
+/* ===== NEXT-PHASE ADDITIONS ===== */
+/* speaker buttons + audio pulse */
+.spk{display:inline-flex;align-items:center;justify-content:center;border:none;
+  background:linear-gradient(180deg,#EEF3FA,#E2EAF4);color:var(--sky-d);
+  border-radius:999px;cursor:pointer;font-size:16px;width:34px;height:34px;line-height:1;
+  box-shadow:0 1px 2px rgba(31,58,95,.12),inset 0 1px 0 rgba(255,255,255,.7);
+  transition:transform .14s cubic-bezier(.33,1,.68,1), filter .14s;user-select:none;vertical-align:middle}
+.spk:hover{filter:brightness(1.03)}
+.spk:active{transform:scale(.92)}
+.spk.big{font-size:20px;width:44px;height:44px}
+.opt-spk{margin-left:auto}
+.opt-spk .spk{background:linear-gradient(180deg,#FFFFFF,#F4F7FB);box-shadow:0 1px 2px rgba(27,36,51,.1),inset 0 1px 0 rgba(255,255,255,.8)}
+.ipa-pill .sp{font-size:14px;color:var(--sky-d);opacity:.9;margin-top:2px;display:inline-flex;cursor:pointer;padding:3px;border-radius:8px}
+.ipa-pill .sp:active{background:#E6EDF5}
+.listen-btn .li-ic{display:inline-flex;font-size:20px;vertical-align:middle;margin-right:4px}
+.pulse{animation:pulse .5s ease}
+@keyframes pulse{0%{transform:scale(1)}30%{transform:scale(1.12)}100%{transform:scale(1)}}
+.ipa-pill{position:relative}
+.ipa-pill.pulse{box-shadow:0 0 0 3px #C5D2E2}
+
+/* COURSE PROGRESS — leading panel (Apple-inspired) */
+.course-progress{position:relative;overflow:hidden;margin-bottom:12px;padding:20px 20px 17px;border:none;
+  border-radius:var(--r-lg);
+  background:linear-gradient(155deg,#274973 0%,#1F3A5F 55%,#172B4C 100%);
+  color:#fff;box-shadow:var(--soft-lg)}
+.course-progress::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 38%);pointer-events:none}
+.course-progress::after{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;
+  background:radial-gradient(circle,rgba(217,181,107,.20),rgba(217,181,107,0) 70%);pointer-events:none}
+.cp-top{display:flex;align-items:center;justify-content:space-between;position:relative}
+.cp-label{font-family:'Fredoka';font-weight:500;font-size:13.5px;letter-spacing:.2px;color:#CBD8E8}
+.cp-icon{font-size:20px;opacity:.95}
+.cp-pct{font-family:'Fredoka';font-weight:700;font-size:44px;line-height:1.04;margin-top:5px;letter-spacing:-.5px;position:relative}
+.cp-pct span{font-size:22px;margin-left:2px;color:#E2C27E;font-weight:600}
+.cp-sub{font-size:12.5px;color:#AFC0D6;font-weight:600;margin-top:0}
+.cp-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden;margin:14px 0 14px;
+  box-shadow:inset 0 1px 1.5px rgba(0,0,0,.2);position:relative}
+.cp-bar > i{display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#D9B56B,#E9C988);
+  transition:width .7s cubic-bezier(.33,1,.68,1)}
+.cp-stats{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#AFC0D6;font-weight:600;position:relative}
+.cp-stats b{color:#fff;font-family:'Fredoka';font-weight:600;font-size:14px;display:block;margin-bottom:1px}
+.cp-stats span{text-align:center;flex:1}
+.cp-stats span+span{border-left:1px solid rgba(255,255,255,.12)}
+
+/* CONTINUE LEARNING card */
+.continue-card{display:flex;align-items:center;gap:14px;padding:14px 15px;margin-bottom:12px;cursor:pointer;
+  border-radius:var(--r-md);border:1px solid var(--hair);
+  transition:transform .18s cubic-bezier(.33,1,.68,1), box-shadow .18s}
+.continue-card:hover{transform:translateY(-1px);box-shadow:var(--soft-lg)}
+.continue-card:active{transform:translateY(0)}
+.continue-card .cc-badge{width:50px;height:50px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:25px;
+  background:linear-gradient(160deg,#EEF3F9,#E0E8F2);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 1px 2px rgba(27,36,51,.05)}
+.continue-card .cc-meta{flex:1;min-width:0}
+.continue-card .cc-kicker{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--teal);opacity:.85}
+.continue-card .cc-meta b{display:block;font-family:'Fredoka';font-size:16px;color:var(--ink);line-height:1.15;margin:1px 0;letter-spacing:-.2px}
+.continue-card .cc-meta span{font-size:12.5px;color:var(--ink-soft);font-weight:600}
+.continue-card .cc-go{flex:none;font-family:'Fredoka';font-weight:600;font-size:13px;color:#fff;
+  padding:9px 16px;border-radius:10px;background:linear-gradient(180deg,#2A4A72,var(--teal));
+  box-shadow:0 1px 3px rgba(20,38,64,.26),inset 0 1px 0 rgba(255,255,255,.16)}
+
+.goal-card{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.goal-ring{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--sun) var(--g,0deg), #E4E9F0 0deg)}
+.goal-ring span{width:40px;height:40px;border-radius:50%;background:#fff;display:grid;place-items:center;
+  font-family:'Fredoka';font-weight:700;font-size:13px;color:var(--sun-d)}
+.goal-meta b{font-family:'Fredoka';font-size:15px;display:block}
+.goal-meta span{font-size:13px;color:var(--ink-soft);font-weight:700}
+.goal-meta small{display:block;font-size:11px;color:var(--sky-d);font-weight:700;margin-top:2px}
+
+/* today's review card (PRIORITY 3) */
+.review-card{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;
+  background:linear-gradient(120deg,#F7EBEE,#F0DDE3);border:1px solid #E3C4CD;
+  transition:transform .12s, box-shadow .12s}
+.review-card:active{transform:scale(.985)}
+.review-card .rv-ic{width:46px;height:46px;border-radius:14px;flex:none;display:grid;place-items:center;
+  font-size:22px;background:#fff;box-shadow:0 1px 4px rgba(139,30,63,.16)}
+.review-card .rv-meta b{font-family:'Fredoka';font-size:15px;display:block;color:var(--coral-d)}
+.review-card .rv-meta span{font-size:12.5px;color:var(--ink-soft);font-weight:700}
+.review-card .rv-go{margin-left:auto;width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--coral);color:#fff;font-size:14px;box-shadow:0 2px 6px rgba(139,30,63,.26)}
+.review-card.done{cursor:default;background:#E6F4EE;border-color:#C5D2E2}
+.review-card.done:active{transform:none}
+.review-card.done .rv-ic{color:var(--teal-dd);box-shadow:0 1px 3px rgba(31,58,95,.12)}
+.review-card.done .rv-meta b{color:var(--teal-dd)}
+
+/* in-lesson listening exercise */
+.big-listen{display:grid;place-items:center;margin:22px 0 6px}
+.listen-btn{font-family:'Fredoka';font-weight:700;font-size:18px;color:#fff;background:var(--sky);border:none;
+  padding:18px 26px;border-radius:18px;box-shadow:0 2px 6px rgba(62,111,160,.28);cursor:pointer;transition:transform .08s}
+.listen-btn:active{transform:translateY(1px);box-shadow:0 1px 3px rgba(62,111,160,.24)}
+
+/* daily goal picker (profile) */
+.goal-pick{display:flex;gap:9px}
+.gp{flex:1;font-family:'Fredoka';font-weight:700;font-size:15px;padding:13px 0;border-radius:14px;cursor:pointer;
+  background:#fff;border:2px solid var(--line);color:var(--ink-soft);box-shadow:var(--soft-sm)}
+.gp.on{background:#F8EFDB;border-color:var(--sun-d);color:var(--sun-d);box-shadow:0 1px 4px rgba(190,150,72,.32)}
+
+/* mobile polish */
+*{ -webkit-touch-callout:none }
+#screen{ -webkit-overflow-scrolling:touch }
+@media (max-width:380px){ .hero h1{font-size:23px} .q-prompt .big{font-size:30px} .chip{font-size:13px;padding:5px 9px} }
+</style>
+
+<div id="app">
+  <div id="hud"></div>
+  <div id="langMenu"></div>
+  <div id="screen"></div>
+  <div id="feedback"></div>
+  <div id="nav"></div>
+</div>
+<div id="fx"></div>
+
+<script src="../../shared/storage.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   1. CONTENT MODEL  —  the ONLY place you add/edit course content.
+      Every exercise reduces to: a prompt + options + correct flag + hint.
+      Variants only change labels/layout, never logic → fully scalable.
+   ===================================================================== */
+
+// Teacher: paste real YouTube links here to embed them automatically.
+// Per-language video links. zh = Chinese versions (existing); en = English.
+// Malay and English UI both use the English video (en). Chinese UI uses zh.
+// welcome has no video yet → that stage simply shows no video.
+const VIDEOS = {
+  welcome:     { zh:"https://youtu.be/UuZCxCoH3ro",  en:"" },
+  lesson1:     { zh:"https://youtu.be/ZuSuf3wM4Zg",  en:"https://youtu.be/Da5VesM66v0" },
+  diphthongs:  { zh:"https://youtu.be/tf2Udtfs7Ec",  en:"https://youtu.be/VGn47X6erdg" },
+  consonants:  { zh:"https://youtu.be/hgpqpdPf46I",  en:"https://youtu.be/bICTwGLTtg8" },
+  bonus:       { zh:"https://youtu.be/XkjAZ-JA8eE",  en:"https://youtu.be/ORS_XUlAick" }
+};
+// resolve the right video URL for the current language.
+// zh → Chinese slot; en & ms → English slot. Empty slot = that stage shows no video.
+function videoUrl(key){
+  const v = VIDEOS[key] || {};
+  return (LANG==="zh") ? (v.zh||"") : (v.en||"");
+}
+
+// helper builders ----------------------------------------------------
+const opt = (label, correct=false) => ({label, correct});
+// choose-IPA-for-word  | ipa-to-word | identify | fill-blank
+function ex(o){ return Object.assign({hint:"Listen for the vowel length and mouth shape."}, o); }
+
+/* =====================================================================
+   CONTENT BANK  (PRIORITY 1 & 2)
+   ---------------------------------------------------------------------
+   These generators EMIT plain exercise objects for the existing engine —
+   the architecture is unchanged. Each stage spreads a generated pool in,
+   reaching ~80–120 questions per stage. Vocabulary is grouped into
+   everyday / workplace / daily-communication sets for real-life value.
+   Question order and answer options are randomized at runtime by the
+   engine's shuffle(), so every run feels fresh.
+   ===================================================================== */
+
+// --- minimal pairs (PRIORITY 2): the backbone of listening + IPA drills ---
+const PAIRS = [
+  // /ɪ/ vs /iː/
+  {a:"ship",  b:"sheep", ia:"/ʃɪp/",   ib:"/ʃiːp/",  f:"/ɪ/ vs /iː/"},
+  {a:"bit",   b:"beat",  ia:"/bɪt/",   ib:"/biːt/",  f:"/ɪ/ vs /iː/"},
+  {a:"live",  b:"leave", ia:"/lɪv/",   ib:"/liːv/",  f:"/ɪ/ vs /iː/"},
+  {a:"sit",   b:"seat",  ia:"/sɪt/",   ib:"/siːt/",  f:"/ɪ/ vs /iː/"},
+  {a:"fit",   b:"feet",  ia:"/fɪt/",   ib:"/fiːt/",  f:"/ɪ/ vs /iː/"},
+  {a:"grin",  b:"green", ia:"/ɡrɪn/",  ib:"/ɡriːn/", f:"/ɪ/ vs /iː/"},
+  {a:"chip",  b:"cheap", ia:"/tʃɪp/",  ib:"/tʃiːp/", f:"/ɪ/ vs /iː/"},
+  {a:"his",   b:"he's",  ia:"/hɪz/",   ib:"/hiːz/",  f:"/ɪ/ vs /iː/"},
+  // /ʊ/ vs /uː/
+  {a:"full",  b:"fool",  ia:"/fʊl/",   ib:"/fuːl/",  f:"/ʊ/ vs /uː/"},
+  {a:"pull",  b:"pool",  ia:"/pʊl/",   ib:"/puːl/",  f:"/ʊ/ vs /uː/"},
+  {a:"look",  b:"Luke",  ia:"/lʊk/",   ib:"/luːk/",  f:"/ʊ/ vs /uː/"},
+  // /æ/ vs /ʌ/
+  {a:"cat",   b:"cut",   ia:"/kæt/",   ib:"/kʌt/",   f:"/æ/ vs /ʌ/"},
+  {a:"cap",   b:"cup",   ia:"/kæp/",   ib:"/kʌp/",   f:"/æ/ vs /ʌ/"},
+  {a:"bat",   b:"but",   ia:"/bæt/",   ib:"/bʌt/",   f:"/æ/ vs /ʌ/"},
+  {a:"ran",   b:"run",   ia:"/ræn/",   ib:"/rʌn/",   f:"/æ/ vs /ʌ/"},
+  {a:"match", b:"much",  ia:"/mætʃ/",  ib:"/mʌtʃ/",  f:"/æ/ vs /ʌ/"},
+  // /e/ vs /æ/
+  {a:"bed",   b:"bad",   ia:"/bed/",   ib:"/bæd/",   f:"/e/ vs /æ/"},
+  {a:"pen",   b:"pan",   ia:"/pen/",   ib:"/pæn/",   f:"/e/ vs /æ/"},
+  {a:"said",  b:"sad",   ia:"/sed/",   ib:"/sæd/",   f:"/e/ vs /æ/"},
+  {a:"men",   b:"man",   ia:"/men/",   ib:"/mæn/",   f:"/e/ vs /æ/"},
+  // /ɒ/ vs /ɔː/  &  /ɑː/
+  {a:"cot",   b:"caught",ia:"/kɒt/",   ib:"/kɔːt/",  f:"/ɒ/ vs /ɔː/"},
+  {a:"hat",   b:"heart", ia:"/hæt/",   ib:"/hɑːt/",  f:"/æ/ vs /ɑː/"},
+  {a:"cap",   b:"carp",  ia:"/kæp/",   ib:"/kɑːp/",  f:"/æ/ vs /ɑː/"},
+  // consonants: /f/ vs /v/
+  {a:"fan",   b:"van",   ia:"/fæn/",   ib:"/væn/",   f:"/f/ vs /v/"},
+  {a:"fine",  b:"vine",  ia:"/faɪn/",  ib:"/vaɪn/",  f:"/f/ vs /v/"},
+  {a:"leaf",  b:"leave", ia:"/liːf/",  ib:"/liːv/",  f:"/f/ vs /v/"},
+  {a:"safe",  b:"save",  ia:"/seɪf/",  ib:"/seɪv/",  f:"/f/ vs /v/"},
+  // /θ/ vs /s/  and  /θ/ vs /t/
+  {a:"thin",  b:"sin",   ia:"/θɪn/",   ib:"/sɪn/",   f:"/θ/ vs /s/"},
+  {a:"think", b:"sink",  ia:"/θɪŋk/",  ib:"/sɪŋk/",  f:"/θ/ vs /s/"},
+  {a:"thick", b:"sick",  ia:"/θɪk/",   ib:"/sɪk/",   f:"/θ/ vs /s/"},
+  {a:"thanks",b:"tanks", ia:"/θæŋks/", ib:"/tæŋks/", f:"/θ/ vs /t/"},
+  // /ð/ vs /d/  &  /ð/ vs /z/
+  {a:"they",  b:"day",   ia:"/ðeɪ/",   ib:"/deɪ/",   f:"/ð/ vs /d/"},
+  {a:"breathe",b:"breeze",ia:"/briːð/",ib:"/briːz/", f:"/ð/ vs /z/"},
+  // /l/ vs /r/
+  {a:"light", b:"right", ia:"/laɪt/",  ib:"/raɪt/",  f:"/l/ vs /r/"},
+  {a:"glass", b:"grass", ia:"/ɡlɑːs/", ib:"/ɡrɑːs/", f:"/l/ vs /r/"},
+  {a:"collect",b:"correct",ia:"/kəˈlekt/",ib:"/kəˈrekt/",f:"/l/ vs /r/"},
+  // /w/ vs /v/
+  {a:"wet",   b:"vet",   ia:"/wet/",   ib:"/vet/",   f:"/w/ vs /v/"},
+  {a:"west",  b:"vest",  ia:"/west/",  ib:"/vest/",  f:"/w/ vs /v/"},
+  // /n/ vs /ŋ/
+  {a:"thin",  b:"thing", ia:"/θɪn/",   ib:"/θɪŋ/",   f:"/n/ vs /ŋ/"},
+  {a:"sin",   b:"sing",  ia:"/sɪn/",   ib:"/sɪŋ/",   f:"/n/ vs /ŋ/"},
+  {a:"ban",   b:"bang",  ia:"/bæn/",   ib:"/bæŋ/",   f:"/n/ vs /ŋ/"},
+  // /ʃ/ vs /tʃ/  &  /s/ vs /ʃ/
+  {a:"ship",  b:"chip",  ia:"/ʃɪp/",   ib:"/tʃɪp/",  f:"/ʃ/ vs /tʃ/"},
+  {a:"wash",  b:"watch", ia:"/wɒʃ/",   ib:"/wɒtʃ/",  f:"/ʃ/ vs /tʃ/"},
+  {a:"sea",   b:"she",   ia:"/siː/",   ib:"/ʃiː/",   f:"/s/ vs /ʃ/"},
+  // /b/ vs /p/  &  /ɡ/ vs /k/
+  {a:"bear",  b:"pear",  ia:"/beə/",   ib:"/peə/",   f:"/b/ vs /p/"},
+  {a:"buy",   b:"pie",   ia:"/baɪ/",   ib:"/paɪ/",   f:"/b/ vs /p/"},
+  {a:"goat",  b:"coat",  ia:"/ɡəʊt/",  ib:"/kəʊt/",  f:"/ɡ/ vs /k/"},
+  {a:"bag",   b:"back",  ia:"/bæɡ/",   ib:"/bæk/",   f:"/ɡ/ vs /k/"}
+];
+const pairFocusVowel = p => /[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f.replace(/[\/\s]/g,'').slice(0,3)) && !/[fvθðlrwŋʃtʃsdzbpɡk]/.test(p.f[1]||'');
+
+// --- vocabulary banks (PRIORITY 1): real-life value ---
+// each: [word, ipa] — used for read-the-IPA & listening items
+const VOCAB = {
+  everyday: [
+    ["water","/ˈwɔːtə/"],["people","/ˈpiːpl/"],["because","/bɪˈkɒz/"],["family","/ˈfæməli/"],
+    ["money","/ˈmʌni/"],["friend","/frend/"],["enough","/ɪˈnʌf/"],["beautiful","/ˈbjuːtɪfl/"],
+    ["comfortable","/ˈkʌmftəbl/"],["favourite","/ˈfeɪvərɪt/"],["interesting","/ˈɪntrəstɪŋ/"],["weather","/ˈweðə/"]
+  ],
+  workplace: [
+    ["schedule","/ˈʃedjuːl/"],["colleague","/ˈkɒliːɡ/"],["meeting","/ˈmiːtɪŋ/"],["deadline","/ˈdedlaɪn/"],
+    ["manager","/ˈmænɪdʒə/"],["project","/ˈprɒdʒekt/"],["client","/ˈklaɪənt/"],["agenda","/əˈdʒendə/"],
+    ["progress","/ˈprəʊɡres/"],["budget","/ˈbʌdʒɪt/"],["report","/rɪˈpɔːt/"],["available","/əˈveɪləbl/"]
+  ],
+  daily: [
+    ["thank you","/ˈθæŋk juː/"],["welcome","/ˈwelkəm/"],["sorry","/ˈsɒri/"],["excuse","/ɪkˈskjuːz/"],
+    ["question","/ˈkwestʃən/"],["answer","/ˈɑːnsə/"],["minute","/ˈmɪnɪt/"],["thirty","/ˈθɜːti/"],
+    ["clothes","/kləʊðz/"],["months","/mʌnθs/"],["world","/wɜːld/"],["usually","/ˈjuːʒuəli/"]
+  ]
+};
+
+const cap = w => w.charAt(0).toUpperCase()+w.slice(1);
+// build a near-miss IPA distractor by nudging one symbol (kept simple & safe)
+function nearMiss(ipa){
+  const swaps=[["iː","ɪ"],["ɪ","iː"],["uː","ʊ"],["ʊ","uː"],["æ","ʌ"],["ʌ","æ"],["ɔː","ɒ"],["ɒ","ɔː"],
+               ["ɑː","æ"],["θ","s"],["ð","d"],["v","f"],["ŋ","n"],["ʃ","s"],["dʒ","tʃ"],["ɜː","ɔː"]];
+  for(const [from,to] of swaps){ if(ipa.includes(from)) return ipa.replace(from,to); }
+  return ipa.replace(/.$/, ""); // fallback: drop last symbol
+}
+
+// generators: each returns an array of exercise objects -------------------
+function genListen(pairs){                       // listening: hear word → choose it
+  return pairs.map(p=>{
+    const target = Math.random()<0.5 ? {w:p.a,o:p.b} : {w:p.b,o:p.a};
+    return ex({kind:"Listen & choose", variant:"listen", word:target.w, sub:"Which word did you hear?",
+      options:[opt(target.w,true),opt(target.o)], fam:p.f,
+      hint:`These two sound close: “${p.a}” and “${p.b}”. Tap 🔊 and listen for the difference.`});
+  });
+}
+function genPairIPA(pairs){                       // choose correct IPA for one word of the pair
+  return pairs.map(p=>{
+    const pickA = Math.random()<0.5;
+    const w = pickA?p.a:p.b, right = pickA?p.ia:p.ib, wrong = pickA?p.ib:p.ia;
+    return ex({kind:"Choose the IPA", prompt:w, options:[opt(right,true),opt(wrong)], fam:p.f,
+      hint:`“${p.a}” = ${p.ia} and “${p.b}” = ${p.ib}. The little difference is the sound in the middle.`});
+  });
+}
+function genReadPair(pairs){                       // IPA → word (minimal-pair confusion)
+  return pairs.map(p=>{
+    const pickA = Math.random()<0.5;
+    const ipa = pickA?p.ia:p.ib, right = pickA?p.a:p.b, wrong = pickA?p.b:p.a;
+    return ex({kind:"Read the IPA", variant:"word", prompt:ipa, options:[opt(right,true),opt(wrong)], fam:p.f,
+      hint:`${ipa} is the word “${pickA?p.a:p.b}”. Compare it with “${pickA?p.b:p.a}”.`});
+  });
+}
+function genVocabRead(list, sub){                  // IPA → word for real vocabulary
+  return list.map(([w,ipa])=>ex({kind:"Read the IPA", variant:"word", prompt:ipa,
+    options:[opt(w,true),opt(cap(w).replace(/.$/,m=>m)+"")], // placeholder replaced below
+    hint:`${ipa} → “${w}”.`, _vocab:w }));
+}
+function genVocabListen(list){                     // listening for real vocabulary
+  return list.map(([w,ipa])=>ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Type-free: which word did you hear?",
+    options:[opt(w,true),opt("")], hint:`“${w}” — ${ipa}. Tap 🔊 to replay.`, _vocabAlt:true }));
+}
+
+// Build a clean wrong-word for vocab read/listen using a similar-looking word bank
+const CONFUSERS = ["water","matter","letter","later","metal","model","manner","minor","major","mirror",
+  "message","massage","margin","manager","manner","measure","picture","feature","future","figure",
+  "person","prison","reason","season","listen","lesson","collar","colour","career","carry","worry",
+  "weather","whether","wander","wonder","walk","work","world","word","ward","wood","would","could"];
+function pickConfuser(w){
+  const c = CONFUSERS.filter(x=>x!==w && Math.abs(x.length-w.length)<=2 && x[0]!==undefined);
+  return (c.length? c[Math.floor(Math.random()*c.length)] : (w+"s"));
+}
+// finalize vocab generators with real distractors
+function vocabRead(list){
+  return list.map(([w,ipa])=>ex({kind:"Read the IPA", variant:"word", prompt:ipa,
+    options:[opt(w,true),opt(pickConfuser(w))], hint:`${ipa} → “${w}”.`}));
+}
+function vocabListen(list){
+  return list.map(([w,ipa])=>ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
+    options:[opt(w,true),opt(pickConfuser(w))], hint:`“${w}” — ${ipa}. Tap 🔊 to replay.`}));
+}
+
+// split PAIRS into vowel-focused vs consonant-focused for natural distribution
+const VOWEL_PAIRS = PAIRS.filter(p=>/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
+const CONS_PAIRS  = PAIRS.filter(p=>!/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
+
+// --- diphthongs: [word, glide, ipa] ---
+const DIPHS = ["/eɪ/","/aɪ/","/ɔɪ/","/aʊ/","/əʊ/","/ɪə/","/eə/","/ʊə/"];
+const DIPH_WORDS = [
+  ["face","/eɪ/","/feɪs/"],["wait","/eɪ/","/weɪt/"],["train","/eɪ/","/treɪn/"],["email","/eɪ/","/ˈiːmeɪl/"],
+  ["time","/aɪ/","/taɪm/"],["price","/aɪ/","/praɪs/"],["climb","/aɪ/","/klaɪm/"],["client","/aɪ/","/ˈklaɪənt/"],
+  ["voice","/ɔɪ/","/vɔɪs/"],["enjoy","/ɔɪ/","/ɪnˈdʒɔɪ/"],["choice","/ɔɪ/","/tʃɔɪs/"],["employ","/ɔɪ/","/ɪmˈplɔɪ/"],
+  ["mouth","/aʊ/","/maʊθ/"],["around","/aʊ/","/əˈraʊnd/"],["account","/aʊ/","/əˈkaʊnt/"],["download","/aʊ/","/ˈdaʊnləʊd/"],
+  ["phone","/əʊ/","/fəʊn/"],["both","/əʊ/","/bəʊθ/"],["focus","/əʊ/","/ˈfəʊkəs/"],["control","/əʊ/","/kənˈtrəʊl/"],
+  ["near","/ɪə/","/nɪə/"],["career","/ɪə/","/kəˈrɪə/"],["idea","/ɪə/","/aɪˈdɪə/"],["serious","/ɪə/","/ˈsɪəriəs/"],
+  ["care","/eə/","/keə/"],["share","/eə/","/ʃeə/"],["prepare","/eə/","/prɪˈpeə/"],["aware","/eə/","/əˈweə/"],
+  ["sure","/ʊə/","/ʃʊə/"],["tour","/ʊə/","/tʊə/"],["secure","/ʊə/","/sɪˈkjʊə/"]
+];
+function distractors(correct, pool, n){
+  const others = pool.filter(x=>x!==correct);
+  const out=[]; while(out.length<n && others.length){ out.push(others.splice(Math.floor(Math.random()*others.length),1)[0]); }
+  return out;
+}
+function genDiphIdentify(){
+  return DIPH_WORDS.map(([w,g])=>ex({kind:"Listen & choose", variant:"identify", prompt:w, sub:"Which sound do you hear?",
+    options:[opt(g,true),...distractors(g,DIPHS,3).map(d=>opt(d))], fam:"glide "+g,
+    hint:`Say “${w}” slowly and notice how the sound moves. Tap 🔊 to hear it again.`}));
+}
+function genDiphRead(){
+  return DIPH_WORDS.map(([w,g,ipa])=>ex({kind:"Read the IPA", variant:"word", prompt:ipa,
+    options:[opt(w,true),opt(pickConfuser(w))], fam:"glide "+g, hint:`${ipa} is the word “${w}”.`}));
+}
+function genDiphListen(){
+  return DIPH_WORDS.map(([w,g,ipa])=>ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
+    options:[opt(w,true),opt(pickConfuser(w))], fam:"glide "+g, hint:`That was “${w}”. Tap 🔊 to hear it again.`}));
+}
+
+
+const COURSE = [
+{
+  id:"s0", title:"Welcome Aboard", short:"Welcome", icon:"👋", color:"coral",
+  video:{key:"welcome", title:"Welcome to TOUCH English", caption:"Your pronunciation journey starts here"},
+  learn:{
+    heading:"The TOUCH Mindset",
+    intro:"Before we start, let's get the right mindset. Pronunciation is a skill — and skills grow with practice, not pressure.",
+    bullets:[
+      ["🎯","IPA is <b>not for exams</b> — it's your map to clear speech."],
+      ["💬","IPA helps you <b>communicate clearly</b> with anyone."],
+      ["🏋️","English pronunciation is a <b>skill</b> you build."],
+      ["🔁","<b>Repetition</b> builds real speaking confidence."],
+      ["❤️","<b>Communication comes before perfection.</b>"]
+    ],
+    quote:{cn:"发音一小步，沟通一大步", en:"A small step in pronunciation, a giant leap in communication."}
+  },
+  exercises:[
+    ex({kind:"Quick check", prompt:"Why are you learning pronunciation?", promptBig:false,
+      sub:"Pick the TOUCH way 👇",
+      options:[opt("To communicate clearly",true), opt("To memorize grammar rules")],
+      okMsg:"Excellent! TOUCH focuses on communication first! 🎉",
+      hint:"Think about the goal: being understood, not memorizing rules."})
+  ],
+  reward:{ xp:50, badge:"starter", title:"You're all set!", line:"Stage 1 Unlocked — Short & Long Vowels" }
+},
+{
+  id:"s1", title:"Short & Long Vowels", short:"Vowels", icon:"🅰️", color:"teal",
+  video:{key:"lesson1", title:"Lesson 1 — Short & Long Vowels", caption:"How vowel length changes meaning"},
+  learn:{
+    heading:"Short vs Long Vowels",
+    intro:"Vowels carry the music of English. Long vowels are <b>longer & steady</b>; short vowels are <b>quick & light</b>. Tap any sound to listen.",
+    groups:[
+      {title:"Short vowels", cls:"", items:[["ɪ","ship"],["ʌ","cup"],["ɒ","hot"],["ʊ","book"],["ə","sofa"],["e","bed"],["æ","cat"]]},
+      {title:"Long vowels", cls:"", items:[["iː","sheep"],["ɑː","car"],["ɔː","door"],["uː","food"],["ɜː","bird"]]}
+    ],
+    note:"Tip: tap each word, then say it back. Hearing it a few times is all it takes."
+  },
+  exercises:[
+    // TYPE A — choose correct IPA
+    ex({kind:"Choose the IPA", prompt:"live", options:[opt("/lɪv/",true),opt("/liːv/")], hint:"“live” (verb) uses the short, relaxed /ɪ/. /liːv/ = “leave”."}),
+    ex({kind:"Choose the IPA", prompt:"sunny", options:[opt("/ˈsʌni/",true),opt("/ˈsuːni/")], hint:"The “u” in sunny is the short /ʌ/ as in “cup”."}),
+    ex({kind:"Choose the IPA", prompt:"said", options:[opt("/sed/",true),opt("/seɪd/")], hint:"“said” sounds like “sed” — short /e/, not the /eɪ/ glide."}),
+    ex({kind:"Choose the IPA", prompt:"pack", options:[opt("/pæk/",true),opt("/pɑːk/")], hint:"/æ/ is the short open “a” in cat. /pɑːk/ = “park”."}),
+    ex({kind:"Choose the IPA", prompt:"mark", options:[opt("/mɑːk/",true),opt("/mæk/")], hint:"“mark” has the long /ɑː/ as in car."}),
+    ex({kind:"Choose the IPA", prompt:"teach", options:[opt("/tiːtʃ/",true),opt("/tɪtʃ/")], hint:"“teach” uses the long, smiley /iː/."}),
+    ex({kind:"Choose the IPA", prompt:"barn", options:[opt("/bɑːn/",true),opt("/bæn/")], hint:"“barn” stretches into /ɑː/. /bæn/ = “ban”."}),
+    ex({kind:"Choose the IPA", prompt:"bed", options:[opt("/bed/",true),opt("/biːd/")], hint:"Short /e/ as in “red”. /biːd/ = “bead”."}),
+    ex({kind:"Choose the IPA", prompt:"curry", options:[opt("/ˈkʌri/",true),opt("/ˈkuːri/")], hint:"The “u” here is the short /ʌ/."}),
+    ex({kind:"Choose the IPA", prompt:"cheap", options:[opt("/tʃiːp/",true),opt("/tʃɪp/")], hint:"“cheap” = long /iː/. /tʃɪp/ = “chip”."}),
+    // TYPE B — fill the missing IPA
+    ex({kind:"Fill the sound", variant:"fill", word:"bat", prompt:"/b__t/", answer:"æ",
+      options:[opt("/iː/"),opt("/ɪ/"),opt("/e/"),opt("/æ/",true),opt("/ʌ/"),opt("/ɑː/")],
+      hint:"“bat” has the short open /æ/ as in cat."}),
+    ex({kind:"Fill the sound", variant:"fill", word:"beat", prompt:"/b__t/", answer:"iː",
+      options:[opt("/iː/",true),opt("/ɪ/"),opt("/e/"),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/")],
+      hint:"“beat” is long & smiley /iː/."}),
+    ex({kind:"Fill the sound", variant:"fill", word:"bit", prompt:"/b__t/", answer:"ɪ",
+      options:[opt("/iː/"),opt("/ɪ/",true),opt("/e/"),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/")],
+      hint:"“bit” is short & relaxed /ɪ/."}),
+    ex({kind:"Fill the sound", variant:"fill", word:"but", prompt:"/b__t/", answer:"ʌ",
+      options:[opt("/iː/"),opt("/ɪ/"),opt("/e/"),opt("/æ/"),opt("/ʌ/",true),opt("/ɑː/")],
+      hint:"“but” uses the short /ʌ/ as in cup."}),
+    ex({kind:"Fill the sound", variant:"fill", word:"bet", prompt:"/b__t/", answer:"e",
+      options:[opt("/iː/"),opt("/ɪ/"),opt("/e/",true),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/")],
+      hint:"“bet” = short /e/ as in red."}),
+    ex({kind:"Fill the sound", variant:"fill", word:"barn", prompt:"/b__n/", answer:"ɑː",
+      options:[opt("/iː/"),opt("/ɪ/"),opt("/e/"),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/",true)],
+      hint:"“barn” stretches into the long /ɑː/."}),
+    // TYPE C — IPA to word
+    ex({kind:"Read the IPA", variant:"word", prompt:"/griːn/", options:[opt("green",true),opt("grin")], hint:"Long /iː/ → green. Short /ɪ/ → grin."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/blæk/", options:[opt("black",true),opt("bleak")], hint:"/æ/ → black. /iː/ → bleak."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/sɪks/", options:[opt("six",true),opt("seeks")], hint:"Short /ɪ/ → six. Long /iː/ → seeks."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ɑːm/", options:[opt("arm",true),opt("aim")], hint:"/ɑː/ → arm. /eɪ/ → aim."}),
+    // LISTENING practice (integrated into the lesson)
+    ex({kind:"Listen & choose", variant:"listen", word:"sheep", sub:"Which word did you hear?",
+      options:[opt("sheep",true),opt("ship")], hint:"Long /iː/ → sheep. Short /ɪ/ → ship. Tap 🔊 to compare."}),
+    ex({kind:"Listen & choose", variant:"listen", word:"full", sub:"Which word did you hear?",
+      options:[opt("full",true),opt("fool")], hint:"Short /ʊ/ → full. Long /uː/ → fool."}),
+    // ——— expanded pools (PRIORITY 1 & 2): minimal pairs, listening & real vocab ———
+    ...genPairIPA(VOWEL_PAIRS),
+    ...genReadPair(VOWEL_PAIRS),
+    ...genListen(VOWEL_PAIRS),
+    ...vocabRead(VOCAB.everyday),
+    ...vocabListen(VOCAB.everyday),
+    ...vocabRead(VOCAB.daily)
+  ],
+  reward:{ xp:200, badge:"vowel_master", title:"You're mastering English vowel sounds!", line:"Stage 2 Unlocked — Diphthongs" }
+},
+{
+  id:"s2", title:"Diphthongs", short:"Diphthongs", icon:"🌀", color:"sky",
+  video:{key:"diphthongs", title:"Lesson 2 — Diphthongs", caption:"Gliding between two vowel sounds"},
+  learn:{
+    heading:"Gliding Sounds",
+    intro:"A <b>diphthong</b> glides from one vowel into another in a single breath. Let your mouth move smoothly — don't stop halfway.",
+    groups:[
+      {title:"Closing glides", cls:"", items:[["eɪ","day"],["aɪ","my"],["ɔɪ","boy"],["aʊ","now"],["əʊ","go"]]},
+      {title:"Centring glides", cls:"", items:[["ɪə","here"],["eə","hair"],["ʊə","tour"]]}
+    ],
+    note:"Say “go” slowly: /əʊ/ starts open, then rounds. One smooth move."
+  },
+  exercises:[
+    // TYPE A
+    ex({kind:"Choose the IPA", prompt:"flight", options:[opt("/flaɪt/",true),opt("/fleɪt/")], hint:"“flight” glides /aɪ/ as in buy."}),
+    ex({kind:"Choose the IPA", prompt:"coil", options:[opt("/kɔɪl/",true),opt("/kəʊl/")], hint:"“coil” uses /ɔɪ/ as in toy. /kəʊl/ = “coal”."}),
+    ex({kind:"Choose the IPA", prompt:"brave", options:[opt("/breɪv/",true),opt("/braɪv/")], hint:"“brave” glides /eɪ/ as in bay."}),
+    ex({kind:"Choose the IPA", prompt:"loaf", options:[opt("/ləʊf/",true),opt("/laʊf/")], hint:"“loaf” uses /əʊ/ as in low. /aʊ/ = “loud”."}),
+    ex({kind:"Choose the IPA", prompt:"browse", options:[opt("/braʊz/",true),opt("/brəʊz/")], hint:"“browse” opens into /aʊ/ as in town."}),
+    // TYPE B — fill diphthong
+    ex({kind:"Fill the glide", variant:"fill", word:"float", prompt:"/fl____t/", answer:"əʊ",
+      options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/"),opt("/aʊ/"),opt("/əʊ/",true),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
+      hint:"“float” glides /əʊ/ as in low."}),
+    ex({kind:"Fill the glide", variant:"fill", word:"loud", prompt:"/l____d/", answer:"aʊ",
+      options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/"),opt("/aʊ/",true),opt("/əʊ/"),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
+      hint:"“loud” opens into /aʊ/ as in town."}),
+    ex({kind:"Fill the glide", variant:"fill", word:"foil", prompt:"/f____l/", answer:"ɔɪ",
+      options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/",true),opt("/aʊ/"),opt("/əʊ/"),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
+      hint:"“foil” glides /ɔɪ/ as in toy."}),
+    ex({kind:"Fill the glide", variant:"fill", word:"clear", prompt:"/kl____/", answer:"ɪə",
+      options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/"),opt("/aʊ/"),opt("/əʊ/"),opt("/ɪə/",true),opt("/eə/"),opt("/ʊə/")],
+      hint:"“clear” glides /ɪə/ as in beer."}),
+    ex({kind:"Fill the glide", variant:"fill", word:"soil", prompt:"/s____l/", answer:"ɔɪ",
+      options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/",true),opt("/aʊ/"),opt("/əʊ/"),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
+      hint:"“soil” uses /ɔɪ/ as in toy."}),
+    // TYPE C — identify diphthong
+    ex({kind:"Listen & choose", variant:"identify", prompt:"proud", sub:"Which sound do you hear?",
+      options:[opt("/aʊ/",true),opt("/əʊ/"),opt("/aɪ/"),opt("/ɔɪ/")], hint:"“proud” opens into /aʊ/ as in town."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"rain", sub:"Which sound do you hear?",
+      options:[opt("/eɪ/",true),opt("/aɪ/"),opt("/ɪə/"),opt("/eə/")], hint:"“rain” glides /eɪ/ as in bay."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"sigh", sub:"Which sound do you hear?",
+      options:[opt("/aɪ/",true),opt("/eɪ/"),opt("/ɔɪ/"),opt("/əʊ/")], hint:"“sigh” glides /aɪ/ as in buy."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"choice", sub:"Which sound do you hear?",
+      options:[opt("/ɔɪ/",true),opt("/aʊ/"),opt("/aɪ/"),opt("/əʊ/")], hint:"“choice” uses /ɔɪ/ as in toy."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"coat", sub:"Which sound do you hear?",
+      options:[opt("/əʊ/",true),opt("/aʊ/"),opt("/ɔɪ/"),opt("/eɪ/")], hint:"“coat” glides /əʊ/ as in low."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"hear", sub:"Which sound do you hear?",
+      options:[opt("/ɪə/",true),opt("/eə/"),opt("/ʊə/"),opt("/eɪ/")], hint:"“hear” glides /ɪə/ as in beer."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"bear", sub:"Which sound do you hear?",
+      options:[opt("/eə/",true),opt("/ɪə/"),opt("/ɜː/"),opt("/aɪ/")], hint:"“bear” glides /eə/ as in fair."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"buy", sub:"Which sound do you hear?",
+      options:[opt("/aɪ/",true),opt("/eɪ/"),opt("/ɔɪ/"),opt("/aʊ/")], hint:"“buy” glides /aɪ/."}),
+    // ——— expanded pools (PRIORITY 1): more diphthong identify / read / listen ———
+    ...genDiphIdentify(),
+    ...genDiphRead(),
+    ...genDiphListen(),
+    ...vocabRead(VOCAB.daily)
+  ],
+  reward:{ xp:300, badge:"diphthong_hero", title:"Your sound gliding is improving beautifully!", line:"Stage 3 Unlocked — Consonants" }
+},
+{
+  id:"s3", title:"Consonants", short:"Consonants", icon:"🔤", color:"plum",
+  video:{key:"consonants", title:"Lesson 3 — Consonants", caption:"Voiced vs voiceless sounds"},
+  learn:{
+    heading:"Voiced vs Voiceless",
+    intro:"Put your hand on your throat. <b>Voiced</b> sounds <b>vibrate</b>; <b>voiceless</b> sounds don't. Same mouth shape, different power!",
+    groups:[
+      {title:"Voiceless (no vibration)", cls:"voiceless", items:[["p","pen"],["t","ten"],["k","key"],["s","sun"],["ʃ","she"],["tʃ","chair"],["f","fan"],["θ","think"],["h","hat"]]},
+      {title:"Voiced (vibration)", cls:"voiced", items:[["b","boot"],["d","dog"],["g","good"],["z","zoo"],["ʒ","vision"],["dʒ","jump"],["v","van"],["ð","this"],["w","we"],["j","yes"],["m","man"],["n","no"],["ŋ","sing"],["l","leg"],["r","red"]]}
+    ],
+    note:"Try /s/ then /z/ — same shape, but /z/ buzzes. That buzz is voicing."
+  },
+  exercises:[
+    // TYPE A
+    ex({kind:"Choose the IPA", prompt:"wealthy", options:[opt("/ˈwelθi/",true),opt("/ˈwelði/")], hint:"“wealthy” has the soft “th” (no buzz), like in “think”."}),
+    ex({kind:"Choose the IPA", prompt:"chimney", options:[opt("/ˈtʃɪmni/",true),opt("/ˈtʃemni/")], hint:"First vowel is short /ɪ/, and the start is /tʃ/."}),
+    ex({kind:"Choose the IPA", prompt:"tongue", options:[opt("/tʌŋ/",true),opt("/tɒŋ/")], hint:"“tongue” = /tʌŋ/ ending in the /ŋ/ sound."}),
+    ex({kind:"Choose the IPA", prompt:"humble", options:[opt("/ˈhʌmbl/",true),opt("/ˈhʊmbl/")], hint:"The “u” here is the short /ʌ/ as in cup."}),
+    // TYPE B — IPA to word
+    ex({kind:"Read the IPA", variant:"word", prompt:"/pliːz/", options:[opt("please",true),opt("piece")], hint:"/pl…z/ with a buzzing /z/ → please."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈdʒɜːnəlɪst/", options:[opt("journalist",true),opt("jernalist")], hint:"Starts with /dʒ/ and the /ɜː/ of bird."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈvɪʒn/", options:[opt("vision",true),opt("visen")], hint:"The middle sound is the soft /ʒ/ (like the s in pleasure)."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ðæt/", options:[opt("that",true),opt("there")], hint:"Voiced /ð/ + the short /æ/ → that."}),
+    // LISTENING practice (integrated into the lesson)
+    ex({kind:"Listen & choose", variant:"listen", word:"van", sub:"Which word did you hear?",
+      options:[opt("van",true),opt("fan")], hint:"Voiced /v/ buzzes → van. Voiceless /f/ → fan. Tap 🔊 to compare."}),
+    ex({kind:"Listen & choose", variant:"listen", word:"think", sub:"Which word did you hear?",
+      options:[opt("think",true),opt("sink")], hint:"/θ/ (tongue between teeth) → think. /s/ → sink."}),
+    // TYPE C — identify consonant
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/θ/", sub:"Which word contains this sound?",
+      options:[opt("threat",true),opt("though"),opt("this")], hint:"“though” & “this” use voiced /ð/. “threat” uses voiceless /θ/."}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ʒ/", sub:"Which word contains this sound?",
+      options:[opt("usury",true),opt("usher"),opt("username")], hint:"“usher” has /ʃ/. “usury” has the buzzing /ʒ/."}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/dʒ/", sub:"Which word contains this sound?",
+      options:[opt("joke",true),opt("version"),opt("leisure")], hint:"“version”/“leisure” use /ʒ/. “joke” starts with the harder /dʒ/."}),
+    // ——— expanded pools (PRIORITY 1 & 2): consonant minimal pairs + vocab ———
+    ...genPairIPA(CONS_PAIRS),
+    ...genReadPair(CONS_PAIRS),
+    ...genListen(CONS_PAIRS),
+    ...vocabRead(VOCAB.workplace),
+    ...vocabListen(VOCAB.workplace),
+    ...vocabListen(VOCAB.daily)
+  ],
+  reward:{ xp:400, badge:"consonant_champion", title:"You can now hear consonant differences much more clearly!", line:"Stage 4 Unlocked — Bonus Final Review" }
+},
+{
+  id:"s4", title:"Bonus Final Review", short:"Final", icon:"🏆", color:"sun",
+  video:{key:"bonus", title:"Bonus — Final Review", caption:"Putting it all together"},
+  learn:{
+    heading:"Everything You've Learned",
+    intro:"Let's bring it all together — everything you've been hearing, mixed into one relaxed round.",
+    groups:[
+      {title:"Recap", cls:"", items:[["iː","sheep"],["ɪ","ship"],["eɪ","bay"],["θ","think"],["ð","this"]]}
+    ],
+    note:"Remember: <b>Consistency is more important than perfection.</b> Show up, repeat, improve.",
+    quote:{cn:"持之以恒，胜过完美", en:"Consistency beats perfection."}
+  },
+  exercises:[
+    // 10 mixed, harder, random-feeling
+    ex({kind:"Choose the IPA", prompt:"thorough", options:[opt("/ˈθʌrə/",true),opt("/ˈθɜːrəʊ/")], hint:"BrE “thorough” = /ˈθʌrə/ — voiceless /θ/, short ending."}),
+    ex({kind:"Choose the IPA", prompt:"measure", options:[opt("/ˈmeʒə/",true),opt("/ˈmiːʒə/")], hint:"Short /e/ + the soft /ʒ/ → /ˈmeʒə/."}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ɔɪ/", sub:"Which word contains this glide?",
+      options:[opt("employ",true),opt("elbow"),opt("ally")], hint:"“employ” ends in the /ɔɪ/ glide as in toy."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈnɒlɪdʒ/", options:[opt("knowledge",true),opt("nollage")], hint:"Silent k, short /ɒ/, ends in /dʒ/ → knowledge."}),
+    ex({kind:"Choose the IPA", prompt:"beard", options:[opt("/bɪəd/",true),opt("/bɜːd/")], hint:"“beard” glides /ɪə/ as in beer. /bɜːd/ = “bird”."}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ŋ/", sub:"Which word contains this sound?",
+      options:[opt("sing",true),opt("seen"),opt("sin")], hint:"“sing” ends in the nasal /ŋ/."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈkætəɡəri/", options:[opt("category",true),opt("cattery")], hint:"Four syllables starting /ˈkæt…/ → category."}),
+    ex({kind:"Choose the IPA", prompt:"world", options:[opt("/wɜːld/",true),opt("/wɔːld/")], hint:"“world” uses the /ɜː/ of bird, not /ɔː/."}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ð/", sub:"Which word has the buzzing “th”?",
+      options:[opt("those",true),opt("think"),opt("thumb")], hint:"“think” and “thumb” have a soft “th”. “those” buzzes — feel it in your throat."}),
+    ex({kind:"Choose the IPA", prompt:"queue", options:[opt("/kjuː/",true),opt("/kweɪ/")], hint:"“queue” is simply /kjuː/ — a /k/, a /j/ glide, then long /uː/."}),
+    // ——— mixed final pool (PRIORITY 1): vowels + diphthongs + consonants ———
+    ...genReadPair(VOWEL_PAIRS),
+    ...genReadPair(CONS_PAIRS),
+    ...genDiphRead(),
+    ...genListen(VOWEL_PAIRS),
+    ...genListen(CONS_PAIRS),
+    ...vocabRead(VOCAB.everyday),
+    ...vocabRead(VOCAB.workplace),
+    ...vocabListen(VOCAB.daily)
+  ],
+  reward:{ xp:1000, badge:"master", title:"Congratulations!", line:"You completed the TOUCH English IPA Pronunciation Course!", final:true }
+}
+];
+
+/* =====================================================================
+   5. BADGE SYSTEM  —  registry of every earnable badge.
+   ===================================================================== */
+// SVG glyphs for the medallion badges (match the screenshot's coin look)
+const BADGE_SVG = {
+  compass:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="15.5 8.5 11 11 8.5 15.5 13 13" fill="currentColor" stroke="none"/></svg>',
+  letterA:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><text x="12" y="18" font-family="Fredoka,sans-serif" font-size="17" font-weight="700" text-anchor="middle">A</text></svg>',
+  swap:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  crown:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 18l-2-9 6 4 5-8 5 8 6-4-2 9z"/></svg>',
+  flame:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2c2 4-2 5-2 8a2 2 0 0 0 4 0c2 2 3 4 3 6a5 5 0 0 1-10 0c0-4 3-6 5-14z"/></svg>',
+  gem:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9z" opacity=".95"/></svg>'
+};
+const BADGES = {
+  starter:            {ic:"compass", tint:"teal",  name:"Starter",             desc:"Began your journey"},
+  vowel_master:       {ic:"letterA", tint:"coral", name:"Vowel Master",         desc:"Cleared all vowels"},
+  diphthong_hero:     {ic:"swap",    tint:"sky",   name:"Diphthong Hero",       desc:"Mastered the glides"},
+  consonant_champion: {ic:"shield",  tint:"navy",  name:"Consonant Champ",      desc:"Tamed the consonants"},
+  master:             {ic:"crown",   tint:"navy",  name:"Pronunciation Master", desc:"Completed the course"},
+  hot_streak:         {ic:"flame",   tint:"coral", name:"Hot Streak",           desc:"5 correct in a row"},
+  flawless:           {ic:"gem",     tint:"teal",  name:"Flawless",             desc:"A perfect stage"}
+};
+function badgeMedal(b, locked){
+  return `<span class="medal ${b.tint} ${locked?'locked':''}">${BADGE_SVG[b.ic]||""}</span>`;
+}
+
+/* =====================================================================
+   2. PERSISTENCE LAYER  —  browser localStorage with in-memory fallback.
+      Fully standalone: works in any browser and when opened as a local
+      file:// download. No Claude / artifact storage dependency.
+   ===================================================================== */
+/* 共用存档层，见 ../../shared/storage.js（同一份模组给全部课程用）。
+   无痕模式退回记忆体的处理已经在模组里，这里不用自己做。 */
+const store = TouchStore.open("ipa");
+const HAS_LS = store.persistent;
+const Persist = {
+  load(){ return store.get("state", null); },
+  save(obj){ store.set("state", obj); }
+};
+
+/* =====================================================================
+   3. STATE STORE  —  single source of truth for the learner.
+   ===================================================================== */
+function freshState(){
+  return {
+    name:"",                   // learner's name (asked on first run, shown in Profile)
+    xp:0, combo:0, bestCombo:0,
+    streak:1, lastActive:new Date().toDateString(),
+    badges:{},                 // id -> true
+    unlocked:COURSE.map(s=>s.id),   // adult system: all stages open from the start
+    stages:{},                 // id -> {completed, best, correct, total}
+    courseDone:false,
+    // --- next-phase additions ---
+    dailyGoal:50,              // PRIORITY 3: daily XP goal (20/50/100)
+    today:new Date().toDateString(),
+    todayXP:0,
+    goalHitToday:false,
+    weak:{},                   // PRIORITY 6: ipaToken -> miss count (lightweight)
+    review:[]                  // PRIORITY 3: recycled wrong questions (capped, lightweight)
+  };
+}
+let S = freshState();
+
+function dayDiff(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+function touchStreak(){
+  const today = new Date().toDateString();
+  if(S.lastActive!==today){
+    const d = dayDiff(S.lastActive, today);
+    S.streak = d===1 ? S.streak+1 : 1;
+    S.lastActive = today;
+  }
+}
+function touchDaily(){            // reset the daily counter when a new day starts
+  const today = new Date().toDateString();
+  if(S.today!==today){ S.today=today; S.todayXP=0; S.goalHitToday=false; }
+}
+function save(){ Persist.save(S); }
+
+/* =====================================================================
+   4. XP & LEVEL SYSTEM
+   ===================================================================== */
+function levelThreshold(n){ return 75*n*(n+1); } // cumulative XP needed to REACH level n (n>=1 => 150,450,900...)
+function levelInfo(xp){
+  let lvl=1; while(xp >= levelThreshold(lvl+1)) lvl++;
+  const cur = levelThreshold(lvl), next = levelThreshold(lvl+1);
+  return {lvl, into:xp-cur, span:next-cur, pct:Math.min(1,(xp-cur)/(next-cur))};
+}
+function awardXP(amount, atEl){
+  const before = levelInfo(S.xp).lvl;
+  S.xp += amount;
+  touchDaily();
+  S.todayXP += amount;                         // PRIORITY 3: daily goal progress
+  const after = levelInfo(S.xp).lvl;
+  if(atEl) xpFloat(amount, atEl);
+  renderHUD();
+  if(after>before) levelUp(after);
+  if(!S.goalHitToday && S.todayXP>=S.dailyGoal){
+    S.goalHitToday=true; setTimeout(goalReached, 600);
+  }
+}
+function goalReached(){
+  confetti(70); sfx("reward");
+  const d=document.createElement("div"); d.className="lvlup"; d.style.background="var(--sun)"; d.style.color="#5A3A1E";
+  d.innerHTML="🎯 Daily goal reached!"; document.getElementById("fx").appendChild(d);
+  setTimeout(()=>d.remove(),1700);
+}
+
+/* =====================================================================
+   6. PROGRESSION SYSTEM
+   ===================================================================== */
+function isUnlocked(id){ return true; }      // adult system: every stage is always open
+function unlock(id){ if(id && !S.unlocked.includes(id)) S.unlocked.push(id); }
+function nextStageId(id){ const i=COURSE.findIndex(s=>s.id===id); return COURSE[i+1] ? COURSE[i+1].id : null; }
+
+/* =====================================================================
+   7. FEEDBACK SYSTEM  —  encouragement pools, hints, sound, motion.
+   ===================================================================== */
+const PRAISE = ["Awesome!","You're getting sharper!","Perfect vowel control!","Great listening!",
+  "Your pronunciation awareness is improving!","Nailed it!","Beautiful ear!","Spot on!","You're on fire!","Crisp & clear!",
+  "You're hearing the difference now!","Excellent sound recognition!","You're building real communication skills!",
+  "Clear and confident!","That's the difference an attentive ear makes.","Your accuracy is climbing!",
+  "Strong control of that sound!","You're tuning in beautifully!","Precise — well done!","Real progress right there!"];
+const COMBO_LINES = {3:"3 in a row! Keep going!",5:"🔥 5 streak — on fire!",8:"⚡ 8 streak — unstoppable!",
+  10:"🌟 10 streak — phenomenal!",15:"💎 15 streak — masterful!",20:"🚀 20 streak — incredible focus!"};
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+// --- sound (optional, synthesized, no assets) ---
+let SOUND = true, AC=null;
+
+// ===== LANGUAGE (i18n) — step 1: video switching + language picker =====
+// Supported UI languages. Videos: zh uses Chinese slot; en & ms use English slot.
+const LANGS = [
+  { code:"en", label:"English", short:"EN" },
+  { code:"zh", label:"中文", short:"ZH" },
+  { code:"ms", label:"Bahasa Melayu", short:"BM" }
+];
+function langShort(code){ const l=LANGS.find(x=>x.code===code); return l?l.short:"🌐"; }
+function loadLang(){ return store.get("lang", "") || ""; }
+function saveLang(code){ store.set("lang", code); }
+let LANG = loadLang() || "";           // "" until the learner picks the first time
+function setLang(code){
+  if(!LANGS.some(l=>l.code===code)) return;
+  LANG = code; saveLang(code);
+  render();                            // re-render so videos + (later) text update
+}
+function langChosen(){ return !!LANG; }
+
+// small dropdown for the top-right language switcher
+let langMenuOpen = false;
+function renderLangMenu(){
+  const host = document.getElementById("langMenu");
+  if(!host) return;
+  if(!langMenuOpen){ host.innerHTML=""; return; }
+  const items = LANGS.map(l=>`
+    <button class="lang-menu-item ${l.code===LANG?'on':''}" data-action="setLang" data-lang="${l.code}">
+      <span>${l.label}</span>${l.code===LANG?' ✓':''}
+    </button>`).join("");
+  host.innerHTML = `<div class="lang-menu-backdrop" data-action="closeLangMenu"></div>
+    <div class="lang-menu">${items}</div>`;
+}
+
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq, t0, dur, type="sine", vol=.13){
+  const c=ac(); if(!c) return; const o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.value=freq; o.connect(g); g.connect(c.destination);
+  const now=c.currentTime+t0; g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(vol,now+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,now+dur); o.start(now); o.stop(now+dur+.02);
+}
+function sfx(kind){
+  if(!SOUND) return;
+  if(kind==="ok"){ tone(660,0,.12,"triangle"); tone(990,.09,.16,"triangle"); }
+  else if(kind==="no"){ tone(200,0,.18,"sawtooth",.09); }
+  else if(kind==="reward"){ [523,659,784,1046].forEach((f,i)=>tone(f,i*.1,.25,"triangle",.12)); }
+  else if(kind==="tap"){ tone(440,0,.05,"sine",.05); }
+}
+
+/* =====================================================================
+   PRONUNCIATION AUDIO ENGINE  (MVP)
+   ---------------------------------------------------------------------
+   NOTE: This is NOT real human-recorded pronunciation. It uses the
+   browser's built-in SpeechSynthesis to READ WORDS CLEARLY so beginners
+   can train their ears. Each playable item carries an optional `src`
+   (an MP3 URL). When a teacher later drops in real recordings:
+        playAudio("sheep", "audio/sheep.mp3")
+   the MP3 plays; otherwise we fall back to SpeechSynthesis automatically.
+   Raw IPA symbols are never spoken — we always speak the EXAMPLE WORD.
+   ===================================================================== */
+const Audio$ = {
+  ready:false, voice:null, current:null,
+  init(){
+    if(!("speechSynthesis" in window)) return;
+    const load = ()=>{
+      const vs = speechSynthesis.getVoices();
+      if(!vs.length) return;
+      // prefer a natural en-GB / en-US voice
+      this.voice =
+        vs.find(v=>/en-GB/i.test(v.lang) && /google|natural|female/i.test(v.name)) ||
+        vs.find(v=>/en-GB/i.test(v.lang)) ||
+        vs.find(v=>/en-US/i.test(v.lang)) ||
+        vs.find(v=>/^en/i.test(v.lang)) || vs[0];
+      this.ready = true;
+    };
+    load(); speechSynthesis.onvoiceschanged = load;
+  },
+  // word: text to speak | src: optional MP3 URL (future teacher audio)
+  play(word, src){
+    this._seq = {};                            // invalidate any pending phoneme→word timers
+    if(src){                                   // real audio file takes priority
+      try{
+        const a = new Audio(src);
+        a.play().catch(()=>this.speak(word));   // network/format issue → fallback
+        return;
+      }catch(e){ /* fall through to TTS */ }
+    }
+    this.speak(word);
+  },
+  speak(word){
+    if(!word || !("speechSynthesis" in window)) return;
+    try{
+      speechSynthesis.cancel();                 // stop overlaps, allow rapid replay
+      const u = new SpeechSynthesisUtterance(String(word));
+      if(this.voice) u.voice = this.voice;
+      u.lang = (this.voice && this.voice.lang) || "en-GB";
+      u.rate = 0.78;                            // slower, beginner-friendly
+      u.pitch = 1.0; u.volume = 1.0;
+      this.current = u; speechSynthesis.speak(u);
+    }catch(e){}
+  },
+  // speak several parts in order with a clear PAUSE between them
+  // (e.g. phoneme sound → beat of silence → the word).
+  speakSeq(parts, gapMs){
+    if(!("speechSynthesis" in window)) return;
+    const list = (parts||[]).filter(Boolean);
+    if(!list.length) return;
+    const gap = gapMs==null ? 450 : gapMs;
+    try{
+      speechSynthesis.cancel();
+      // speak + resume() — Chrome/Android can stay paused after cancel()
+      // and silently drop the utterance; resume() unsticks it.
+      const speakSynthSafe = (u)=>{ speechSynthesis.speak(u); try{ speechSynthesis.resume(); }catch(e){} };
+      const mk = (text, rate)=>{
+        const u = new SpeechSynthesisUtterance(String(text));
+        if(this.voice) u.voice = this.voice;
+        u.lang = (this.voice && this.voice.lang) || "en-GB";
+        u.rate = rate; u.pitch = 1.0; u.volume = 1.0;
+        return u;
+      };
+      const seq = this._seq = {}; // token: a newer tap invalidates pending timers
+      const speakAt = (i)=>{
+        if(this._seq!==seq || i>=list.length) return;
+        // each part may be a plain string or [text, rate]
+        const part = list[i];
+        const text = Array.isArray(part) ? part[0] : part;
+        const rate = Array.isArray(part) ? part[1] : (i===0?0.7:0.78);
+        const u = mk(text, rate);
+        let advanced = false;
+        const next = ()=>{ if(advanced) return; advanced=true;
+          if(i+1<list.length) setTimeout(()=>speakAt(i+1), gap); };
+        u.onend = next;
+        // fallback: if onend never fires (some engines), advance after an estimate
+        setTimeout(next, 1200 + String(text).length*90);
+        speakSynthSafe(u);
+      };
+      // KEY FIX: Chrome drops an utterance queued in the same tick as cancel()
+      // (the phoneme was being swallowed). A short beat lets cancel settle.
+      setTimeout(()=>speakAt(0), 80);
+    }catch(e){}
+  }
+};
+// TEACHING NOTE: anchors are REAL words TTS pronounces correctly, and each
+// anchor matches the example word shown on its tile (what you see = what you
+// hear). Collisions avoided: no two sounds share an anchor word, so a tap is
+// never ambiguous. Long vowels play slower (stretched) so the length contrast
+// vs the short partner is audible.
+const PHONEME_SAY = {
+  // short vowels
+  "ɪ":["ship",1.0],"e":["bed",1.0],"æ":["cat",1.0],"ʌ":["cup",1.0],
+  "ɒ":["hot",1.0],"ʊ":["book",1.0],"ə":["about",1.05],   // "about" gives a real schwa; "a" alone reads as /eɪ/
+  // long vowels — stretched
+  "iː":["sheep",0.75],"ɑː":["car",0.75],"ɔː":["door",0.75],"uː":["food",0.75],"ɜː":["bird",0.75],
+  // diphthongs — gliding
+  "eɪ":["day",0.85],"aɪ":["my",0.85],"ɔɪ":["boy",0.85],"aʊ":["now",0.85],"əʊ":["go",0.85],
+  "ɪə":["here",0.85],"eə":["hair",0.85],"ʊə":["tour",0.85],
+  // voiceless consonants — anchor == tile word
+  "p":["pen",1.05],"t":["ten",1.05],"k":["key",1.05],"f":["fan",1.05],
+  "θ":["think",1.0],"s":["sun",1.05],"ʃ":["she",1.0],"tʃ":["chair",1.0],"h":["hat",1.05],
+  // voiced consonants — anchor == tile word (NB: /d/≠day, /g/≠go to avoid
+  // colliding with the /eɪ/ and /əʊ/ diphthongs)
+  "b":["boot",1.0],"d":["dog",1.0],"g":["good",1.0],"v":["van",1.0],
+  "ð":["this",1.0],"z":["zoo",1.0],"ʒ":["vision",0.95],"dʒ":["jump",1.0],
+  "m":["man",1.0],"n":["no",1.0],"ŋ":["sing",0.95],
+  "l":["leg",1.0],"r":["red",1.0],"w":["we",1.0],"j":["yes",1.0]
+};
+// SOUND LIBRARY — the complete 44-sound inventory for the Sounds tab.
+// Each item: [ipa, example word]. Tap = phoneme → pause → word.
+const SOUND_LIBRARY = [
+  {title:"Short vowels", items:[["ɪ","ship"],["e","bed"],["æ","cat"],["ʌ","cup"],["ɒ","hot"],["ʊ","book"],["ə","about"]]},
+  {title:"Long vowels", items:[["iː","sheep"],["ɑː","car"],["ɔː","door"],["uː","food"],["ɜː","bird"]]},
+  {title:"Diphthongs", items:[["eɪ","day"],["aɪ","my"],["ɔɪ","boy"],["aʊ","now"],["əʊ","go"],["ɪə","here"],["eə","hair"],["ʊə","tour"]]},
+  {title:"Voiceless consonants", cls:"voiceless", items:[["p","pen"],["t","ten"],["k","key"],["f","fan"],["θ","think"],["s","sun"],["ʃ","she"],["tʃ","chair"],["h","hat"]]},
+  {title:"Voiced consonants", cls:"voiced", items:[["b","boot"],["d","dog"],["g","good"],["v","van"],["ð","this"],["z","zoo"],["ʒ","vision"],["dʒ","jump"],["m","man"],["n","no"],["ŋ","sing"],["l","leg"],["r","red"],["w","we"],["j","yes"]]}
+];
+// Pure voiceless fricatives can't come from TTS (any spelling adds a vowel or
+// letter names). Synthesize them as filtered noise — physically what /s/ is.
+const NOISE_SAY = {
+  "s": {type:"highpass", freq:5200, dur:0.5, vol:0.5}    // bright hiss, no voicing
+};
+function playNoise(spec){
+  const ctx = ac(); if(!ctx) return spec.dur*1000;
+  try{
+    const n = Math.floor(ctx.sampleRate * spec.dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i] = Math.random()*2-1;       // white noise
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filt = ctx.createBiquadFilter();
+    filt.type = spec.type; filt.frequency.value = spec.freq;
+    const g = ctx.createGain();
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(spec.vol, t+0.04);     // soft attack
+    g.gain.setValueAtTime(spec.vol, t+spec.dur-0.12);
+    g.gain.linearRampToValueAtTime(0.0001, t+spec.dur);   // soft release
+    src.connect(filt); filt.connect(g); g.connect(ctx.destination);
+    src.start(t); src.stop(t+spec.dur);
+  }catch(e){}
+  return spec.dur*1000;
+}
+// trigger a playback + pulse the clicked element.
+// ipa (optional): speak the phoneme sound first, then the word.
+function playWord(word, src, el, ipa){
+  sfx("tap");
+  if(ipa && PHONEME_SAY[ipa] && !src){
+    const anchor = PHONEME_SAY[ipa];          // [text, rate]
+    const sameWord = anchor[0].toLowerCase() === String(word||"").toLowerCase();
+    // anchor word demonstrates the target sound; if the tile's example word is
+    // different, play it second (anchor → pause → example). If identical, the
+    // single clear anchor play IS the demonstration (no robotic double-read).
+    if(sameWord || !word){
+      Audio$.speakSeq([anchor]);
+    } else {
+      Audio$.speakSeq([anchor, word]);
+    }
+  } else {
+    Audio$.play(word, src);
+  }
+  if(el){ el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse"); }
+}
+
+// ===== PURE PHONEME PLAYBACK (Sound Reference Card top button) =====
+// Goal: play ONLY the target sound itself — not a letter name, not a word.
+// Browser TTS cannot utter a bare phoneme, so:
+//   1. If a real human recording exists (PHONEME_AUDIO[ipa]), play that.
+//   2. Otherwise fall back to the closest isolated TTS approximation, spoken
+//      slowly — never a full word. (Replace with recordings for true accuracy.)
+// PHONEME_AUDIO is intentionally empty now: drop in MP3 URLs later, e.g.
+//   "ɪ":"sounds/ipa-i.mp3"  → the top button will play the real /ɪ/ instantly.
+// ===== HUMAN-RECORDED IPA AUDIO (always higher priority than TTS) =====
+// Canonical filename for every sound: "IPA Chart - /xxx/.mp3", keyed by the
+// FINAL IPA symbol (never ee/er/ay etc). All 44 slots are pre-reserved below.
+// To activate: drop the .mp3 into AUDIO_DIR and the top button plays the real
+// recording automatically; until then it falls back to the TTS cue.
+let AUDIO_DIR = "";   // set to "audio/" (or a URL prefix) once your mp3s exist
+const PHONEME_AUDIO_FILES = {
+  // short vowels
+  "ɪ":"IPA Chart - /ɪ/.mp3",  "e":"IPA Chart - /e/.mp3",  "æ":"IPA Chart - /æ/.mp3",
+  "ʌ":"IPA Chart - /ʌ/.mp3",  "ɒ":"IPA Chart - /ɒ/.mp3",  "ʊ":"IPA Chart - /ʊ/.mp3",  "ə":"IPA Chart - /ə/.mp3",
+  // long vowels
+  "iː":"IPA Chart - /iː/.mp3", "ɑː":"IPA Chart - /ɑː/.mp3", "ɔː":"IPA Chart - /ɔː/.mp3",
+  "uː":"IPA Chart - /uː/.mp3", "ɜː":"IPA Chart - /ɜː/.mp3",
+  // diphthongs
+  "eɪ":"IPA Chart - /eɪ/.mp3", "aɪ":"IPA Chart - /aɪ/.mp3", "ɔɪ":"IPA Chart - /ɔɪ/.mp3",
+  "aʊ":"IPA Chart - /aʊ/.mp3", "əʊ":"IPA Chart - /əʊ/.mp3", "ɪə":"IPA Chart - /ɪə/.mp3",
+  "eə":"IPA Chart - /eə/.mp3", "ʊə":"IPA Chart - /ʊə/.mp3",
+  // voiceless consonants
+  "p":"IPA Chart - /p/.mp3", "t":"IPA Chart - /t/.mp3", "k":"IPA Chart - /k/.mp3",
+  "f":"IPA Chart - /f/.mp3", "θ":"IPA Chart - /θ/.mp3", "s":"IPA Chart - /s/.mp3",
+  "ʃ":"IPA Chart - /ʃ/.mp3", "tʃ":"IPA Chart - /tʃ/.mp3", "h":"IPA Chart - /h/.mp3",
+  // voiced consonants
+  "b":"IPA Chart - /b/.mp3", "d":"IPA Chart - /d/.mp3", "g":"IPA Chart - /g/.mp3",
+  "v":"IPA Chart - /v/.mp3", "ð":"IPA Chart - /ð/.mp3", "z":"IPA Chart - /z/.mp3",
+  "ʒ":"IPA Chart - /ʒ/.mp3", "dʒ":"IPA Chart - /dʒ/.mp3", "m":"IPA Chart - /m/.mp3",
+  "n":"IPA Chart - /n/.mp3", "ŋ":"IPA Chart - /ŋ/.mp3", "l":"IPA Chart - /l/.mp3",
+  "r":"IPA Chart - /r/.mp3", "w":"IPA Chart - /w/.mp3", "j":"IPA Chart - /j/.mp3"
+};
+// Set a sound's value to true (or rely on AUDIO_AVAILABLE) once its mp3 exists.
+// Empty = no recording yet → TTS fallback is used. NO recordings are bundled now.
+const PHONEME_AUDIO = {};
+// Resolve the recording URL for a sound, or "" if none is active yet.
+function phonemeAudioSrc(ipa){
+  // explicit override wins (e.g. PHONEME_AUDIO["ɪ"]="custom.mp3")
+  if(PHONEME_AUDIO[ipa]) return PHONEME_AUDIO[ipa];
+  // otherwise use the canonical file IF a directory has been configured
+  if(AUDIO_DIR && PHONEME_AUDIO_FILES[ipa]) return AUDIO_DIR + PHONEME_AUDIO_FILES[ipa];
+  return "";
+}
+// Isolated approximations per teaching spec — a near-sound CUE, never a word
+// or letter name. Browser TTS cannot make a true isolated phoneme, so these are
+// learner-friendly hints; human recordings (above) always take priority.
+const PHONEME_ISO = {
+  // ----- short vowels -----
+  "ɪ":["ee",1.15],     // short "ee"
+  "ə":["err",1.15],    // clearer short "er"
+  "æ":["aa",1.1],      // "at" without the t
+  "ʌ":["ah",1.1],      // short "ah"
+  "ɒ":["o",1.1],       // short "o"
+  "e":["eh",1.1],
+  "ʊ":["wu",1.1],      // closer to "wu" short
+  // ----- long vowels -----
+  "ɜː":["err",0.6],    // clearer long "er"
+  "iː":["ee",0.6],
+  "ɑː":["ah",0.6],     // long "ah"
+  "ɔː":["aw",0.6],"uː":["oo",0.6],
+  // ----- diphthongs -----
+  "eɪ":["ay",0.8],     // "ay" (not "ei")
+  "ɪə":["eer",0.8],    // "eer"
+  "eə":["air",0.8],    // "air"
+  "ʊə":["wu er",0.8],  // "wu-er"
+  "aɪ":["eye",0.8],"ɔɪ":["oy",0.8],"aʊ":["ow",0.8],"əʊ":["oh",0.8],
+  // ----- voiceless consonants (light "er" support so TTS says the SOUND,
+  //        not the letter name; still not a full word) -----
+  "p":["per",1.0],"t":["ter",1.0],"k":["ker",1.0],"f":["fer",1.0],
+  "θ":["ther",1.0],"s":["ser",1.0],"ʃ":["sher",1.0],"tʃ":["cher",1.0],"h":["her",1.0],
+  // ----- voiced consonants (with -er support) -----
+  "b":["bur",1.0],"d":["dur",1.0],"g":["ger",1.0],"v":["vur",1.0],
+  "ð":["dher",1.0],"ʒ":["zhur",1.0],"dʒ":["jur",1.0],
+  "m":["mur",1.0],"n":["nur",1.0],"ŋ":["erng",1.0],
+  "l":["lur",1.0],"r":["rur",1.0],"w":["wer",1.0],"j":["yer",1.0],
+  "z":["zur",1.0]
+};
+// PRIORITY RULE: human-recorded IPA audio ALWAYS wins over TTS. If browser TTS
+// cannot produce a proper isolated IPA sound, the PHONEME_AUDIO hook lets us
+// drop in human recordings later without changing the system.
+function playPhoneme(ipa){
+  sfx("tap");
+  const src = phonemeAudioSrc(ipa);
+  if(src){ Audio$.play(null, src); return; }     // human recording ALWAYS wins
+  const iso = PHONEME_ISO[ipa];
+  if(iso){ Audio$.speakSeq([iso]); }             // isolated cue only — never a word/letter
+}
+// clean SVG speaker glyph (replaces plain emoji for a more tappable look)
+const SPK_SVG = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 9 4 15 8 15 13 19 13 5 8 9" fill="currentColor" stroke="none"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>';
+// small reusable speaker control (a SPAN so it can live inside .opt buttons)
+function speaker(word, src, extra){
+  if(!word) return "";
+  const s = src ? ` data-src="${src}"` : "";
+  return `<span class="spk ${extra||''}" role="button" data-action="speak" data-word="${word}"${s} aria-label="Play ${word}">${SPK_SVG}</span>`;
+}
+const isWordLabel = (lbl)=> lbl && !/^\s*\//.test(lbl);   // a word, not an /ipa/ token
+
+/* visual fx */
+function xpFloat(amount, el){
+  const r = el.getBoundingClientRect();
+  const f = document.createElement("div");
+  f.className="xpfloat"; f.textContent="+"+amount+" XP";
+  f.style.left=(r.left+r.width/2-22)+"px"; f.style.top=(r.top-6)+"px";
+  document.getElementById("fx").appendChild(f); setTimeout(()=>f.remove(),1000);
+}
+function levelUp(lvl){
+  sfx("reward"); confetti();
+  const d=document.createElement("div"); d.className="lvlup"; d.textContent="⭐ Level "+lvl+"!";
+  document.getElementById("fx").appendChild(d); setTimeout(()=>d.remove(),1600);
+}
+const CONF_COLORS=["#1F3A5F","#8B1E3F","#D9B56B","#4FAE8A","#3E6FA0","#BE9648"];
+function confetti(n=90){
+  const fx=document.getElementById("fx");
+  for(let i=0;i<n;i++){
+    const c=document.createElement("div"); c.className="confetti";
+    const x=Math.random()*100, rot=Math.random()*360, dur=1.6+Math.random()*1.4, delay=Math.random()*.3;
+    c.style.left=x+"vw"; c.style.top="-20px"; c.style.background=pick(CONF_COLORS);
+    c.style.transform="rotate("+rot+"deg)";
+    c.animate([
+      {transform:"translateY(0) rotate("+rot+"deg)",opacity:1},
+      {transform:"translateY(110vh) rotate("+(rot+540)+"deg)",opacity:.9}
+    ],{duration:dur*1000,delay:delay*1000,easing:"cubic-bezier(.3,.1,.4,1)"});
+    fx.appendChild(c); setTimeout(()=>c.remove(),(dur+delay)*1000+50);
+  }
+}
+
+/* =====================================================================
+   ROUTER + APP STATE
+   ===================================================================== */
+let view = {name:"map"};         // map | stage | profile | done
+let session = null;              // active exercise session
+const $screen = ()=>document.getElementById("screen");
+function go(v){ view=v; render(); window.scrollTo(0,0); }
+
+function render(){
+  // First run: ask for a language, then the learner's name, before the app.
+  if(!langChosen()){ renderNav(); return renderLangPicker(); }
+  if(!nameChosen()){ renderNav(); return renderNameAsk(); }
+  renderHUD(); renderNav();
+  document.getElementById("feedback").className=""; document.getElementById("feedback").innerHTML="";
+  if(view.name==="map") return renderMap();
+  if(view.name==="sounds") return renderSounds();
+  if(view.name==="soundcard") return renderSoundCard(view.ipa);
+  if(view.name==="profile") return renderProfile();
+  if(view.name==="stage") return renderStageFlow();
+  if(view.name==="done") return renderCourseComplete();
+}
+
+// Full-screen first-run language chooser.
+function renderLangPicker(){
+  const opts = LANGS.map(l=>`
+    <button class="btn lang-opt" data-action="pickLang" data-lang="${l.code}">
+      <span>${l.label}</span>
+    </button>`).join("");
+  const hud=document.getElementById("hud"); if(hud) hud.innerHTML="";
+  document.getElementById("screen").innerHTML = `
+    <div class="pad lang-pick">
+      <div class="lang-logo">✦ TOUCH ENGLISH</div>
+      <h1 class="lang-title">Choose your language</h1>
+      <p class="lang-sub">选择语言 · Pilih bahasa</p>
+      <div class="lang-list">${opts}</div>
+    </div>`;
+}
+
+function nameChosen(){ return !!(S.name && S.name.trim()); }
+// Ask the learner's name after they pick a language (first run only).
+function renderNameAsk(){
+  const hud=document.getElementById("hud"); if(hud) hud.innerHTML="";
+  document.getElementById("screen").innerHTML = `
+    <div class="pad lang-pick">
+      <div class="lang-logo">✦ TOUCH ENGLISH</div>
+      <h1 class="lang-title">What's your name?</h1>
+      <p class="lang-sub">你叫什么名字？· Siapa nama anda?</p>
+      <div class="name-wrap">
+        <input id="nameInput" class="name-input" type="text" maxlength="24"
+          placeholder="Your name" autocomplete="off"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();commitName();}">
+        <button class="btn coral" data-action="saveName">Start Learning →</button>
+      </div>
+    </div>`;
+  const inp=document.getElementById("nameInput"); if(inp){ try{ inp.focus(); }catch(e){} }
+}
+function commitName(){
+  const inp=document.getElementById("nameInput");
+  const val=(inp && inp.value ? inp.value : "").trim();
+  if(!val) return;                 // require a name to continue
+  S.name = val; save();
+  go({name:"map"});
+}
+
+/* ---------- HUD ---------- */
+function renderHUD(){
+  const li = levelInfo(S.xp);
+  const goalPct = Math.min(100, Math.round((S.todayXP/Math.max(1,S.dailyGoal))*100));
+  document.getElementById("hud").innerHTML = `
+    <div class="hud-row">
+      <span class="chip streak"><span class="ic">🔥</span>${S.streak}</span>
+      <span class="chip xp"><span class="ic">⚡</span>${S.xp}</span>
+      <button class="sound-btn" data-action="toggleSound" title="Sound">${SOUND?"🔊":"🔈"}</button>
+      <button class="sound-btn lang-btn" data-action="cycleLang" title="Language">${LANG?langShort(LANG):"🌐"}</button>
+      <span class="lvl">
+        <span class="ring" style="--p:${(li.pct*360).toFixed(0)}deg"><i>${li.lvl}</i></span>
+      </span>
+    </div>
+    <div class="xpbar"><i style="width:${(li.pct*100).toFixed(1)}%"></i></div>
+    <div class="xptxt">${li.into} / ${li.span} XP to Lvl ${li.lvl+1} · 🎯 ${S.todayXP}/${S.dailyGoal} today (${goalPct}%)</div>`;
+}
+/* ---------- SOUNDS LIBRARY (all 44 phonemes; tap a card → reference card) ---------- */
+function renderSounds(){
+  const groups = SOUND_LIBRARY.map(g=>`
+    <div class="card block">
+      <h3>${g.title}</h3>
+      ${soundTiles(g.items, g.cls||"")}
+    </div>`).join("");
+  $screen().innerHTML = `
+    <div class="hero">
+      <span class="logo">✦ TOUCH ENGLISH</span>
+      <h1>Sound Library</h1>
+      <p>All 44 sounds. Tap a card to open it — hear the sound, then see it in common words.</p>
+    </div>
+    <div class="pad" style="padding-top:0">${groups}</div>
+    <div class="fineprint">Tip: say each one out loud right after you hear it.</div>`;
+}
+// Sounds-page tiles: card body → reference card; speaker glyph → quick play.
+function soundTiles(items, cls){
+  return `<div class="ipa-grid">${items.map(it=>{
+    const word = it[1]||"";
+    return `
+    <div class="ipa-pill ${cls||''}" data-action="openSoundCard" data-ipa="${it[0]}" aria-label="Open ${it[0]}">
+      <b class="ipa">${it[0]}</b>${word?`<span class="w">${word}</span>`:""}
+      <span class="sp" data-action="playword" data-word="${word}" data-ipa="${it[0]}" aria-label="Play ${word}">${SPK_SVG}</span>
+    </div>`;}).join("")}</div>`;
+}
+
+/* ---------- SOUND REFERENCE CARD ----------
+   Teaching principle: the learner ALWAYS hears the target sound first, then
+   sees how that sound appears in common English words. This is a reference
+   card, not a quiz — no auto-advance, no click limit, replay freely.        */
+// IPA units that must be treated as ONE symbol so a target like /ɪ/ is not
+// matched inside a diphthong like /eɪ/.
+const IPA_UNITS = ["eɪ","aɪ","ɔɪ","aʊ","əʊ","ɪə","eə","ʊə","iː","ɑː","ɔː","uː","ɜː","tʃ","dʒ"];
+// normalise look-alike glyphs (script-ɡ U+0261 vs ascii g) so matching works
+function ipaNorm(ch){ return ch==="ɡ" ? "g" : ch; }
+// Wrap the FIRST occurrence of the target sound inside a transcription with a
+// highlight span, so learners see exactly where the sound appears in the word.
+function ipaHighlight(tr, target){
+  if(!tr || !target) return tr||"";
+  const hasSlash = tr.startsWith("/");
+  const body = tr.replace(/^\/|\/$/g,"");
+  const tgt = Array.from(target).map(ipaNorm).join("");
+  // tokenise into IPA units (2-char units first), keeping stress/length marks
+  const toks=[];
+  for(let i=0;i<body.length;){
+    const two=body.substr(i,2);
+    if(IPA_UNITS.includes(two)){ toks.push(two); i+=2; }
+    else { toks.push(body[i]); i+=1; }
+  }
+  let done=false;
+  const out=toks.map(t=>{
+    const tn = Array.from(t).map(ipaNorm).join("");
+    if(!done && tn===tgt){ done=true; return `<span class="tgt">${t}</span>`; }
+    return t;
+  }).join("");
+  return (hasSlash?"/":"")+out+(hasSlash?"/":"");
+}
+
+function renderSoundCard(ipa){
+  const group = SOUND_LIBRARY.find(g=>g.items.some(it=>it[0]===ipa));
+  const cls = group ? (group.cls||"") : "";
+  const groupTitle = group ? group.title : "";
+  const words = (SOUND_WORDS[ipa]||[]);
+  const anchorWord = (PHONEME_SAY[ipa]||[])[0] || (words[0]||"");
+  const rows = words.map(w=>{
+    const tr = WORD_IPA[w] || "";
+    return `
+    <div class="sc-row" data-action="playword" data-word="${w}" aria-label="Play ${w}">
+      <span class="sc-word">${w}</span>
+      <span class="sc-ipa">${ipaHighlight(tr, ipa)}</span>
+      <span class="sc-spk">${SPK_SVG}</span>
+    </div>`;
+  }).join("");
+  $screen().innerHTML = `
+    <div class="topbar"><button class="iconbtn" data-action="goSounds">✕</button>
+      <span class="topbar-title">Sound Reference</span><span style="width:38px"></span></div>
+    <div class="pad">
+      <div class="sc-hero ${cls}">
+        <div class="sc-ipa-big">/${ipa}/</div>
+        <button class="btn sc-listen" data-action="playPhoneme" data-ipa="${ipa}">
+          ${SPK_SVG}<span>Listen</span>
+        </button>
+        ${groupTitle?`<div class="sc-group">${groupTitle}</div>`:""}
+      </div>
+      <div class="sc-lead">This sound appears in these common words. Tap any word to hear it.</div>
+      <div class="card block sc-list">${rows}</div>
+      <div class="fineprint">Hear the sound first, then say each word out loud. Replay as many times as you like.</div>
+    </div>`;
+}
+
+function renderNav(){
+  const learnOn = view.name==="map"||view.name==="stage"||view.name==="done";
+  const mapIc = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg>';
+  const soundIc = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 9 4 15 8 15 13 19 13 5 8 9" fill="currentColor" stroke="none"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>';
+  const userIc = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+  document.getElementById("nav").innerHTML = `
+    <button class="${learnOn?'on':''}" data-action="goMap"><span class="i">${mapIc}</span><span class="lbl">Learn</span></button>
+    <button class="${view.name==='sounds'?'on':''}" data-action="goSounds"><span class="i">${soundIc}</span><span class="lbl">Sounds</span></button>
+    <button class="${view.name==='profile'?'on':''}" data-action="goProfile"><span class="i">${userIc}</span><span class="lbl">Profile</span></button>`;
+}
+
+/* ---------- 10a. STAGE MAP ---------- */
+
+
+function renderMap(){
+  let nodes="";
+  const firstIncomplete = COURSE.find(s=>!S.stages[s.id]?.completed);
+  COURSE.forEach((s,i)=>{
+    const st = S.stages[s.id]||{};
+    const done = st.completed;
+    const cls = done?"done":"open";          // adult system: no locked state
+    const side = i%2===0 ? "c" : (i%4===1?"l":"r");
+    const badgeDot = done && BADGES[s.reward.badge] ? `<span class="badge-dot">${badgeMedal(BADGES[s.reward.badge]).replace('class="medal ','class="medal sm ')}</span>` : "";
+    const start = (firstIncomplete && firstIncomplete.id===s.id) ? `<span class="start-flag">START</span>` : "";
+    const checkSVG = '<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 18 19 6"/></svg>';
+    const face = done ? checkSVG : s.icon;
+    nodes += (i>0?`<div class="connector"></div>`:"") + `
+      <div class="node-wrap" data-side="${i===0?'c':(i%2?'l':'r')}">
+        <div class="node ${cls}" data-action="openStage" data-id="${s.id}">
+          ${start}${badgeDot}
+          <div class="disc">${face}</div>
+          <div class="nm">${s.title}</div>
+        </div>
+      </div>`;
+  });
+  const goalPct = Math.min(100, Math.round((S.todayXP/Math.max(1,S.dailyGoal))*100));
+  // COURSE PROGRESS — computed from completed stages (display only, no logic change)
+  const totalStages = COURSE.length;
+  const doneStages = COURSE.filter(s=>S.stages[s.id]?.completed).length;
+  const coursePct = Math.round((doneStages/totalStages)*100);
+  // next stage to continue = first unlocked-but-not-completed stage
+  const nextStage = COURSE.find(s=>isUnlocked(s.id) && !S.stages[s.id]?.completed)
+                 || COURSE.find(s=>!S.stages[s.id]?.completed) || COURSE[COURSE.length-1];
+  const allDone = doneStages===totalStages;
+  const progressCard = `
+    <div class="card course-progress">
+      <div class="cp-top">
+        <div class="cp-label">Course Progress</div>
+        <div class="cp-icon">🎯</div>
+      </div>
+      <div class="cp-pct">${coursePct}<span>%</span></div>
+      <div class="cp-sub">Complete</div>
+      <div class="cp-bar"><i style="width:${coursePct}%"></i></div>
+      <div class="cp-stats">
+        <span><b>${S.xp}</b> XP earned</span>
+        <span><b>${doneStages}/${totalStages}</b> stages</span>
+        <span><b>🔥 ${S.streak}</b> day streak</span>
+      </div>
+    </div>`;
+  const continueCard = `
+    <div class="card continue-card" ${allDone?'':`data-action="openStage" data-id="${nextStage.id}"`}>
+      <div class="cc-badge">${allDone?'🏆':nextStage.icon}</div>
+      <div class="cc-meta">
+        <div class="cc-kicker">${allDone?'Course complete':'Continue learning'}</div>
+        <b>${nextStage.title}</b>
+        <span>${allDone?'You finished every stage — replay anytime.':(S.stages[nextStage.id]?.completed?'Review this stage':'Pick up where you left off')}</span>
+      </div>
+      ${allDone?'':'<div class="cc-go">Continue</div>'}
+    </div>`;
+  const goalCard = `
+    <div class="card goal-card" data-action="cycleGoal">
+      <div class="goal-ring" style="--g:${goalPct*3.6}deg"><span>${goalPct}%</span></div>
+      <div class="goal-meta">
+        <b>Daily Goal · ${S.dailyGoal} XP</b>
+        <span>${S.todayXP>=S.dailyGoal?"Done for today — amazing! 🎉":`${S.dailyGoal-S.todayXP} XP to go today`}</span>
+        <small>Tap to change goal (20 / 50 / 100)</small>
+      </div>
+    </div>`;
+  // PRIORITY 3 — Today's Review card (shows a completed state when empty)
+  const reviewCount = reviewPoolCount();
+  const reviewCard = reviewCount>0 ? `
+    <div class="card review-card" data-action="startReview">
+      <div class="rv-ic">🔁</div>
+      <div class="rv-meta">
+        <b>Today's Review</b>
+        <span>${reviewCount} sound${reviewCount>1?"s":""} to refresh — a quick 2-minute warm-up.</span>
+      </div>
+      <div class="rv-go">▶</div>
+    </div>` : `
+    <div class="card review-card done">
+      <div class="rv-ic">✓</div>
+      <div class="rv-meta">
+        <b>Today's Review</b>
+        <span>All caught up — no review needed right now. Nice work!</span>
+      </div>
+    </div>`;
+  $screen().innerHTML = `
+    <div class="hero">
+      <span class="logo">✦ TOUCH ENGLISH</span>
+      <h1>IPA Pronunciation Course</h1>
+      <p>Speak clearly. Learn by playing. One sound at a time.</p>
+    </div>
+    <div class="pad" style="padding-bottom:4px">${progressCard}${continueCard}${goalCard}${reviewCard}</div>
+    <div class="path pad" style="padding-top:6px">${nodes}</div>
+    <div class="fineprint">Complete a stage to unlock the next • Progress saves automatically</div>`;
+}
+
+/* ---------- 10b. STAGE FLOW (Video → Learn → Exercises → Reward) ---------- */
+// Keep a single session short & satisfying even though the bank is large.
+const STAGE_QUESTION_CAP = 16;
+// SOFT GROUPED SEQUENCING (learning-flow improvement):
+// instead of fully random questions, keep similar-sound questions together in
+// short blocks of 4–6, then transition naturally to another sound family.
+// Lightweight: just group by the internal `fam` tag, no scoring or tracking.
+function buildQueue(s){
+  const all = s.exercises.slice();
+  if(s.id==="s0") return all;                 // welcome = its single check
+
+  // bucket by sound family (questions without a fam tag → "general" vocab pool)
+  const fams = new Map();
+  for(const q of all){
+    const key = q.fam || "_general";
+    if(!fams.has(key)) fams.set(key, []);
+    fams.get(key).push(q);
+  }
+  // shuffle questions inside each family, and shuffle the order families appear
+  const famKeys = shuffle([...fams.keys()]);
+  for(const k of famKeys) fams.set(k, shuffle(fams.get(k)));
+
+  // emit families as blocks of 4–6 until we reach the cap, so the learner gets
+  // repeated exposure to one sound before moving on. General vocab comes last.
+  famKeys.sort((a,b)=> (a==="_general") - (b==="_general"));   // general → end
+  const queue = [];
+  for(const k of famKeys){
+    if(queue.length >= STAGE_QUESTION_CAP) break;
+    const pool = fams.get(k);
+    const blockSize = Math.min(pool.length, 4 + Math.floor(Math.random()*3)); // 4–6
+    const room = STAGE_QUESTION_CAP - queue.length;
+    queue.push(...pool.slice(0, Math.min(blockSize, room)));
+  }
+  return queue.slice(0, STAGE_QUESTION_CAP);
+}
+function startStage(id){
+  const s = COURSE.find(x=>x.id===id);
+  const queue = buildQueue(s);
+  // If this stage has no video in the current language (e.g. Welcome has no
+  // English video), skip the Watch step and open straight into Learn.
+  const hasVideo = s.video && ytId(videoUrl(s.video.key));
+  session = { stageId:id, step: hasVideo ? "video" : "learn", qi:0, correct:0, total:queue.length, earned:0,
+              perfect:true, comboStart:S.combo, queue };
+  go({name:"stage"});
+}
+// accessor: the active question list (session queue, or full bank as fallback)
+function sessionExercises(s){ return (session && session.queue) ? session.queue : s.exercises; }
+
+/* =====================================================================
+   PRIORITY 3 — TODAY'S REVIEW  (lightweight, no dashboard)
+   Recycles previously-wrong questions + a few items targeting weak sounds.
+   Reuses the exact stage-quiz engine via a small synthetic stage object.
+   ===================================================================== */
+// =====================================================================
+//  SOUND PRACTICE WORD BANK  (teacher-curated)
+//  For each IPA sound: 10 high-frequency, mostly single-syllable words that
+//  clearly contain the target sound. Chosen for Common + Simple + Easy to
+//  remember (cat/dog/pen), NOT rare/academic. Each word hand-checked so the
+//  target sound is unambiguous.
+// =====================================================================
+const SOUND_WORDS = {
+  // ---- short vowels ----
+  "ɪ":["sit","pig","big","pin","kid","win","lip","hit","zip","bin"],
+  "e":["bed","pen","red","ten","net","yes","wet","hen","leg","egg"],
+  "æ":["cat","bag","map","hat","bad","fan","man","jam","cab","sad"],
+  "ʌ":["cup","bus","sun","cut","mud","nut","run","gun","duck","luck"],
+  "ɒ":["hot","dog","top","job","pot","mop","pop","rock","lock","sock"],
+  "ʊ":["book","foot","good","look","cook","wood","put","pull","bull","hook"],
+  "ə":["about","sofa","banana","again","comma","camera","panda","zebra","pizza","data"],
+  // ---- long vowels ----
+  "iː":["sheep","tree","key","sea","bee","green","cheese","read","meet","feet"],
+  "ɑː":["car","star","park","arm","card","dark","far","hard","jar","bar"],
+  "ɔː":["door","ball","wall","call","four","saw","law","draw","fork","corn"],
+  "uː":["food","blue","moon","spoon","zoo","shoe","room","cool","pool","glue"],
+  "ɜː":["bird","girl","word","work","first","shirt","turn","burn","nurse","third"],
+  // ---- diphthongs ----
+  "eɪ":["day","cake","name","rain","play","face","game","late","train","gate"],
+  "aɪ":["my","time","five","ice","kite","ride","light","night","bike","line"],
+  "ɔɪ":["boy","toy","coin","oil","join","noise","voice","point","joy","soil"],
+  "aʊ":["now","cow","house","mouth","down","town","brown","cloud","sound","mouse"],
+  "əʊ":["go","home","nose","boat","road","snow","phone","coat","bone","note"],
+  "ɪə":["here","ear","beer","year","dear","near","clear","fear","deer","cheer"],
+  "eə":["hair","air","chair","bear","pear","care","share","wear","square","stare"],
+  "ʊə":["tour","pure","cure","sure","poor","tourist","mature","secure","detour","Europe"],
+  // ---- voiceless consonants ----
+  "p":["pen","pig","cup","map","top","pet","pan","lip","cap","tap"],
+  "t":["ten","cat","top","toy","hat","tea","net","bat","sit","tie"],
+  "k":["key","cat","cup","cake","book","kid","car","milk","duck","kick"],
+  "f":["fan","fish","four","leaf","fun","fly","foot","knife","life","off"],
+  "θ":["think","thin","bath","math","mouth","tooth","path","thick","cloth","fourth"],
+  "s":["sun","sit","bus","yes","see","sea","sad","kiss","sock","sing"],
+  "ʃ":["she","shop","fish","ship","shoe","wash","push","cash","dish","brush"],
+  "tʃ":["chair","cheese","catch","watch","lunch","chip","much","rich","teach","match"],
+  "h":["hat","hot","home","hand","hill","hen","house","help","hop","hug"],
+  // ---- voiced consonants ----
+  "b":["boot","bed","big","bus","bag","ball","book","bird","boy","cab"],
+  "d":["dog","day","desk","door","duck","red","bad","mud","ride","bed"],
+  "g":["good","go","big","dog","bag","game","girl","green","egg","gun"],
+  "v":["van","very","love","five","give","live","seven","river","voice","save"],
+  "ð":["this","that","they","them","then","the","mother","father","brother","weather"],
+  "z":["zoo","zip","buzz","nose","rose","jazz","size","prize","zebra","lazy"],
+  "ʒ":["vision","measure","treasure","usual","casual","leisure","pleasure","beige","garage","decision"],
+  "dʒ":["jump","jam","job","page","cage","bridge","juice","jacket","fridge","large"],
+  "m":["man","map","milk","mum","moon","mouse","jam","time","name","game"],
+  "n":["no","net","nose","sun","ten","run","moon","rain","name","nine"],
+  "ŋ":["sing","ring","king","long","song","wing","bring","strong","hang","young"],
+  "l":["leg","lion","milk","ball","bell","love","light","lamp","blue","cool"],
+  "r":["red","run","rain","road","rock","ring","river","green","tree","grass"],
+  "w":["we","win","water","wall","week","wind","west","wood","wet","wing"],
+  "j":["yes","you","year","yellow","young","yard","yawn","yoga","beyond","yet"]
+};
+
+
+// Verified British-RP IPA for every curated SOUND_WORDS entry (317 words).
+// Hand-checked by a pronunciation teacher — shown on the Sound Reference Card.
+const WORD_IPA = {"about":"/əˈbaʊt/", "again":"/əˈɡen/", "air":"/eə/", "arm":"/ɑːm/", "bad":"/bæd/", "bag":"/bæɡ/", "ball":"/bɔːl/", "banana":"/bəˈnɑːnə/", "bar":"/bɑː/", "bat":"/bæt/", "bath":"/bɑːθ/", "bear":"/beə/", "bed":"/bed/", "bee":"/biː/", "beer":"/bɪə/", "beige":"/beɪʒ/", "bell":"/bel/", "beyond":"/bɪˈjɒnd/", "big":"/bɪɡ/", "bike":"/baɪk/", "bird":"/bɜːd/", "blue":"/bluː/", "boat":"/bəʊt/", "bone":"/bəʊn/", "book":"/bʊk/", "boot":"/buːt/", "box":"/bɒks/", "boy":"/bɔɪ/", "bridge":"/brɪdʒ/", "bring":"/brɪŋ/", "brother":"/ˈbrʌðə/", "brown":"/braʊn/", "brush":"/brʌʃ/", "bull":"/bʊl/", "burn":"/bɜːn/", "bus":"/bʌs/", "buzz":"/bʌz/", "cab":"/kæb/", "cage":"/keɪdʒ/", "cake":"/keɪk/", "call":"/kɔːl/", "camera":"/ˈkæmərə/", "cap":"/kæp/", "car":"/kɑː/", "card":"/kɑːd/", "care":"/keə/", "cash":"/kæʃ/", "casual":"/ˈkæʒuəl/", "cat":"/kæt/", "catch":"/kætʃ/", "chair":"/tʃeə/", "cheer":"/tʃɪə/", "cheese":"/tʃiːz/", "chip":"/tʃɪp/", "clear":"/klɪə/", "clock":"/klɒk/", "cloth":"/klɒθ/", "cloud":"/klaʊd/", "coat":"/kəʊt/", "coin":"/kɔɪn/", "comma":"/ˈkɒmə/", "cook":"/kʊk/", "cool":"/kuːl/", "corn":"/kɔːn/", "cow":"/kaʊ/", "cup":"/kʌp/", "cure":"/kjʊə/", "cut":"/kʌt/", "dark":"/dɑːk/", "data":"/ˈdeɪtə/", "day":"/deɪ/", "dear":"/dɪə/", "decision":"/dɪˈsɪʒn/", "deer":"/dɪə/", "desk":"/desk/", "detour":"/ˈdiːtʊə/","Europe":"/ˈjʊərəp/","bin":"/bɪn/","six":"/sɪks/","mop":"/mɒp/","pop":"/pɒp/","pot":"/pɒt/","put":"/pʊt/", "dish":"/dɪʃ/", "dog":"/dɒɡ/", "door":"/dɔː/", "down":"/daʊn/", "draw":"/drɔː/", "duck":"/dʌk/", "ear":"/ɪə/", "egg":"/eɡ/", "face":"/feɪs/", "fan":"/fæn/", "far":"/fɑː/", "father":"/ˈfɑːðə/", "fear":"/fɪə/", "feet":"/fiːt/", "first":"/fɜːst/", "fish":"/fɪʃ/", "five":"/faɪv/", "fly":"/flaɪ/", "food":"/fuːd/", "foot":"/fʊt/", "fork":"/fɔːk/", "four":"/fɔː/", "fourth":"/fɔːθ/", "fridge":"/frɪdʒ/", "fun":"/fʌn/", "game":"/ɡeɪm/", "garage":"/ˈɡærɑːʒ/", "gate":"/ɡeɪt/", "girl":"/ɡɜːl/", "give":"/ɡɪv/", "glue":"/ɡluː/", "go":"/ɡəʊ/", "good":"/ɡʊd/", "grass":"/ɡrɑːs/", "green":"/ɡriːn/", "gun":"/ɡʌn/", "hair":"/heə/", "hand":"/hænd/", "hang":"/hæŋ/", "hard":"/hɑːd/", "hat":"/hæt/", "help":"/help/", "hen":"/hen/", "here":"/hɪə/", "hill":"/hɪl/", "hit":"/hɪt/", "home":"/həʊm/", "hook":"/hʊk/", "hop":"/hɒp/", "hot":"/hɒt/", "house":"/haʊs/", "hug":"/hʌɡ/", "ice":"/aɪs/", "jacket":"/ˈdʒækɪt/", "jam":"/dʒæm/", "jar":"/dʒɑː/", "jazz":"/dʒæz/", "job":"/dʒɒb/", "join":"/dʒɔɪn/", "joy":"/dʒɔɪ/", "juice":"/dʒuːs/", "jump":"/dʒʌmp/", "key":"/kiː/", "kick":"/kɪk/", "kid":"/kɪd/", "king":"/kɪŋ/", "kiss":"/kɪs/", "kite":"/kaɪt/", "knife":"/naɪf/", "lamp":"/læmp/", "large":"/lɑːdʒ/", "late":"/leɪt/", "law":"/lɔː/", "lazy":"/ˈleɪzi/", "leaf":"/liːf/", "leg":"/leɡ/", "leisure":"/ˈleʒə/", "life":"/laɪf/", "light":"/laɪt/", "line":"/laɪn/", "lion":"/ˈlaɪən/", "lip":"/lɪp/", "live":"/lɪv/", "lock":"/lɒk/", "long":"/lɒŋ/", "look":"/lʊk/", "love":"/lʌv/", "luck":"/lʌk/", "lunch":"/lʌntʃ/", "man":"/mæn/", "map":"/mæp/", "match":"/mætʃ/", "math":"/mæθ/", "mature":"/məˈtʃʊə/", "measure":"/ˈmeʒə/", "meet":"/miːt/", "milk":"/mɪlk/", "moon":"/muːn/", "mother":"/ˈmʌðə/", "mouse":"/maʊs/", "mouth":"/maʊθ/", "much":"/mʌtʃ/", "mud":"/mʌd/", "mum":"/mʌm/", "my":"/maɪ/", "name":"/neɪm/", "near":"/nɪə/", "net":"/net/", "night":"/naɪt/", "nine":"/naɪn/", "no":"/nəʊ/", "noise":"/nɔɪz/", "nose":"/nəʊz/", "note":"/nəʊt/", "now":"/naʊ/", "nurse":"/nɜːs/", "nut":"/nʌt/", "off":"/ɒf/", "oil":"/ɔɪl/", "page":"/peɪdʒ/", "pan":"/pæn/", "panda":"/ˈpændə/", "park":"/pɑːk/", "path":"/pɑːθ/", "pear":"/peə/", "pen":"/pen/", "pet":"/pet/", "phone":"/fəʊn/", "pig":"/pɪɡ/", "pin":"/pɪn/", "pizza":"/ˈpiːtsə/", "play":"/pleɪ/", "pleasure":"/ˈpleʒə/", "point":"/pɔɪnt/", "pool":"/puːl/", "poor":"/pʊə/", "prize":"/praɪz/", "pull":"/pʊl/", "pure":"/pjʊə/", "push":"/pʊʃ/", "rain":"/reɪn/", "read":"/riːd/", "red":"/red/", "rich":"/rɪtʃ/", "ride":"/raɪd/", "ring":"/rɪŋ/", "river":"/ˈrɪvə/", "road":"/rəʊd/", "rock":"/rɒk/", "room":"/ruːm/", "rose":"/rəʊz/", "run":"/rʌn/", "sad":"/sæd/", "save":"/seɪv/", "saw":"/sɔː/", "sea":"/siː/", "secure":"/sɪˈkjʊə/", "see":"/siː/", "seven":"/ˈsevn/", "share":"/ʃeə/", "she":"/ʃiː/", "sheep":"/ʃiːp/", "ship":"/ʃɪp/", "shirt":"/ʃɜːt/", "shoe":"/ʃuː/", "shop":"/ʃɒp/", "sing":"/sɪŋ/", "sit":"/sɪt/", "size":"/saɪz/", "snow":"/snəʊ/", "sock":"/sɒk/", "sofa":"/ˈsəʊfə/", "soil":"/sɔɪl/", "song":"/sɒŋ/", "sound":"/saʊnd/", "spoon":"/spuːn/", "square":"/skweə/", "star":"/stɑː/", "stare":"/steə/", "strong":"/strɒŋ/", "sun":"/sʌn/", "sure":"/ʃʊə/", "tap":"/tæp/", "tea":"/tiː/", "teach":"/tiːtʃ/", "ten":"/ten/", "that":"/ðæt/", "the":"/ðə/", "them":"/ðem/", "then":"/ðen/", "they":"/ðeɪ/", "thick":"/θɪk/", "thin":"/θɪn/", "think":"/θɪŋk/", "third":"/θɜːd/", "this":"/ðɪs/", "tie":"/taɪ/", "time":"/taɪm/", "tooth":"/tuːθ/", "top":"/tɒp/", "tour":"/tʊə/", "tourist":"/ˈtʊərɪst/", "town":"/taʊn/", "toy":"/tɔɪ/", "train":"/treɪn/", "treasure":"/ˈtreʒə/", "tree":"/triː/", "turn":"/tɜːn/", "usual":"/ˈjuːʒuəl/", "van":"/væn/", "very":"/ˈveri/", "vision":"/ˈvɪʒn/", "voice":"/vɔɪs/", "wall":"/wɔːl/", "wash":"/wɒʃ/", "watch":"/wɒtʃ/", "water":"/ˈwɔːtə/", "we":"/wiː/", "wear":"/weə/", "weather":"/ˈweðə/", "week":"/wiːk/", "west":"/west/", "wet":"/wet/", "win":"/wɪn/", "wind":"/wɪnd/", "wing":"/wɪŋ/", "wood":"/wʊd/", "word":"/wɜːd/", "work":"/wɜːk/", "yard":"/jɑːd/", "yawn":"/jɔːn/", "year":"/jɪə/", "yellow":"/ˈjeləʊ/", "yes":"/jes/", "yet":"/jet/", "yoga":"/ˈjəʊɡə/", "you":"/juː/", "young":"/jʌŋ/", "zebra":"/ˈzebrə/", "zip":"/zɪp/", "zoo":"/zuː/"};
+
+const REVIEW_STAGE = { id:"review", title:"Today's Review", short:"Review", icon:"🔁", color:"coral",
+  exercises:[], reward:{ xp:0, title:"Review complete!", line:"" } };
+function findStage(id){ return id==="review" ? REVIEW_STAGE : id==="soundpx" ? SOUND_STAGE : COURSE.find(x=>x.id===id); }
+// gather a few extra questions that drill the learner's weakest sounds.
+// Deterministic (no randomness) so the count and the actual session agree.
+function weakSoundQuestions(){
+  const weakTokens = Object.entries(S.weak).filter(([k,v])=>v>=2).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+  if(!weakTokens.length) return [];
+  const strip = t => t.replace(/\//g,"");
+  const out=[];
+  for(const p of PAIRS){
+    const ia=strip(p.ia), ib=strip(p.ib), f=strip(p.f);
+    if(weakTokens.some(t=>{ const s=strip(t); return ia.includes(s)||ib.includes(s)||f.includes(s); })){
+      out.push(ex({kind:"Choose the IPA", prompt:p.a, options:[opt(p.ia,true),opt(p.ib)], fam:p.f,
+        hint:`${p.f}. ${cap(p.a)} = ${p.ia}, ${cap(p.b)} = ${p.ib}.`}));
+    }
+    if(out.length>=6) break;
+  }
+  return out;
+}
+// the single source of truth for the review pool (deduped). Both the count
+// and the session are built from this, so they can never disagree.
+function buildReviewPool(){
+  const seen = new Set();
+  const pool = [];
+  for(const q of [...S.review, ...weakSoundQuestions()]){
+    const k = reviewKey(q);
+    if(seen.has(k)) continue;
+    seen.add(k); pool.push(q);
+  }
+  return pool;
+}
+function reviewPoolCount(){
+  return Math.min(15, buildReviewPool().length);
+}
+function startReview(){
+  const queue = shuffle(buildReviewPool()).slice(0, 15);
+  if(!queue.length){ return; }
+  REVIEW_STAGE.exercises = queue;
+  session = { stageId:"review", step:"quiz", qi:0, correct:0, total:queue.length, earned:0,
+              perfect:true, comboStart:S.combo, queue, isReview:true };
+  S.combo=0; renderHUD(); go({name:"stage"});
+}
+
+// ===== PER-SOUND PRACTICE (Sounds page → tap a sound → 10 targeted questions) =====
+// Reuses the engine via a temporary stage (like REVIEW_STAGE), marked isReview
+// so it gives a light wrap-up and does NOT touch course progression.
+const SOUND_STAGE = { id:"soundpx", title:"Sound Practice", short:"Practice", icon:"🔊", color:"teal",
+  exercises:[], reward:{ xp:0, title:"Practice complete!", line:"" } };
+function soundLabel(ipa){
+  const ex0 = (SOUND_WORDS[ipa]||[])[0] || "";
+  return `/${ipa}/${ex0?` (${ex0})`:""}`;
+}
+// words that do NOT contain the target sound, avoiding its confusable partner
+// ===== SOUND DISTANCE TIERS (beginner→advanced difficulty curve) =====
+// Each sound belongs to a phonetic family. Distractors are graded by how FAR
+// they sit from the target so beginners build a sound boundary before facing
+// minimal pairs (full/fool, ship/sheep).
+const SOUND_FAMILY = {
+  short:["ɪ","e","æ","ʌ","ɒ","ʊ","ə"],
+  long:["iː","ɑː","ɔː","uː","ɜː"],
+  diph:["eɪ","aɪ","ɔɪ","aʊ","əʊ","ɪə","eə","ʊə"],
+  vless:["p","t","k","f","θ","s","ʃ","tʃ","h"],
+  vced:["b","d","g","v","ð","z","ʒ","dʒ","m","n","ŋ","l","r","w","j"]
+};
+function familyOf(ipa){
+  for(const [fam,arr] of Object.entries(SOUND_FAMILY)) if(arr.includes(ipa)) return fam;
+  return "other";
+}
+function nearPartners(ipa){ return [LENGTH_PAIRS[ipa], VOICE_PAIRS[ipa]].filter(Boolean); }
+// pick `n` distractor WORDS at a difficulty tier:
+//  "far"  → opposite macro-category (vowel↔consonant): easy
+//  "mid"  → related family but NOT the minimal-pair partner: medium
+//  "near" → the minimal-pair partner (length/voice): advanced
+function tierWords(ipa, n, tier){
+  const fam = familyOf(ipa);
+  const near = new Set(nearPartners(ipa));
+  const own = new Set(SOUND_WORDS[ipa]||[]);
+  let allow;
+  if(tier==="near"){
+    allow = s => near.has(s);
+  } else if(tier==="mid"){
+    const sameBucket = ["short","long"].includes(fam) ? ["short","long"] : [fam];
+    allow = s => s!==ipa && !near.has(s) && sameBucket.includes(familyOf(s));
+  } else {
+    const consonantFams=["vless","vced"], vowelFams=["short","long","diph"];
+    const isVowel = vowelFams.includes(fam);
+    if(isVowel){
+      // far = a clearly different vowel quality: diphthongs read as very distinct
+      // from plain short/long vowels, so prefer the non-adjacent vowel families.
+      const farVowel = fam==="diph" ? ["short","long"] : ["diph"];
+      allow = s => s!==ipa && !near.has(s) && farVowel.includes(familyOf(s));
+    } else {
+      allow = s => s!==ipa && !near.has(s) && vowelFams.includes(familyOf(s));
+    }
+  }
+  const pool=[];
+  for(const [s,ws] of Object.entries(SOUND_WORDS)){
+    if(!allow(s)) continue;
+    for(const w of ws){ if(!own.has(w)) pool.push(w); }
+  }
+  let picks = shuffle(pool).slice(0,n);
+  if(picks.length<n) picks = picks.concat(distractorWords(ipa, n-picks.length));
+  return picks.slice(0,n);
+}
+// generic distractor (safety fallback)
+function distractorWords(ipa, n){
+  const avoid = new Set([ipa, LENGTH_PAIRS[ipa], VOICE_PAIRS[ipa]].filter(Boolean));
+  const own = new Set(SOUND_WORDS[ipa]||[]);
+  const pool = [];
+  for(const [k,ws] of Object.entries(SOUND_WORDS)){
+    if(avoid.has(k)) continue;
+    for(const wd of ws){ if(!own.has(wd)) pool.push(wd); }
+  }
+  return shuffle(pool).slice(0, n);
+}
+// 10 questions on a beginner→advanced curve:
+//   Stage 1 (×4) EASY  — 3 options, far distractors
+//   Stage 2 (×3) MEDIUM— 3 options, mid distractors (no minimal pair)
+//   Stage 3 (×3) HARD  — minimal pair (2 options) if one exists, else mid odd-one-out
+function buildSoundQuestions(ipa){
+  const words = (SOUND_WORDS[ipa]||[]).slice();
+  if(!words.length) return [];
+  const qs = [];
+  const hasNear = nearPartners(ipa).length>0;
+  const w1 = shuffle(words.slice());
+  for(let i=0;i<4 && i<w1.length;i++){
+    const right=w1[i], wrongs=tierWords(ipa,2,"far");
+    qs.push(ex({ kind:`Find the /${ipa}/ sound`, lvl:"Easy", prompt:`Which word has the /${ipa}/ sound?`,
+      options:shuffle([opt(right,true), ...wrongs.map(x=>opt(x))]),
+      hint:`“${right}” has /${ipa}/. The others sound clearly different — tap 🔊 to compare.` }));
+  }
+  const w2 = shuffle(words.slice());
+  for(let i=0;i<3 && i<w2.length;i++){
+    const right=w2[i], wrongs=tierWords(ipa,2,"mid");
+    qs.push(ex({ kind:"Listen & choose", lvl:"Medium", variant:"listen", word:right, sub:"Which word did you hear?",
+      options:shuffle([opt(right,true), ...wrongs.map(x=>opt(x))]),
+      hint:`You heard “${right}” — it has the /${ipa}/ sound.` }));
+  }
+  const w3 = shuffle(words.slice());
+  for(let i=0;i<3;i++){
+    if(hasNear){
+      const right=w3[i%w3.length], wrong=tierWords(ipa,1,"near")[0];
+      qs.push(ex({ kind:"Minimal pair", lvl:"Hard", variant:"listen", word:right, sub:"Which word did you hear?",
+        options:shuffle([opt(right,true), opt(wrong)]),
+        hint:`Tricky pair! “${right}” has /${ipa}/. Listen for the small difference — tap 🔊 to compare.` }));
+    } else {
+      const keep=shuffle(words.filter(x=>x!==w3[i%w3.length])).slice(0,2);
+      const odd=tierWords(ipa,1,"mid")[0] || distractorWords(ipa,1)[0] || "no";
+      qs.push(ex({ kind:"Spot the odd one", lvl:"Hard", prompt:`Which word does NOT have the /${ipa}/ sound?`,
+        options:shuffle([opt(odd,true), ...keep.map(x=>opt(x))]),
+        hint:`“${keep.join("” and “")}” have /${ipa}/; “${odd}” does not.` }));
+    }
+  }
+  return qs.slice(0,10);
+}
+function startSoundPractice(ipa){
+  const qs = buildSoundQuestions(ipa);
+  if(!qs.length) return;
+  SOUND_STAGE.exercises = qs;
+  SOUND_STAGE.title = `Practice: ${soundLabel(ipa)}`;
+  session = { stageId:"soundpx", step:"quiz", qi:0, correct:0, total:qs.length, earned:0,
+              perfect:true, comboStart:S.combo, queue:qs, isReview:true, soundIpa:ipa };
+  S.combo=0; renderHUD(); go({name:"stage"});
+}
+
+function stepBar(active){ // active: 0..3
+  return `<div class="steps">${[0,1,2,3].map(i=>`<i class="${i<active?'on':(i===active?'cur':'')}"></i>`).join("")}</div>`;
+}
+function topbar(active){
+  return `<div class="topbar"><button class="iconbtn" data-action="goMap">✕</button>${stepBar(active)}</div>`;
+}
+function renderStageFlow(){
+  const s = findStage(session.stageId);
+  if(session.step==="video")  return renderVideo(s);
+  if(session.step==="learn")  return renderLearn(s);
+  if(session.step==="quiz")   return renderExercise(s);
+  if(session.step==="reward") return renderReward(s);
+}
+
+/* STEP 1 — VIDEO */
+// extract the 11-char video id from any YouTube URL shape
+function ytId(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+// proper, Safari-safe embed URL: no autoplay, privacy domain, inline playback
+function ytEmbedUrl(id){
+  return "https://www.youtube-nocookie.com/embed/" + id +
+         "?rel=0&modestbranding=1&playsinline=1&autoplay=0";
+}
+// embeds commonly fail with "Error 153" on file:// or srcdoc previews → use link fallback there
+function embedUnsupported(){
+  const p = location.protocol;
+  return p === "file:" || p === "about:" || p === "data:";
+}
+// requirement 4: if a YouTube iframe cannot load (blocked, no network, embedding
+// disabled, Error 153), swap its wrapper for a tappable thumbnail that opens YouTube.
+function ytFallback(frameId, id, title){
+  const wrap = document.getElementById(frameId+"_wrap");
+  if(!wrap || wrap.dataset.fellback) return;
+  wrap.dataset.fellback = "1";
+  const watch = "https://www.youtube.com/watch?v=" + id;
+  const thumb = "https://img.youtube.com/vi/" + id + "/hqdefault.jpg";
+  wrap.outerHTML =
+    `<a class="video as-link" href="${watch}" target="_blank" rel="noopener" style="background-image:url('${thumb}')">
+       <span class="tag">▶ WATCH ON YOUTUBE</span>
+       <div class="play">▶</div>
+       <div class="vmeta"><b>${title||"Watch the lesson"}</b><span>Opens in YouTube</span></div>
+     </a>`;
+}
+function renderVideo(s){
+  const url = videoUrl(s.video.key);
+  const id  = ytId(url);
+  let player;
+  if(!id){
+    // No video for this stage in the current language (e.g. Welcome has no
+    // English video). Show a gentle note instead of a teacher placeholder.
+    player = `<div class="video">
+         <span class="tag">▶ VIDEO LESSON</span>
+         <div class="play">▶</div>
+         <div class="vmeta"><b>${s.video.title}</b><span>${s.video.caption}</span></div>
+       </div>`;
+  } else {
+    const watch = "https://www.youtube.com/watch?v=" + id;
+    const thumb = "https://img.youtube.com/vi/" + id + "/hqdefault.jpg";
+    if(embedUnsupported()){
+      // local / sandboxed preview: show a tappable thumbnail that opens YouTube (avoids Error 153)
+      player = `<a class="video as-link" href="${watch}" target="_blank" rel="noopener" style="background-image:url('${thumb}')">
+           <span class="tag">▶ WATCH ON YOUTUBE</span>
+           <div class="play">▶</div>
+           <div class="vmeta"><b>${s.video.title}</b><span>Opens in YouTube</span></div>
+         </a>
+         <div class="placeholder-note">Embedded playback is blocked in local preview — opens on YouTube instead.</div>`;
+    } else {
+      // normal responsive iframe + automatic fallback if it can't load
+      const fid = "yt_"+id+"_"+Math.random().toString(36).slice(2,7);
+      player = `<div class="video" id="${fid}_wrap">
+           <iframe id="${fid}" src="${ytEmbedUrl(id)}" title="${s.video.title}"
+             loading="lazy" referrerpolicy="origin-when-cross-origin"
+             allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+             allowfullscreen
+             onerror="ytFallback('${fid}','${id}','${(s.video.title||'').replace(/'/g,'')}')"></iframe>
+         </div>
+         <div class="placeholder-note">Trouble playing here? <a href="${watch}" target="_blank" rel="noopener">Watch on YouTube ↗</a></div>`;
+      // if the iframe hasn't reported load shortly, assume it's blocked and swap in the link card
+      setTimeout(()=>{
+        const f = document.getElementById(fid);
+        if(f && !f.dataset.loaded){ ytFallback(fid, id, s.video.title||""); }
+      }, 4000);
+      // mark as loaded when the frame fires its load event (cancels the timeout swap)
+      setTimeout(()=>{
+        const f = document.getElementById(fid);
+        if(f) f.addEventListener("load", ()=>{ f.dataset.loaded = "1"; });
+      }, 0);
+    }
+  }
+  $screen().innerHTML = `
+    ${topbar(0)}
+    <div class="pad">
+      <span class="sec-label">Step 1 · Watch</span>
+      <h2 class="sec-h">${s.title}</h2>
+      <p class="sec-p">${s.video.caption}.</p>
+      ${player}
+      <div style="height:18px"></div>
+      <button class="btn" data-action="toLearn">I've watched it →</button>
+    </div>`;
+}
+
+/* STEP 2 — LEARN */
+function ipaPills(items, cls){
+  return `<div class="ipa-grid">${items.map(it=>{
+    const word = it[1]||"";
+    return `
+    <div class="ipa-pill ${cls||''}" data-action="playword" data-word="${word}" data-ipa="${it[0]}" aria-label="Play ${word}">
+      <b class="ipa">${it[0]}</b>${word?`<span class="w">${word}</span><span class="sp">${SPK_SVG}</span>`:""}
+    </div>`;}).join("")}</div>`;
+}
+function renderLearn(s){
+  const L=s.learn;
+  let body = `<p class="sec-p">${L.intro}</p>`;
+  if(L.bullets){
+    body += `<div class="card block"><h3>Why it matters</h3>${L.bullets.map(b=>`
+      <div style="display:flex;gap:11px;align-items:flex-start;margin:10px 0;font-weight:700;font-size:15px;line-height:1.4">
+        <span style="font-size:20px">${b[0]}</span><span>${b[1]}</span></div>`).join("")}</div>`;
+  }
+  if(L.groups){
+    body += L.groups.map(g=>`<div class="card block"><h3>${g.title}</h3>${ipaPills(g.items,g.cls)}</div>`).join("");
+  }
+  if(L.note) body += `<div class="note">💡 <span>${L.note}</span></div>`;
+  if(L.quote) body += `<div class="quote">“${L.quote.cn}”<small>${L.quote.en}</small></div>`;
+  $screen().innerHTML = `
+    ${topbar(1)}
+    <div class="pad">
+      <span class="sec-label">Step 2 · Learn</span>
+      <h2 class="sec-h">${L.heading}</h2>
+      ${body}
+      <div style="height:18px"></div>
+      <button class="btn coral" data-action="toQuiz">Start exercises →</button>
+    </div>`;
+}
+
+/* =====================================================================
+   9. EXERCISE ENGINE  —  ONE renderer for every question variant.
+      STEP 3 of the stage template.
+   ===================================================================== */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function renderExercise(s){
+  const q = sessionExercises(s)[session.qi];
+  if(!session._opts || session._optsFor!==session.qi){
+    session._opts = shuffle(q.options); session._optsFor=session.qi; session.sel=null; session.locked=false;
+  }
+  const opts = session._opts;
+  const isChip = q.variant==="fill";
+  // prompt rendering by variant (with audio where a WORD is shown)
+  let promptHTML="";
+  if(q.variant==="fill"){
+    const shown = q.prompt.replace(/_+/, `<span class="q-blank">&nbsp;?&nbsp;</span>`);
+    promptHTML = `<div class="q-sub">Complete the transcription of <b>“${q.word}”</b> ${speaker(q.word,q.audioSrc)}</div>
+                  <div class="q-prompt"><span class="big ipaword ipa">${shown}</span></div>`;
+  } else if(q.variant==="word"){
+    promptHTML = `<div class="q-sub">Which word is this?</div>
+                  <div class="q-prompt"><span class="big ipaword ipa">${q.prompt}</span></div>`;
+  } else if(q.variant==="identify"){
+    const spk = isWordLabel(q.prompt) ? " "+speaker(q.prompt,q.audioSrc,"big") : "";
+    promptHTML = `<div class="q-prompt"><span class="big ipaword ipa">${q.prompt}</span>${spk}</div>
+                  <div class="q-sub">${q.sub||"Which one?"}</div>`;
+  } else if(q.variant==="listen"){
+    // listening practice INSIDE the lesson: hear the word, then pick it
+    promptHTML = `<div class="q-sub">${q.sub||"Listen, then choose the word you hear"}</div>
+                  <div class="big-listen"><button class="listen-btn" data-action="listen" data-word="${q.word}"${q.audioSrc?` data-src="${q.audioSrc}"`:""}><span class="li-ic">${SPK_SVG}</span> Tap to listen</button></div>`;
+  } else { // choose IPA for a word
+    promptHTML = `<div class="q-sub">${q.sub||"Choose the correct IPA for"}</div>
+                  <div class="q-prompt"><span class="big">${q.prompt}</span> ${speaker(q.prompt,q.audioSrc,"big")}</div>`;
+  }
+  const optsHTML = opts.map((o,idx)=>{
+    const spk = isWordLabel(o.label) ? speaker(o.label, o.src) : "";
+    return `
+    <button class="opt ${isChip?'chipopt':''}" data-action="pick" data-idx="${idx}">
+      ${isChip?"":`<span class="key">${String.fromCharCode(65+idx)}</span>`}
+      <span class="ipa">${o.label}</span>${spk?`<span class="opt-spk">${spk}</span>`:""}
+    </button>`;}).join("");
+
+  $screen().innerHTML = `
+    ${topbar(2)}
+    <div class="pad" style="position:relative">
+      <div class="combo" id="comboMsg"></div>
+      <span class="q-kind">${q.kind} · ${session.qi+1}/${session.total}${q.lvl?` <span class="q-lvl ${q.lvl.toLowerCase()}">${q.lvl}</span>`:""}</span>
+      ${promptHTML}
+      <div class="opts ${isChip?'wrap':''}" id="opts">${optsHTML}</div>
+    </div>`;
+  if(q.variant==="listen") setTimeout(()=>Audio$.play(q.word, q.audioSrc), 350);  // play once on load
+}
+
+function pickOption(idx){
+  if(session.locked) return;
+  session.sel = idx; sfx("tap");
+  [...document.querySelectorAll("#opts .opt")].forEach((el,i)=>el.classList.toggle("sel", i===idx));
+  showCheck();
+}
+function showCheck(){
+  const fb=document.getElementById("feedback");
+  fb.className="show"; fb.innerHTML=`<div class="fb-inner" style="background:#fff;border-color:var(--line)">
+    <button class="btn" data-action="check">Check answer</button></div>`;
+}
+
+function checkAnswer(){
+  const s = findStage(session.stageId);
+  const q = sessionExercises(s)[session.qi];
+  const opts = session._opts, sel = session.sel;
+  if(sel==null) return;
+  if(session.locked) return;                 // QA fix: block double-submit (fast double-tap)
+  session.locked=true;
+  const correct = opts[sel].correct;
+  const els=[...document.querySelectorAll("#opts .opt")];
+  els.forEach((el,i)=>{
+    el.classList.remove("sel");
+    if(opts[i].correct) el.classList.add("correct");
+    else if(i===sel) el.classList.add("wrong");
+    el.classList.add("answered");           // blocks re-pick (see pickOption) but
+                                            // keeps the speaker buttons tappable
+  });
+
+  if(correct){
+    sfx("ok");
+    S.combo++; if(S.combo>S.bestCombo) S.bestCombo=S.combo;
+    session.correct++;
+    let gain = 10 + (S.combo>=5?5:0);          // 4. XP per correct + combo bonus
+    session.earned += gain;
+    const cl = opts.find(o=>o.correct).label;
+    if(session.isReview){
+      // PRIORITY 3 FIX: a correct review answer clears the item immediately —
+      // remove it from the pending pool AND zero its weak-sound counter so the
+      // weak-sound generator stops re-creating it.
+      clearFromReview(q);
+    } else if(!isWordLabel(cl) && S.weak[cl]){
+      S.weak[cl] = Math.max(0, S.weak[cl]-1);  // normal lesson: ease off a weak sound
+    }
+    const okMsg = q.okMsg || pick(PRAISE);
+    if(S.combo===5 && !S.badges.hot_streak){ S.badges.hot_streak=true; setTimeout(()=>miniBadge("hot_streak"),300); }
+    if(COMBO_LINES[S.combo]) comboFlash(COMBO_LINES[S.combo]);
+    feedbackOK(okMsg, gain);
+    const correctEl = els.find(e=>e.classList.contains("correct"));
+    awardXP(gain, correctEl);
+  } else {
+    sfx("no");
+    session.perfect=false; S.combo=0;          // reset combo only — no penalty, learning continues
+    // lightweight weak-sound tracking (unrelated to lives)
+    const cl = opts.find(o=>o.correct).label;
+    if(!isWordLabel(cl)) S.weak[cl] = (S.weak[cl]||0)+1;
+    // PRIORITY 3: stash this question for "Today's Review" (dedupe by prompt, cap 30)
+    addToReview(q);
+    els[sel].classList.add("shake");
+    // TEACHING FEEDBACK: explain chosen vs correct & why, falling back to the hint
+    const chosenLbl = opts[sel].label;
+    const teach = whyDifferent(chosenLbl, cl);
+    const norm = s => String(s).replace(/[\/\[\]]/g,"").trim();
+    const cTok = norm(chosenLbl), aTok = norm(cl);
+    let compare = null;
+    if(teach && PHONEME_SAY[cTok] && PHONEME_SAY[aTok]){
+      compare = { a: PHONEME_SAY[aTok][0], b: PHONEME_SAY[cTok][0] };  // correct word first
+    }
+    feedbackNO(teach || q.hint, compare);
+    renderHUD();
+  }
+  save();
+}
+function reviewKey(q){ return (q.variant||"std")+"|"+(q.prompt||q.word||""); }
+function addToReview(q){
+  const key = reviewKey(q);
+  S.review = S.review.filter(r=>reviewKey(r)!==key);   // move-to-front dedupe
+  // store a clean copy (the engine re-shuffles options at render time)
+  S.review.unshift(JSON.parse(JSON.stringify(q)));
+  if(S.review.length>30) S.review.length = 30;
+}
+// PRIORITY 3 FIX: clear a correctly-answered review item so it doesn't reappear.
+function clearFromReview(q){
+  const key = reviewKey(q);
+  S.review = S.review.filter(r=>reviewKey(r)!==key);
+  const strip = t => t.replace(/\//g,"");
+  // 1) clear the exact correct-option IPA key if it's tracked as weak
+  const correctLabel = (q.options||[]).find(o=>o.correct);
+  if(correctLabel && !isWordLabel(correctLabel.label)) delete S.weak[correctLabel.label];
+  // 2) clear ANY weak key (which are full IPA transcriptions like "/biːt/")
+  //    whose sound contains one of the focus tokens this question drilled, so the
+  //    weak-sound generator can no longer produce a phantom item for it.
+  const focusTokens = [];
+  if(q.fam) (q.fam.match(/\/[^\/]+\//g)||[]).forEach(t=>focusTokens.push(strip(t)));
+  (q.options||[]).forEach(o=>{ if(!isWordLabel(o.label)) focusTokens.push(strip(o.label)); });
+  if(focusTokens.length){
+    for(const k of Object.keys(S.weak)){
+      const ks = strip(k);
+      if(focusTokens.some(t=> ks.includes(t) || t.includes(ks) )) delete S.weak[k];
+    }
+  }
+}
+function comboFlash(txt){ const c=document.getElementById("comboMsg"); if(!c)return; c.textContent=txt; c.classList.remove("show"); void c.offsetWidth; c.classList.add("show"); }
+
+function feedbackOK(msg, gain){
+  const fb=document.getElementById("feedback");
+  fb.className="ok show";
+  fb.innerHTML=`<div class="fb-inner">
+    <div class="fb-head"><span class="ic">✓</span><b>${msg}</b><span class="xpgain">+${gain} XP</span></div>
+    <button class="btn" data-action="next">Continue</button></div>`;
+}
+const GENTLE = ["Let's compare the two sounds","Listen for the difference","Worth a closer listen",
+  "Almost — here's the distinction","Tune your ear to this one","Compare them once more"];
+// ===== TEACHING FEEDBACK: explain WHY the chosen sound differs from the answer =====
+const SOUND_DESC = {
+  "ɪ":"short, relaxed ‘i’ (ship)","iː":"long, tense ‘ee’ (sheep)",
+  "e":"short ‘e’ (bed)","æ":"open ‘a’, mouth wide (cat)","ʌ":"short ‘uh’ (cup)",
+  "ɒ":"short, rounded ‘o’ (hot)","ɑː":"long, open ‘ah’ (car)",
+  "ʊ":"short ‘oo’ (book)","uː":"long ‘oo’ (food)","ɔː":"long ‘aw’ (door)",
+  "ə":"weak, unstressed ‘uh’ (about)","ɜː":"long ‘er’ (bird)",
+  "eɪ":"glide ‘ay’ (day)","aɪ":"glide ‘eye’ (my)","ɔɪ":"glide ‘oy’ (boy)",
+  "aʊ":"glide ‘ow’ (now)","əʊ":"glide ‘oh’ (go)",
+  "ɪə":"glide ‘ear’ (here)","eə":"glide ‘air’ (hair)","ʊə":"glide ‘oor’ (tour)",
+  "p":"voiceless ‘p’","b":"voiced ‘b’","t":"voiceless ‘t’","d":"voiced ‘d’",
+  "k":"voiceless ‘k’","g":"voiced ‘g’","f":"voiceless ‘f’","v":"voiced ‘v’",
+  "θ":"voiceless ‘th’ (think)","ð":"voiced ‘th’ (this)","s":"voiceless ‘s’ (hiss)","z":"voiced ‘z’ (buzz)",
+  "ʃ":"voiceless ‘sh’ (she)","ʒ":"voiced ‘zh’ (vision)","tʃ":"voiceless ‘ch’ (chair)","dʒ":"voiced ‘j’ (jump)",
+  "h":"breathy ‘h’","m":"‘m’, lips together","n":"‘n’, tongue up","ŋ":"‘ng’ (sing)",
+  "l":"‘l’, tongue tip up","r":"‘r’","w":"‘w’, rounded lips","j":"‘y’ (yes)"
+};
+const LENGTH_PAIRS = {"ɪ":"iː","iː":"ɪ","ʊ":"uː","uː":"ʊ","ɒ":"ɔː","ɔː":"ɒ","ʌ":"ɑː","ɑː":"ʌ","ə":"ɜː","ɜː":"ə"};
+const VOICE_PAIRS  = {"p":"b","b":"p","t":"d","d":"t","k":"g","g":"k","f":"v","v":"f","θ":"ð","ð":"θ","s":"z","z":"s","ʃ":"ʒ","ʒ":"ʃ","tʃ":"dʒ","dʒ":"tʃ"};
+// Build a teaching explanation comparing the chosen vs correct option.
+// Works when the options are IPA tokens (e.g. /ɪ/ vs /iː/). Returns "" otherwise.
+function whyDifferent(chosenLabel, correctLabel){
+  const norm = s => String(s).replace(/[\/\[\]]/g,"").trim();
+  const c = norm(chosenLabel), a = norm(correctLabel);
+  if(!c || !a || c===a) return "";
+  const cDesc = SOUND_DESC[c], aDesc = SOUND_DESC[a];
+  if(!cDesc || !aDesc) return "";
+  let why;
+  if(LENGTH_PAIRS[a]===c){
+    why = "They differ in length — listen for how long the vowel is held.";
+  } else if(VOICE_PAIRS[a]===c){
+    why = "Same mouth shape, but one is voiced (throat buzzes) and one is voiceless. Rest a finger on your throat to feel it.";
+  } else {
+    why = "Different mouth position — say both slowly and notice where your tongue and lips move.";
+  }
+  return `You chose /${c}/ (${cDesc}). The answer is /${a}/ (${aDesc}). ${why}`;
+}
+
+function feedbackNO(hint, compare){
+  const fb=document.getElementById("feedback");
+  fb.className="no show";
+  const cmp = (compare && compare.a && compare.b)
+    ? `<button class="btn ghost" data-action="compareSounds" data-a="${compare.a}" data-b="${compare.b}" style="margin-bottom:8px">🔊 Hear both sounds</button>`
+    : "";
+  fb.innerHTML=`<div class="fb-inner">
+    <div class="fb-head"><span class="ic">↻</span><b>${pick(GENTLE)}</b></div>
+    <div class="fb-hint">💡 ${hint||"Tap 🔊 and listen for the small difference between the two words."}</div>
+    ${cmp}
+    <button class="btn" data-action="next">Got it, continue</button></div>`;
+}
+// play two example words back-to-back so the learner hears the contrast
+function compareSounds(aWord, bWord){
+  if(!aWord||!bWord) return;
+  Audio$.speakSeq([[aWord,0.8],[bWord,0.8]]);
+}
+function nextQuestion(){
+  document.getElementById("feedback").className="";
+  const s = findStage(session.stageId);
+  session.qi++;
+  if(session.qi>=sessionExercises(s).length){ finishStage(s); }
+  else render();
+}
+
+/* =====================================================================
+   8. REWARD SYSTEM  —  STEP 4 of the stage template.
+   ===================================================================== */
+function finishStage(s){
+  if(session.isReview){                                 // PRIORITY 3: review wrap-up
+    // NOTE: correctly-answered items are already removed during checkAnswer via
+    // clearFromReview(). Items the learner missed stay in S.review so they can
+    // come back later. So we do NOT blanket-clear the queue here.
+    save();
+    session.step="reward";
+    sfx("reward"); confetti(90);
+    render();
+    return;
+  }
+  // record progress
+  const prev = S.stages[s.id]||{};
+  const wasDone = prev.completed;
+  S.stages[s.id] = {
+    completed:true,
+    correct:session.correct, total:session.total,
+    best: Math.max(prev.best||0, session.correct)
+  };
+  if(!wasDone){
+    awardXP(s.reward.xp);                              // big stage bonus
+    if(s.reward.badge && !S.badges[s.reward.badge]) S.badges[s.reward.badge]=true;
+    if(session.perfect && session.total>0 && !S.badges.flawless) S.badges.flawless=true;
+    unlock(nextStageId(s.id));                          // progression
+    if(s.reward.final) S.courseDone=true;
+  }
+  save();
+  session.step="reward";
+  sfx("reward"); confetti(120);
+  render();
+}
+function renderReward(s){
+  if(session.isReview){                                 // lightweight review summary
+    const acc = session.total? Math.round(session.correct/session.total*100) : 100;
+    $screen().innerHTML = `
+      <div class="reward">
+        <div class="burst">🔁</div>
+        <h2>${pick(["Great refresher!","Nicely reviewed!","Your ear is sharpening!","Strong review!"])}</h2>
+        <div class="sub">${session.correct}/${session.total} this round · ${acc}% accuracy</div>
+        <div class="tally">
+          <div class="tally-row"><span class="ic">⚡</span><span class="lbl">XP earned</span><span class="val">+${session.earned}</span></div>
+          <div class="tally-row" style="animation-delay:.1s"><span class="ic">🎯</span><span class="lbl">Today's goal</span><span class="val">${Math.min(100,Math.round(S.todayXP/Math.max(1,S.dailyGoal)*100))}%</span></div>
+        </div>
+        <div style="height:16px"></div>
+        ${reviewPoolCount()>0?`<button class="btn coral" data-action="startReview">Review more 🔁</button><div style="height:10px"></div>`:""}
+        <button class="btn ghost" data-action="goMap">Back to map</button>
+      </div>`;
+    return;
+  }
+  const r=s.reward, b=BADGES[r.badge];
+  const acc = session.total? Math.round(session.correct/session.total*100) : 100;
+  const earnedFlawless = session.perfect && session.total>0;
+  $screen().innerHTML = `
+    <div class="reward">
+      <div class="burst">${r.final?"🎉":"🌟"}</div>
+      <h2>${r.title}</h2>
+      <div class="sub">Stage complete${session.total?` · ${session.correct}/${session.total} first-try`:""}</div>
+
+      ${r.badge?`<div class="badge-card">${badgeMedal(b)}<b>${b.name} Badge</b><span>${b.desc}</span></div>`:""}
+
+      <div class="tally">
+        <div class="tally-row" style="animation-delay:.05s"><span class="ic">⚡</span><span class="lbl">XP this stage</span><span class="val">+${session.earned + (S.stages[s.id]?r.xp:0)}</span></div>
+        ${session.total?`<div class="tally-row" style="animation-delay:.15s"><span class="ic">🎯</span><span class="lbl">Accuracy</span><span class="val">${acc}%</span></div>`:""}
+        <div class="tally-row" style="animation-delay:.25s"><span class="ic">🔥</span><span class="lbl">Best combo</span><span class="val">${S.bestCombo}</span></div>
+        ${earnedFlawless?`<div class="tally-row" style="animation-delay:.35s"><span class="ic">💎</span><span class="lbl">Flawless bonus</span><span class="val">unlocked!</span></div>`:""}
+      </div>
+
+      ${r.line?`<div class="unlock-toast"><span class="ut-ic">🔓</span><span class="ut-body"><span class="ut-tag">Unlocked</span><span class="ut-text">${r.line.replace(/^.*?Unlocked\s*[—-]\s*/i,"").trim()||r.line}</span></span></div>`:""}
+      <div style="height:20px"></div>
+      ${r.final
+        ? `<button class="btn sun" data-action="goDone">See your trophy 🏆</button>`
+        : `<button class="btn" data-action="goMap">Continue your journey →</button>`}
+    </div>`;
+}
+
+/* ---------- COURSE COMPLETION ---------- */
+function renderCourseComplete(){
+  confetti(140); sfx("reward");
+  const earned = Object.keys(S.badges).length, totalB=Object.keys(BADGES).length;
+  $screen().innerHTML = `
+    <div class="reward">
+      <div class="burst">👑</div>
+      <h2>TOUCH Pronunciation Master!</h2>
+      <div class="sub">You completed the entire course 🎓</div>
+      <div class="badge-card" style="margin-top:14px">${badgeMedal(BADGES.master)}
+        <b>${BADGES.master.name}</b><span>The highest TOUCH honour</span></div>
+      <div class="tally">
+        <div class="tally-row"><span class="ic">⚡</span><span class="lbl">Total XP</span><span class="val">${S.xp}</span></div>
+        <div class="tally-row" style="animation-delay:.1s"><span class="ic">🏅</span><span class="lbl">Badges earned</span><span class="val">${earned}/${totalB}</span></div>
+        <div class="tally-row" style="animation-delay:.2s"><span class="ic">📈</span><span class="lbl">Level</span><span class="val">${levelInfo(S.xp).lvl}</span></div>
+      </div>
+      <div class="quote" style="margin-top:4px">Consistency is more important than perfection.<small>Keep speaking — keep growing. 💚</small></div>
+      <div style="height:18px"></div>
+      <button class="btn ghost" data-action="goMap">Back to course map</button>
+    </div>`;
+}
+
+/* ---------- PROFILE ---------- */
+function renderProfile(){
+  const li=levelInfo(S.xp);
+  const stagesDone = COURSE.filter(s=>S.stages[s.id]?.completed).length;
+  const displayName = (S.name && S.name.trim()) ? S.name.trim() : "TOUCH Learner";
+  const initials = displayName.split(/\s+/).map(w=>w[0]||"").slice(0,2).join("").toUpperCase() || "TL";
+  const shelf = Object.keys(BADGES).map(id=>{
+    const b=BADGES[id], have=!!S.badges[id];
+    return `<div class="bcell ${have?'':'locked'}">${badgeMedal(b, !have)}<div class="n">${b.name}</div></div>`;
+  }).join("");
+  $screen().innerHTML = `
+    <div class="profile">
+      <div class="pf-head">
+        <div class="av"><span class="av-initials">${initials}</span><span class="av-lv">Lv ${li.lvl}</span></div>
+        <div class="pf-meta">
+          <h2>${displayName}</h2>
+          <p>🔥 ${S.streak}-day streak</p>
+          <div class="pf-bar"><i style="width:${(li.pct*100).toFixed(0)}%"></i></div>
+          <small>${li.into} / ${li.span} XP to Level ${li.lvl+1}</small>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="si streak">🔥</div><div class="v">${S.streak}</div><div class="l">Day streak</div></div>
+        <div class="stat"><div class="si xp">⚡</div><div class="v">${S.xp}</div><div class="l">Total XP</div></div>
+        <div class="stat"><div class="si done">✓</div><div class="v">${stagesDone}/${COURSE.length}</div><div class="l">Stages</div></div>
+      </div>
+
+      <div class="sect-title">🎯 Daily Goal</div>
+      <div class="goal-pick">
+        ${[20,50,100].map(g=>`<button class="gp ${S.dailyGoal===g?'on':''}" data-action="setGoal" data-g="${g}">${g} XP</button>`).join("")}
+      </div>
+      <div class="fineprint" style="text-align:left;padding:8px 4px">Today: ${S.todayXP} / ${S.dailyGoal} XP ${S.todayXP>=S.dailyGoal?"✓ reached!":""}</div>
+
+      <div class="sect-title">🏅 Badge Collection (${Object.keys(S.badges).length}/${Object.keys(BADGES).length})</div>
+      <div class="badge-shelf">${shelf}</div>
+
+      <div class="sect-title">⚙️ Settings</div>
+      <button class="btn ghost" data-action="resetCourse">Reset all progress</button>
+      <div class="fineprint">Progress saves automatically to this device.</div>
+    </div>`;
+}
+
+/* ---------- mini badge toast (mid-quiz) ---------- */
+function miniBadge(id){
+  const b=BADGES[id]; const d=document.createElement("div"); d.className="lvlup";
+  d.style.background="var(--sun)"; d.style.color="#5A3A1E";
+  d.innerHTML=`🏅 ${b.name} Badge!`;
+  document.getElementById("fx").appendChild(d); setTimeout(()=>d.remove(),1700); confetti(40);
+}
+
+/* =====================================================================
+   MINIMAL PAIRS  —  reference data for the in-lesson listening exercises
+   (the standalone Listening Lab was removed to keep the journey linear).
+   Each pair carries optional MP3 sources for future teacher recordings.
+   ===================================================================== */
+const MINIMAL_PAIRS = [
+  {a:"ship", b:"sheep", ipaA:"/ʃɪp/",  ipaB:"/ʃiːp/", focus:"/ɪ/ vs /iː/"},
+  {a:"bit",  b:"beat",  ipaA:"/bɪt/",  ipaB:"/biːt/", focus:"/ɪ/ vs /iː/"},
+  {a:"full", b:"fool",  ipaA:"/fʊl/",  ipaB:"/fuːl/", focus:"/ʊ/ vs /uː/"},
+  {a:"cat",  b:"cut",   ipaA:"/kæt/",  ipaB:"/kʌt/",  focus:"/æ/ vs /ʌ/"},
+  {a:"fan",  b:"van",   ipaA:"/fæn/",  ipaB:"/væn/",  focus:"/f/ vs /v/"},
+  {a:"sink", b:"think", ipaA:"/sɪŋk/", ipaB:"/θɪŋk/", focus:"/s/ vs /θ/"}
+  // future: {a:"...", b:"...", srcA:"audio/x.mp3", srcB:"audio/y.mp3"}
+];
+
+/* =====================================================================
+   EVENT DELEGATION  —  every interaction routes through here.
+   ===================================================================== */
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-action]"); if(!t) return;
+  const a = t.dataset.action;
+  switch(a){
+    case "goMap": session=null; go({name:"map"}); break;
+    case "goSounds": session=null; go({name:"sounds"}); break;
+    case "playPhoneme": playPhoneme(t.dataset.ipa); break;
+    case "openSoundCard": session=null; go({name:"soundcard", ipa:t.dataset.ipa}); break;
+    case "goProfile": go({name:"profile"}); break;
+    case "goDone": go({name:"done"}); break;
+    case "openStage": startStage(t.dataset.id); break;
+    case "startReview": startReview(); break;
+    case "toLearn": session.step="learn"; render(); window.scrollTo(0,0); break;
+    case "toQuiz": session.step="quiz"; session.qi=0; S.combo=0; renderHUD(); render(); window.scrollTo(0,0); break;
+    case "pick": pickOption(+t.dataset.idx); break;
+    case "check": checkAnswer(); break;
+    case "next": nextQuestion(); window.scrollTo(0,0); break;
+    case "compareSounds": compareSounds(t.dataset.a, t.dataset.b); break;
+    // audio (in-lesson playback)
+    case "playword": playWord(t.dataset.word, t.dataset.src, t, t.dataset.ipa); break;
+    case "speak": playWord(t.dataset.word, t.dataset.src, t); break;
+    case "listen": playWord(t.dataset.word, t.dataset.src, t); break;
+    // daily goal
+    case "cycleGoal": { const order=[20,50,100]; S.dailyGoal = order[(order.indexOf(S.dailyGoal)+1)%order.length]; save(); renderHUD(); renderMap(); } break;
+    case "setGoal": S.dailyGoal=+t.dataset.g; save(); renderHUD(); renderProfile(); break;
+    case "toggleSound": SOUND=!SOUND; if(SOUND){ac(); sfx("tap");} renderHUD(); break;
+    case "pickLang": setLang(t.dataset.lang); break;
+    case "saveName": commitName(); break;
+    case "cycleLang": langMenuOpen=!langMenuOpen; renderLangMenu(); break;
+    case "setLang": langMenuOpen=false; setLang(t.dataset.lang); break;
+    case "closeLangMenu": langMenuOpen=false; renderLangMenu(); break;
+    case "resetCourse":
+      if(confirm("Reset ALL progress, XP and badges? This can't be undone.")){
+        S=freshState(); save(); go({name:"map"});
+      } break;
+  }
+});
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+(function init(){
+  Audio$.init();                               // warm up speech voices
+  const loaded = Persist.load();
+  if(loaded){ S = Object.assign(freshState(), loaded); }
+  touchStreak(); touchDaily(); save();
+  go({name:"map"});
+})();
+</script>
