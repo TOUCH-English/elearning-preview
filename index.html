@@ -352,13 +352,6 @@ footer b{color:var(--muted); font-weight:800}
   var esc = function (x) { return String(x == null ? "" : x)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
 
-  /* profile.js 没载到（例如整个 shared/ 被搬走了）就当没有这个功能，
-     卡片本来就能点，课程照样进得去。 */
-  if (!P) { document.querySelectorAll("[data-t]").forEach(function (e) {
-              if (!e.textContent.trim()) e.textContent = ""; });
-            var tb = document.querySelector(".topbar"); if (tb) tb.style.display = "none";
-            return; }
-
   var T = {
     h1:      { zh: "E-learning 课程",  ms: "Kursus E-learning",  en: "E-learning Courses" },
     sub:     { zh: "选你的课程开始",    ms: "Pilih kursus anda untuk mula", en: "Pick your course to begin" },
@@ -396,6 +389,18 @@ footer b{color:var(--muted); font-weight:800}
     { k: "goal",  q: { zh: "你想用英文做到什么？", ms: "Apa matlamat Bahasa Inggeris anda?", en: "What do you want to do with your English?" },
                   ph: { zh: "例如 speak confidently at work", ms: "cth. speak confidently at work", en: "e.g. speak confidently at work" } }
   ];
+
+  /* profile.js 没载到（例如 shared/ 被搬走、或发布时漏档）就退回英文，
+     整页文字照样有，卡片照样点得进课程 —— 不能变成一片空白。 */
+  if (!P) {
+    document.querySelectorAll("[data-t]").forEach(function (e) {
+      var k = e.getAttribute("data-t");
+      if (T[k]) e.textContent = T[k].en;
+    });
+    var tb = document.querySelector(".topbar");
+    if (tb) tb.style.display = "none";
+    return;
+  }
 
   var t = function (k) { return P.t(T[k]); };
 
