@@ -295,6 +295,18 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 
 /* feedback bottom sheet (Duolingo style) */
 #feedback{position:fixed;left:0;right:0;bottom:0;z-index:80;transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+/* ===== 修：底部 Continue 面板碰不到，学生卡住（append-only） =====
+   #feedback 原本是 position:fixed;bottom:0 的浮动列。学生自己开这个 HTML
+   的时候没问题，但课程被嵌在别的页面（iframe）里时，它是钉在 iframe 自己
+   的视窗底部 —— 外层页面怎么卷都不一定露得出来。
+
+   为什么症状正好是「只能做到第 4 题」：第 1–3 步（Vocabulary／Conversation
+   Match／Patterns）的 Continue 在卡片里，从第 4 步（Fill in the Blank）开始
+   才必须用这个浮动列的 Continue。所以前三步顺，第四步开始怎么划都没反应。
+
+   .inflow：不浮动，跟着内容排。被嵌在 iframe 里时一律用这个。 */
+#feedback.inflow{position:static;transform:none;z-index:auto;transition:none}
+#feedback.inflow .fb-inner{border-radius:22px;margin-top:14px;box-shadow:var(--sh-md)}
 #feedback.show{transform:none}
 #feedback .fb-inner{max-width:470px;margin:0 auto;padding:16px 18px calc(18px + env(safe-area-inset-bottom));border-top:1px solid;border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(27,36,51,.18)}
 #feedback.ok .fb-inner{background:#E6F4EE;border-color:#C2E2D4}
@@ -1409,9 +1421,76 @@ function showFeedback(ok, opts){
  btn.textContent = t.continue;
  btn.onclick = ()=>{ hideFeedback(); opts.onContinue(); };
  fb.classList.add("show");
+ ensureFeedbackReachable();
  if(ok) xpFloat(opts.xp);
 }
-function hideFeedback(){ const fb=$("feedback"); fb.classList.remove("show"); fb.className=fb.className.replace(/\b(ok|no)\b/g,"").trim(); }
+function hideFeedback(){
+ const fb=$("feedback");
+ fb.classList.remove("show","inflow");
+ fb.className=fb.className.replace(/\b(ok|no)\b/g,"").trim();
+ document.body.classList.remove("fb-open");
+ const w=document.querySelector(".wrap"); if(w) w.style.paddingBottom="";
+}
+
+/* 这一页是不是被嵌在别的页面里。跨网域读不到 window.top 会丢例外 ——
+   丢例外本身就代表被嵌住了，所以当成 true。 */
+const EMBEDDED = (function(){ try{ return window.self !== window.top; }catch(e){ return true; } })();
+
+/* 确保 Continue 一定点得到。
+
+   判断刻意不量「现在的位置」—— 面板有 .35s 的滑入动画，量到一半会误判
+   （我第一版就是这样，好好的浮动列被误判成碰不到）。改成用固定的几何事实判断：
+
+   浮动列是 position:fixed;bottom:0，settle 之後底边一定贴着视窗底部，
+   Continue 又是面板最後一个元素，所以「只要面板放得进视窗，就一定点得到」。
+   真正会出事的只有两种情况，两种都不用等动画就知道：
+
+     1) 被嵌在别的页面里（iframe）—— 浮动列钉在 iframe 自己的视窗底部，
+        外层页面不一定露得出来。这就是学员遇到的情况。
+     2) 视窗比面板还矮，或浏览器自己的工具列压在上面
+        （visualViewport 比 innerHeight 矮）。
+
+   这两种就不浮动，改成跟着内容排再卷进视野；其余维持原本的浮动列。 */
+function ensureFeedbackReachable(){
+ const fb=$("feedback"), btn=$("fbbtn");
+ if(!fb||!btn) return;
+ document.body.classList.add("fb-open");
+ const wrap = document.querySelector(".wrap");
+
+ const vh = window.innerHeight;
+ const vvh = (window.visualViewport && window.visualViewport.height) || vh;
+ const covered = vvh < vh - 8;              // 浏览器工具列压着视窗底部
+ const tooTall = fb.offsetHeight > vvh - 8; // 面板比视窗还高（offsetHeight 不受 transform 影响）
+
+ if(EMBEDDED || covered || tooTall){
+  fb.classList.add("inflow");
+  if(wrap) wrap.style.paddingBottom="";
+  try{ btn.scrollIntoView({block:"end", behavior:"auto"}); }
+  catch(e){ try{ btn.scrollIntoView(false); }catch(e2){} }
+  return;
+ }
+
+ /* 维持浮动列 —— 把内容底部垫高，免得面板盖住选项和 Check */
+ if(wrap) wrap.style.paddingBottom = (fb.offsetHeight + 40) + "px";
+
+ /* 保险：滑入靠的是 CSS transition。分页在背景、或 iframe 在画面外时，
+    浏览器会把动画节流甚至冻住 —— 面板就一直停在画面外（transform 还是
+    translateY(110%)），可是 class 明明已经是 show，不会再触发第二次动画，
+    学生怎么划都没反应。这时候把 transition 拿掉让它直接跳到定位。 */
+ const settle = function(){
+  if(!fb.classList.contains("show") || fb.classList.contains("inflow")) return;
+  const tf = getComputedStyle(fb).transform;
+  if(tf && tf !== "none" && tf !== "matrix(1, 0, 0, 1, 0, 0)"){
+   fb.style.transition = "none";
+   void fb.offsetWidth;          // 强制套用，之後再还原才不会又animate一次
+   fb.style.transition = "";
+  }
+ };
+ setTimeout(settle, 500);
+ setTimeout(settle, 1400);
+ document.addEventListener("visibilitychange", settle, {once:true});
+}
+
 function nextStep(){
  P.idx++;
  if(P.idx>=P.steps.length) return finishLesson();
