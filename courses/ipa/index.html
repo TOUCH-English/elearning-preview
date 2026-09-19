@@ -549,6 +549,7 @@ h1,h2,h3,.disp{font-family:'Fredoka',sans-serif;font-weight:700;letter-spacing:.
 
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
+<script src="../../shared/nav.js"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -1933,6 +1934,7 @@ function renderMap(){
     </div>`;
   $screen().innerHTML = `
     <div class="hero">
+      ${window.TouchNav && !TouchNav.embedded ? `<div style="text-align:left">${TouchNav.html()}</div>` : ""}
       <span class="logo">✦ TOUCH ENGLISH</span>
       <h1>IPA Pronunciation Course</h1>
       <p>${L("Speak clearly. Learn by playing. One sound at a time.","把音发清楚。玩着学。一次一个音。","Sebut dengan jelas. Belajar sambil bermain. Satu bunyi pada satu masa.")}</p>

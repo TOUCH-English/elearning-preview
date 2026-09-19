@@ -147,6 +147,7 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
+<script src="../../shared/nav.js"></script>
 <script src="../../shared/record.js"></script>
 <script>
 /* DAYS:START */
@@ -4412,6 +4413,7 @@ function renderHome() {
   const n = Object.keys(S.done).length;
   const pct = DAYS.length ? Math.round((n / DAYS.length) * 100) : 0;
   app().innerHTML = `${topBar()}
+    ${window.TouchNav ? TouchNav.html() : ""}
     <h1>Speaking Bonus${S.profile && S.profile.name ? `<span class="hi">, ${esc(S.profile.name)}</span>` : ""}</h1>
     <p class="sub">${esc(L_("homeSub"))}</p>
     <div class="bar"><i style="width:${pct}%"></i></div>
