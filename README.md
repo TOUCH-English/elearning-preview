@@ -5,4 +5,4 @@
 正本在私有 repo `TOUCH-English/TOUCH-e-learning`，
 用 `tools/publish-preview.sh` 发布到这里。
 
-目前对应主 repo 的 commit：`f4a5724`
+目前对应主 repo 的 commit：`5a82b1d`

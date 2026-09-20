@@ -46,6 +46,16 @@
     try { return global.self !== global.top; } catch (e) { return true; }  // 跨网域读不到 top 本身就代表被嵌住
   })();
 
+  /* 课程也会被单独部署（例如旧户口 touchenglish.github.io/TOUCH-Grammar/，
+     那边没有启动页）。那种情况下 ../../index.html 是不存在的页面，
+     所以只有在 courses/<课程>/ 底下才显示这个按钮。 */
+  var inLauncher = (function () {
+    try { return /\/courses\/[^/]+\//.test(String(global.location.pathname)); }
+    catch (e) { return false; }
+  })();
+
+  var hidden = embedded || !inLauncher;
+
   function label() {
     var P = global.TouchProfile;
     return P ? P.t(LABEL) : LABEL.en;
@@ -56,7 +66,7 @@
   }
 
   function html() {
-    if (embedded) return "";
+    if (hidden) return "";
     return '<a class="te-courses" href="' + HREF + '">' + esc(label()) + "</a>";
   }
 
@@ -66,7 +76,7 @@
     var els = global.document.querySelectorAll("[data-te-courses]");
     for (var i = 0; i < els.length; i++) {
       var a = els[i];
-      if (embedded) { a.style.display = "none"; continue; }
+      if (hidden) { a.style.display = "none"; continue; }
       a.className = "te-courses";
       a.setAttribute("href", HREF);
       a.textContent = label();
@@ -101,7 +111,7 @@
 
   global.TouchNav = {
     href: HREF,
-    embedded: embedded,
+    embedded: hidden,   // 对外就是「要不要显示」，两种情况都算
     label: label,
     html: html,
     refresh: refresh
