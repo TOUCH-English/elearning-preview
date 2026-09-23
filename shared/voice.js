@@ -35,16 +35,55 @@
 
   var doc = global.document;
 
-  /* 音档放哪里：课程在 courses/<名字>/，所以往上两层。
-     启动页在根目录，所以要判断一下。 */
+  /* 音档放哪里：从这个 script 自己的位置推算（shared/voice.js → shared/audio/）。
+     这样不管是课程（courses/x/）、启动页（根目录）还是後台页（tools/），路径都对。
+     拿不到 currentScript（很旧的浏览器）才退回猜路径。 */
   var BASE = (function () {
     try {
+      var me = doc && (doc.currentScript ||
+        (function () {
+          var ss = doc.getElementsByTagName("script");
+          for (var i = ss.length - 1; i >= 0; i--) if (/voice\.js(\?|$)/.test(ss[i].src || "")) return ss[i];
+          return null;
+        })());
+      if (me && me.src) return me.src.replace(/[^/]*$/, "") + "audio/";
       return /\/courses\/[^/]+\//.test(String(global.location.pathname))
         ? "../../shared/audio/" : "shared/audio/";
     } catch (e) { return "shared/audio/"; }
   })();
 
-  var SLOW = 0.75;
+  /* ---------------------------------------------------------------------------
+     速度设定
+     学生端没有速度选项 —— 每个课程的预设速度由 shared/voice-config.js 决定，
+     你在 tools/voice-admin.html 调好、发布，学生打开就是对的速度。
+
+     config() 是唯一的读取入口。之後接 Supabase 时只要改这一个函式：
+     从 Supabase 拉回设定、存进 TouchStore 当快取，其他地方都不用动。
+  --------------------------------------------------------------------------- */
+  function config() {
+    var c = global.TouchVoiceConfig || {};
+    return { rate: c.rate || {}, slowFactor: c.slowFactor == null ? 0.8 : c.slowFactor };
+  }
+
+  /* 从网址判断现在是哪一个课程：courses/<名字>/ */
+  var COURSE = (function () {
+    try {
+      var m = /\/courses\/([^/]+)\//.exec(String(global.location.pathname));
+      return m ? m[1] : "";
+    } catch (e) { return ""; }
+  })();
+
+  function baseRate() {
+    var r = config().rate;
+    var v = (COURSE && r[COURSE] != null) ? r[COURSE] : r["default"];
+    v = Number(v);
+    /* 挡住设定档打错字（0 或负数会让音档整个不动、听起来像坏掉） */
+    return (isFinite(v) && v >= 0.5 && v <= 1.5) ? v : 1;
+  }
+  function rateFor(slow) {
+    var r = baseRate();
+    return slow ? Math.max(0.5, r * config().slowFactor) : r;
+  }
 
   /* ---------------------------------------------------------------------------
      档名：可读的部分 ＋ 一个短雜凑
@@ -120,7 +159,7 @@
       var v = vs.filter(function (x) { return /^en[-_]?(US|GB)/i.test(x.lang); })[0] ||
               vs.filter(function (x) { return /^en/i.test(x.lang); })[0];
       if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
-      u.rate = opt.slow ? 0.6 : 0.8;
+      u.rate = (opt.rate != null ? opt.rate : rateFor(opt.slow)) * 0.85;   // 机械音本来就要再慢一点才听得懂
       if (opt.btn) {
         curBtn = opt.btn; curBtn.classList.add("playing");
         u.onend = u.onerror = clearBtn;
@@ -144,7 +183,7 @@
 
     try {
       var a = new Audio(BASE + k + ".mp3");
-      a.playbackRate = opt.slow ? SLOW : 1;
+      a.playbackRate = (opt.rate != null) ? opt.rate : rateFor(opt.slow);
       if ("preservesPitch" in a) a.preservesPitch = true;          // 慢放不变音高
       if ("mozPreservesPitch" in a) a.mozPreservesPitch = true;
       if ("webkitPreservesPitch" in a) a.webkitPreservesPitch = true;
@@ -191,6 +230,7 @@
       if (!el) return;
       lpFired = false;
       clearTimeout(lpTimer);
+      if (config().slowFactor >= 1) return;        // 后台把「长按慢速」关掉了
       lpTimer = setTimeout(function () {
         lpFired = true;
         say(lpText(el), { btn: el.classList.contains("spk") ? el : null, slow: true });
@@ -223,7 +263,9 @@
     stop: stop,
     key: key,
     base: BASE,
-    slowRate: SLOW,
+    course: COURSE,
+    rate: baseRate,          /* 这个课程现在用的速度 */
+    rateFor: rateFor,
     /* 这一条有没有音档（manifest 还没载到时回传 null＝不知道） */
     has: function (t) { return have ? !!have[key(t)] : null; }
   };
