@@ -92,3 +92,139 @@
   --te-ac-purple:     #9B5FE0;
   --te-ac-pink:       #D957A8;
 }
+
+/* =============================================================================
+   动态与材质  (append-only，2026-09)
+   -----------------------------------------------------------------------------
+   为什么加这一段：原本每个课程各自写 transition .18s ease、各自决定按钮按下去
+   有没有反应。结果是「同一间公司的 7 个课程，手感不一样」。
+
+   这里定的是「时间与曲线」，不是新的颜色 —— 所以套上去不会改变现有配色。
+
+   两条规矩（来自 Apple 的 Designing Fluid Interfaces）：
+
+     1. 回馈发生在「按下去」的那一刻，不是放开之后。
+        延迟一出现，「直接操作」的感觉就整个塌掉。
+     2. 会被手指抓住的东西（面板、卡片、滑动）用弹簧，不用固定长度的动画 ——
+        弹簧可以随时被打断、被反向，固定动画只能播完。
+        弹簧在 shared/motion.js，这里只负责静态的 hover/press。
+
+   damping 1.0（不回弹）是预设。只有「手势本身带了动量」（甩、拖放开）才给回弹，
+   否则一个只是淡入的选单在那边弹一下，看起来很廉价。
+============================================================================= */
+
+:root {
+  /* ---------- 时间 ----------
+     press 要够短，短到学生感觉是「手指压下去」而不是「画面在动」。 */
+  --te-dur-press:   90ms;
+  --te-dur-fast:    160ms;
+  --te-dur-base:    240ms;
+  --te-dur-slow:    360ms;
+
+  /* ---------- 曲线 ----------
+     te-ease-out    一般进场／离场（对应 damping 1.0，不回弹）
+     te-ease-spring 带一点回弹，只给动量手势用
+     te-ease-in     离场（跟 ease-out 互为镜像，同一条路进出）*/
+  --te-ease-out:    cubic-bezier(.22,.61,.36,1);
+  --te-ease-in:     cubic-bezier(.64,0,.78,.39);
+  --te-ease-spring: cubic-bezier(.2,.9,.28,1.12);
+
+  /* ---------- 按下去的量 ----------
+     大按钮压小一点，整张卡片压更少 —— 面积越大，同样的比例看起来越夸张。 */
+  --te-press-btn:   .97;
+  --te-press-card:  .985;
+
+  /* ---------- 材质（半透明的浮层） ----------
+     顶栏、面板用这个，内容从底下卷过去，而不是被一条实心的横条切掉。
+     prefers-reduced-transparency 会在下面换成实心。 */
+  --te-glass:       rgba(255,255,255,.72);
+  --te-glass-blur:  saturate(180%) blur(20px);
+  --te-glass-edge:  rgba(255,255,255,.55);   /* 上缘的亮边＝光打在材质上 */
+  --te-scrim:       rgba(20,38,64,.32);      /* 挡住底下内容的遮罩 */
+
+  /* ---------- 焦点框 ----------
+     键盘使用者要看得到自己在哪里，而且不能被卡片的圆角切掉。 */
+  --te-focus:       0 0 0 3px rgba(46,86,133,.34);
+}
+
+/* -----------------------------------------------------------------------------
+   字距要跟着字级走（The Details of UI Typography, WWDC 2020）
+
+   大标题的字母在视觉上会「散开」，所以要收紧（负字距）；
+   小字反而要放松一点才好读。一个 letter-spacing 套全部字级，一定有地方是错的。
+   行高相反：字越大行高越紧。
+----------------------------------------------------------------------------- */
+.te-display { font-size:clamp(28px,6vw,46px); line-height:1.08; letter-spacing:-.022em; }
+.te-title   { font-size:clamp(20px,3.4vw,26px); line-height:1.22; letter-spacing:-.012em; }
+.te-body    { font-size:15px; line-height:1.6; letter-spacing:0; }
+.te-caption { font-size:12.5px; line-height:1.5; letter-spacing:.006em; }
+.te-label   { font-size:11.5px; line-height:1; letter-spacing:.1em; text-transform:uppercase; }
+
+/* -----------------------------------------------------------------------------
+   按下去的回馈
+
+   [data-pressed] 由 shared/motion.js 在 pointerdown 当下加上去 —— 不等 click。
+   :active 留着当後备（motion.js 没载到时至少还有反应）。
+   手指移开超过 10px 会被 motion.js 取消，跟 iOS 一样：按错了可以滑开。
+----------------------------------------------------------------------------- */
+.te-pressable {
+  transition: transform var(--te-dur-press) var(--te-ease-out),
+              box-shadow var(--te-dur-fast) var(--te-ease-out),
+              background-color var(--te-dur-fast) var(--te-ease-out),
+              border-color var(--te-dur-fast) var(--te-ease-out);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.te-pressable[data-pressed],
+.te-pressable:active            { transform: scale(var(--te-press-btn)); }
+.te-pressable.te-card-press[data-pressed],
+.te-pressable.te-card-press:active { transform: scale(var(--te-press-card)); }
+.te-pressable:focus-visible     { outline:none; box-shadow: var(--te-focus); }
+
+/* -----------------------------------------------------------------------------
+   浮层（顶栏、底部面板）
+----------------------------------------------------------------------------- */
+.te-glass {
+  background: var(--te-glass);
+  -webkit-backdrop-filter: var(--te-glass-blur);
+  backdrop-filter: var(--te-glass-blur);
+  border-color: var(--te-glass-edge);
+}
+
+/* 内容跟浮动顶栏交界处用渐层淡出，不要用一条 1px 的线 */
+.te-edge-fade {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 14px);
+}
+
+/* -----------------------------------------------------------------------------
+   无障碍：三个偏好各自独立，不是同一个开关
+
+   reduce motion       ＝要更温和的回馈，不是完全没有回馈：位移／回弹换成淡入淡出
+   reduce transparency ＝毛玻璃换实心，学生才读得到字
+   more contrast       ＝近乎实心的底 ＋ 明确的外框
+----------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --te-dur-press: 1ms; --te-dur-fast: 1ms; --te-dur-base: 120ms; --te-dur-slow: 140ms;
+    --te-ease-spring: linear; --te-press-btn: 1; --te-press-card: 1;
+  }
+  .te-pressable[data-pressed],
+  .te-pressable:active { transform:none; background-color: var(--te-brand-soft,#E6ECF4); }
+  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root { --te-glass: var(--te-surface,#fff); --te-glass-blur: none; --te-glass-edge: var(--te-line,#DCE3EC); }
+  .te-glass { -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --te-glass: var(--te-surface,#fff); --te-glass-blur:none;
+    --te-muted:#3C4655; --te-subtle:#44505F;
+    --te-line:#8A97A8; --te-hairline: rgba(31,58,95,.4);
+    --te-focus: 0 0 0 3px #1F3A5F;
+  }
+  .te-glass { border:1px solid var(--te-line); }
+}
