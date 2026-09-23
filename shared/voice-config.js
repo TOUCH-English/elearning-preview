@@ -28,7 +28,7 @@ globalThis.TouchVoiceConfig = {
     "pre-beginner": 0.80,   /* 零基础：最慢，每个字都要听得清楚 */
     "level-1":      0.88,
     "level-2":      0.95,   /* 已经能听整句，接近正常语速 */
-    "speaking-bonus": 1.00,
+    "speaking-bonus": 0.85,
     "ipa":          0.85
   },
 
