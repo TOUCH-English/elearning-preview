@@ -68,6 +68,13 @@
                  all: function () { var c = {}; for (var k in m) c[k] = m[k]; return c; } };
       })();
 
+  /* 在平台里：名字、解释语言先用帐号上的（学生自己改过的就不盖掉） */
+  var who = global.TouchStore && global.TouchStore.student;
+  if (who) {
+    if (who.name && !String(store.get("name", "") || "").trim()) store.set("name", String(who.name).trim());
+    if (LANGS.indexOf(who.lang) >= 0 && LANGS.indexOf(store.get("lang", null)) < 0) store.set("lang", who.lang);
+  }
+
   var listeners = [];
   function emit() {
     for (var i = 0; i < listeners.length; i++) {

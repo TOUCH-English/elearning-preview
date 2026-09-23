@@ -818,6 +818,9 @@ body:has(#testbar){padding-bottom:64px}
  <div class="fb-hint" id="fbexpl"></div>
  <button class="btn btn-block" id="fbbtn">Continue</button>
 </div></div>
+<!-- 在 TOUCH 平台里才载得到：设好 window.TOUCH_PLATFORM（学生、进度）。
+     file:// 或 GitHub Pages 载不到就跳过，课程照旧只存本机。必须在 storage.js 之前。 -->
+<script src="/api/learn/state.js"></script>
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
@@ -1596,7 +1599,9 @@ function ensureFeedbackReachable(){
    为什么用网址参数而不是按钮：学生不会知道这个参数，也不会误触；
    而且一关掉分页就没了，不会留在他们的装置上。
 ============================================================================= */
-const TESTMODE = /[?&]test=1/.test(location.search) || location.hash === "#test";
+/* 在平台里只有员工帐号能开（不然学生加 ?test=1 就能跳过 boss）；单机测试照旧 */
+const TESTMODE = (/[?&]test=1/.test(location.search) || location.hash === "#test")
+  && (!TouchStore.platform || TouchStore.staff);
 
 function testBar(){
  if(!TESTMODE) return;

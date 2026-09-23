@@ -742,6 +742,9 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
  <div class="fb-hint" id="fbexpl"></div>
  <button class="btn btn-block" id="fbbtn">Continue</button>
 </div></div>
+<!-- 在 TOUCH 平台里才载得到：设好 window.TOUCH_PLATFORM（学生、进度）。
+     file:// 或 GitHub Pages 载不到就跳过，课程照旧只存本机。必须在 storage.js 之前。 -->
+<script src="/api/learn/state.js"></script>
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
