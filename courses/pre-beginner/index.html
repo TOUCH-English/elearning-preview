@@ -668,7 +668,19 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 @keyframes xtgrow{from{transform:scaleY(.2);opacity:0}to{transform:scaleY(1);opacity:1}}
 @keyframes xtpop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
 @keyframes xtbreath{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-@keyframes xtsway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}</style>
+@keyframes xtsway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+/* 测试模式工具列（?test=1 才会出现） */
+#testbar{position:fixed;left:0;right:0;bottom:0;z-index:9999;display:flex;gap:6px;align-items:center;
+ padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(20,38,64,.94);
+ -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);flex-wrap:wrap}
+#testbar button,#testbar select{font-family:inherit;font-size:13px;font-weight:700;border-radius:9px;
+ border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;padding:7px 10px;min-height:36px}
+#testbar select{max-width:42vw}
+#testbar button:active{background:rgba(255,255,255,.25)}
+.tb-tag{font-size:11px;font-weight:800;letter-spacing:.12em;color:#FFD98A;padding-right:2px}
+.tb-hint{font-size:12.5px;color:rgba(255,255,255,.75);font-weight:600}
+body:has(#testbar){padding-bottom:64px}
+</style>
 </head>
 <body>
 
@@ -1126,6 +1138,7 @@ function bossUnlocked(mi){
  return true;
 }
 function lessonUnlocked(mi,li){
+ if(TESTMODE) return true;                                  // 测试模式：全部开放，boss 也能直接进
  return COURSE[mi].lessons[li].boss ? bossUnlocked(mi) : true;
 }
 // the single best "next step" to recommend (first unfinished lesson the learner can take)
@@ -1571,6 +1584,57 @@ function ensureFeedbackReachable(){
  setTimeout(settle, 500);
  setTimeout(settle, 1400);
  document.addEventListener("visibilitychange", settle, {once:true});
+}
+
+
+/* =============================================================================
+   测试模式（只给 Marco 用，学生看不到）
+
+   网址加上 ?test=1 就会出现一条工具列：可以直接跳到任何一个步骤、
+   跳过要做完练习才能过的关卡、boss 也能直接进。
+
+   为什么用网址参数而不是按钮：学生不会知道这个参数，也不会误触；
+   而且一关掉分页就没了，不会留在他们的装置上。
+============================================================================= */
+const TESTMODE = /[?&]test=1/.test(location.search) || location.hash === "#test";
+
+function testBar(){
+ if(!TESTMODE) return;
+ let bar = document.getElementById("testbar");
+ if(!bar){
+  bar = document.createElement("div");
+  bar.id = "testbar";
+  document.body.appendChild(bar);
+ }
+ const inLesson = P && P.steps && P.steps.length;
+ const opts = inLesson ? P.steps.map((st,i)=>
+   `<option value="${i}"${i===P.idx?" selected":""}>${i+1}. ${st.kind}</option>`).join("") : "";
+ bar.innerHTML = `<span class="tb-tag">TEST</span>` + (inLesson
+   ? `<button id="tb-prev">‹</button>
+      <select id="tb-jump">${opts}</select>
+      <button id="tb-next">›</button>
+      <button id="tb-skip">跳过这一步</button>
+      <button id="tb-end">直接到结算</button>`
+   : `<span class="tb-hint">全部课程已解锁，随便点一课</span>`);
+
+ if(inLesson){
+  const go = i => { P.idx = Math.max(0, Math.min(P.steps.length-1, i)); renderStep(); testBar(); };
+  document.getElementById("tb-prev").onclick = ()=>go(P.idx-1);
+  document.getElementById("tb-next").onclick = ()=>go(P.idx+1);
+  document.getElementById("tb-skip").onclick = ()=>go(P.idx+1);
+  document.getElementById("tb-jump").onchange = e=>go(+e.target.value);
+  document.getElementById("tb-end").onclick = ()=>finishLesson();
+ }
+}
+
+/* 每次画面换了就重画工具列（步骤下拉要跟着目前进度走） */
+if(TESTMODE){
+ const _renderStep = renderStep;
+ renderStep = function(){ _renderStep.apply(this, arguments); testBar(); };
+ const _renderHome = renderHome;
+ renderHome = function(){ _renderHome.apply(this, arguments); testBar(); };
+ document.addEventListener("DOMContentLoaded", testBar);
+ setTimeout(testBar, 300);
 }
 
 function nextStep(){
