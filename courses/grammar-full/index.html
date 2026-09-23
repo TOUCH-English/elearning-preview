@@ -580,7 +580,8 @@ function hasName(){ return (typeof meta==='object'&&meta&&meta.name)?meta.name:n
 function maybeAskName(){
   if(typeof meta==='object'&&meta&&meta.named) return;
   /* 启动页已经问过了 —— 填了就直接用，跳过也算问过，不要再拦一次 */
-  if(SP&&SP.asked()){ meta.name=SP.get().name||null; meta.named=true; saveMeta(); return; }
+  /* 在平台里名字是帐号的，不问 */
+  if(SP&&(SP.platform||SP.asked())){ meta.name=SP.get().name||null; meta.named=true; saveMeta(); return; }
   fillNameGate();
   document.getElementById('nameGate').classList.remove('hidden');
   setTimeout(function(){var i=document.getElementById('nameInput');if(i)i.focus();},80);
@@ -1042,7 +1043,8 @@ function rFinish(){
 function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
 /* ---- init ---- */
-let savedLang=TS.get('lang',null) || (SP&&SP.lang()?SP.toBM(SP.lang()):null);
+/* 在平台里语言以共用的 profile 为准（平台管「人」，2026-09-24） */
+let savedLang=(SP&&SP.platform&&SP.lang()) ? SP.toBM(SP.lang()) : (TS.get('lang',null) || (SP&&SP.lang()?SP.toBM(SP.lang()):null));
 if(savedLang==='en'||savedLang==='zh'||savedLang==='bm'){ lang=savedLang; document.getElementById('langGate').classList.add('hidden'); maybeAskName(); }
 applyLang();
 </script>

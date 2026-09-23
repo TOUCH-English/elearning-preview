@@ -4391,7 +4391,7 @@ function renderAsk(isEdit) {
     <h1>${esc(L_(isEdit ? "askTitleEdit" : "askTitleNew"))}</h1>
     <p class="sub">${L_(isEdit ? "askSubEdit" : "askSubNew")}</p>
     <div class="card">
-      ${ASK.map((a) => `<div class="ask">
+      ${ASK.filter((a) => !(SP && SP.platform && a.k === "name")).map((a) => `<div class="ask">
         <label for="f_${a.k}">${esc(L_(a.t))}</label>
         <input id="f_${a.k}" type="text" autocomplete="off" placeholder="${esc(a.ph)}" value="${esc(p[a.k] || "")}">
       </div>`).join("")}
@@ -4401,9 +4401,10 @@ function renderAsk(isEdit) {
 
   $("okb").onclick = () => {
     const p2 = {};
-    ASK.forEach((a) => { const v = $("f_" + a.k).value.trim(); if (v) p2[a.k] = v; });
+    ASK.forEach((a) => { const f = $("f_" + a.k); const v = f ? f.value.trim() : ""; if (v) p2[a.k] = v; });
     if (SP) { SP.set(p2); SP.markAsked(); }
-    S.profile = Object.keys(p2).length ? p2 : null;
+    /* 在平台里名字栏不显示（名字是帐号的），所以从共用 profile 取回完整一份 */
+    S.profile = SP ? SP.get() : (Object.keys(p2).length ? p2 : null);
     S.asked = true; save(); renderHome();
   };
   $("skipb").onclick = () => { if (SP) SP.markAsked(); S.asked = true; save(); renderHome(); };

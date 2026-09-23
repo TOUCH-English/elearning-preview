@@ -217,6 +217,27 @@
 .cp .cpstats { color: var(--te-muted, #5C6779); font-weight: 600; }
 .cp .cpstats b { color: var(--te-ink, #16202E); }
 
+/* IPA 的同一张卡（class 名字不同：.course-progress / .cp-*） */
+.course-progress {
+  background: var(--te-surface, #fff);
+  color: var(--te-ink, #16202E);
+  border: 1px solid var(--te-line, #DFE5F0);
+  box-shadow: 0 16px 48px rgba(14,36,86,.16);
+  padding-top: 22px;
+}
+.course-progress::before {
+  inset: 0 0 auto 0; height: 5px; border-radius: 0;
+  background: var(--te-brand, #15357B);
+}
+.course-progress::after { display: none; }
+.course-progress .cp-label, .course-progress .cp-sub, .course-progress .cp-stats { color: var(--te-muted, #5C6779); }
+.course-progress .cp-pct { color: var(--te-brand, #15357B); }
+.course-progress .cp-pct span { color: var(--te-muted, #5C6779); }
+.course-progress .cp-bar { background: var(--te-brand-soft, #EAF0FB); box-shadow: none; }
+.course-progress .cp-bar > i { background: var(--te-brand-2, #2A5BD7); }
+.course-progress .cp-stats b { color: var(--te-ink, #16202E); }
+.course-progress .cp-stats span + span { border-left-color: var(--te-line, #DFE5F0); }
+
 /* -----------------------------------------------------------------------------
    首页地图：单元横幅和关卡圆点
    原本底下都有一条 4~7px 的实色边（假装是一颗实体按钮）加一块模糊的亮点。
@@ -269,4 +290,14 @@ h1, h2, h3 { letter-spacing: -.01em; }
 @media (prefers-reduced-motion: reduce) {
   .btn, .opt, .wchip, .langopt, .iconbtn, .langbtn, .cont { transition: opacity 150ms ease; }
   .btn:active, .opt:active, .wchip:active, .cont:active { transform: none; }
+}
+
+/* =============================================================================
+   在平台里上课（profile.js 在 <html> 挂 te-platform）
+   平台管「人」，课程只管「课」（Marco 2026-09-24）：课程自己的 Profile 和底部导航
+   不显示 —— 学生的个人页只有平台一个。平台以外打开（员工、测试站）照旧。
+============================================================================= */
+html.te-platform #bottomnav,                           /* Pre-Beginner／Level 1／Level 2 */
+html.te-platform #nav [data-action="goProfile"] {      /* IPA：留「学习」「音标」，拿掉「我的」 */
+  display: none !important;
 }

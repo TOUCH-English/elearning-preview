@@ -1101,7 +1101,9 @@ function save(){ Persist.save(S); }
 /* =====================================================================
    4. XP & LEVEL SYSTEM
    ===================================================================== */
-function levelThreshold(n){ return 75*n*(n+1); } // cumulative XP needed to REACH level n (n>=1 => 150,450,900...)
+/* 升到第 n 级要累积的 XP：第 1 级从 0 开始，150 升第 2 级，450 升第 3 级……
+   原本是 75*n*(n+1)，第 1 级的起点变成 150，0 XP 的学生看到「-150 / 300 XP」（2026-09-24 修） */
+function levelThreshold(n){ return 75*n*(n-1); }
 function levelInfo(xp){
   let lvl=1; while(xp >= levelThreshold(lvl+1)) lvl++;
   const cur = levelThreshold(lvl), next = levelThreshold(lvl+1);
@@ -1315,7 +1317,11 @@ function L(en, zh, ms){
   if(LANG === "ms") return ms !== undefined ? ms : en;
   return en;
 }
-function loadLang(){ return store.get("lang", "") || (SP && SP.lang()) || ""; }
+function loadLang(){
+  /* 在平台里语言以共用的 profile 为准（平台管「人」，2026-09-24） */
+  if(SP && SP.platform) return SP.lang() || store.get("lang", "") || "";
+  return store.get("lang", "") || (SP && SP.lang()) || "";
+}
 function saveLang(code){ store.set("lang", code); if(SP) SP.setLang(code); }
 let LANG = loadLang() || "";           // "" until the learner picks the first time
 function setLang(code){
@@ -1696,6 +1702,8 @@ function renderLangPicker(){
 }
 
 function nameChosen(){
+  /* 在平台里名字是帐号的（顾问建的），不问 */
+  if(SP && SP.platform){ S.name = SP.get().name || S.name || ""; return true; }
   if(S.name && S.name.trim()) return true;
   /* 启动页问过了就不要再拦一次 —— 填了直接带出来，跳过也算问过 */
   if(SP && SP.asked()){ const n=SP.get().name; if(n){ S.name=n; save(); } return true; }

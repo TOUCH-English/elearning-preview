@@ -68,11 +68,17 @@
                  all: function () { var c = {}; for (var k in m) c[k] = m[k]; return c; } };
       })();
 
-  /* 在平台里：名字、解释语言先用帐号上的（学生自己改过的就不盖掉） */
+  /* 在平台里：平台管「人」，课程只管「课」（Marco 2026-09-24 选 A，docs/decisions.md）。
+     · 名字一律用帐号上的 —— 顾问建的那个名字，课程里不再问、也不能改
+     · 解释语言：顾问设的是预设；学生自己选过（这个共用的 profile）就用学生的
+     · 课程读语言要先读这里、不读自己存的那份，否则七个课程又会各说各话
+     <html> 挂上 te-platform，课程的 CSS 用它藏掉自己的 Profile、底部导航。 */
   var who = global.TouchStore && global.TouchStore.student;
+  var onPlatform = !!who;
   if (who) {
-    if (who.name && !String(store.get("name", "") || "").trim()) store.set("name", String(who.name).trim());
+    if (who.name && String(store.get("name", "") || "").trim() !== String(who.name).trim()) store.set("name", String(who.name).trim());
     if (LANGS.indexOf(who.lang) >= 0 && LANGS.indexOf(store.get("lang", null)) < 0) store.set("lang", who.lang);
+    try { global.document.documentElement.classList.add("te-platform"); } catch (e) {}
   }
 
   var listeners = [];
@@ -131,6 +137,7 @@
     var out = {};
     for (var i = 0; i < FIELDS.length; i++) {
       var k = FIELDS[i];
+      if (onPlatform && k === "name") continue;      // 平台上的名字是帐号的，课程不能改
       if (k in patch) out[k] = String(patch[k] == null ? "" : patch[k]).trim();
     }
     store.patch(out);
@@ -152,6 +159,8 @@
   function fromBM(l) { return l === "bm" ? "ms" : l; }
 
   global.TouchProfile = {
+    /* 在平台里上课（有登入的学生）：课程不问语言以外的学生资料，不显示自己的 Profile */
+    platform: onPlatform,
     LANGS: LANGS.slice(),
     FIELDS: FIELDS.slice(),
     meta: LANG_META,

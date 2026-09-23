@@ -967,9 +967,10 @@ const store = TouchStore.open("level-2");
 const SP = globalThis.TouchProfile || null;
 
 let S = {
- name: store.get("name", "") || (SP ? SP.get().name : ""),
+ /* 在平台里（SP.platform）：名字、语言以平台为准，不用这个课程自己存的那份 */
+ name: (SP && SP.platform) ? SP.get().name : (store.get("name", "") || (SP ? SP.get().name : "")),
  sound: store.get("sound", true),
- lang: store.get("lang", null) || (SP ? SP.lang() : null),
+ lang: (SP && SP.platform) ? (SP.lang() || store.get("lang", null)) : (store.get("lang", null) || (SP ? SP.lang() : null)),
  xp: store.get("xp", 0),
  done: store.get("done", {}),                      // {"m1-0":true,...}
  review: store.get("review", []),                  // [{m,l,k,n},...] wrong answers to redo
@@ -1155,7 +1156,7 @@ function openMenu(){
 
 /* ---------- language screen ---------- */
 document.querySelectorAll(".langopt").forEach(b=>{
- b.onclick = ()=>{ S.lang = b.dataset.lang; if(SP) SP.setLang(S.lang); save(); S.name ? renderHome() : showNameScreen(); };
+ b.onclick = ()=>{ S.lang = b.dataset.lang; if(SP) SP.setLang(S.lang); save(); (S.name || (SP && SP.platform)) ? renderHome() : showNameScreen(); };
 });
 function showNameScreen(){
  const t = T();
@@ -2059,7 +2060,8 @@ $("editname").onclick = editNameSheet;
 function init(){
  if(!S.lang){ show("scr-lang"); return; }
  // existing users who saved a language before the name step existed: ask once
- if(!S.name && !store.get("askedname", false) && !(SP && SP.asked())){ showNameScreen(); return; }
+ // 在平台里名字是帐号的（顾问建的），不问
+ if(!(SP && SP.platform) && !S.name && !store.get("askedname", false) && !(SP && SP.asked())){ showNameScreen(); return; }
  renderHome();
 }
 init();
