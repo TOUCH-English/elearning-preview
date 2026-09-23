@@ -1,0 +1,272 @@
+/* =============================================================================
+   TOUCH E-learning — 平台外皮  (shared/skin.css)
+   -----------------------------------------------------------------------------
+   为什么有这个档案：
+
+   theme.css 把颜色和字体换成平台的之後（2026-09-23），Marco 还是觉得
+   「跟现在的系统不太搭配」—— 因为形状没换：按钮是「糖果 3D」（渐层、上半一道亮面、
+   底下一条厚厚的实色阴影、每 3 秒扫过一道反光、金色按钮一直在呼吸），
+   平台的按钮是平的：实色、全圆角、一层很淡的蓝色影子，按下去才动。
+
+   这个档案**放在课程自己的 <style> 之後**载入，同样的权重後面的赢，
+   所以不用去改课程里原本的规则 —— 四个用同一套模板的课程
+   （Pre-Beginner、Level 1、Level 2）加上 IPA、Speaking Bonus，一处改、一起变。
+   Grammar Course 是 React 打包的，同样的规则写在 courses/grammar/src/App.jsx 最後一段。
+   拿掉这一行 <link>，课程就回到原本的样子，这是刻意留的退路。
+
+   数值都照平台（touch-platform app/globals.css 的 .ui-c 与 login 页的主按钮）：
+     主按钮  实色 #15357B、全圆角、0 6px 18px rgba(21,53,123,.24)
+     次按钮  白底、1px #DFE5F0 边、蓝字、没有影子
+     卡片    白底、1px 边、22px 圆角；主卡片上缘一条 5px 的蓝
+
+   动态照 Apple（Designing Fluid Interfaces）：
+     · 按下去的那一刻就有反应（:active / motion.js 的 [data-pressed]），缩到 .97，不等放开
+     · 一般按压用不回弹的曲线；原本的 cubic-bezier(.34,1.56,…) 会弹一下，按钮不该弹
+     · 不要无限循环的动画（反光、呼吸）—— 一直动的东西会让人忽略它；
+       只有「正在录音」那个会闪，因为它在报告状态
+   按钮高度 52px（平台是 44px）：学生是零基础的学习者，常在手机上一手操作，
+   主要动作给大一点的目标；形状、颜色、影子跟平台一样。
+============================================================================= */
+
+:root {
+  --sk-dur:   120ms;
+  --sk-ease:  cubic-bezier(.2,.8,.2,1);         /* 平台的 --motion-ease */
+  --sk-press: .97;
+  --sk-pri-shadow:       0 6px 18px rgba(21,53,123,.24);
+  --sk-pri-shadow-hover: 0 10px 24px rgba(21,53,123,.28);
+  --sk-pri-shadow-press: 0 2px 8px rgba(21,53,123,.20);
+}
+
+/* -----------------------------------------------------------------------------
+   主要按钮（.btn）—— Pre-Beginner／Level 1／Level 2 的 .btn-primary、IPA 的 .btn
+----------------------------------------------------------------------------- */
+.btn {
+  --bb: transparent;
+  min-height: 52px;
+  padding: 14px 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--te-brand, #15357B);
+  color: #fff;
+  font-family: var(--te-font-body, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0;
+  box-shadow: var(--sk-pri-shadow);
+  filter: none;
+  animation: none;
+  transition: transform var(--sk-dur) var(--sk-ease),
+              box-shadow var(--sk-dur) var(--sk-ease),
+              background-color var(--sk-dur) var(--sk-ease),
+              border-color var(--sk-dur) var(--sk-ease),
+              opacity var(--sk-dur) var(--sk-ease);
+}
+/* 亮面和扫过去的反光都拿掉 */
+.btn::before, .btn::after { content: none !important; display: none !important; animation: none !important; }
+.btn-primary { background: var(--te-brand, #15357B); }
+
+.btn:active, .btn.pressed, .btn[data-pressed] {
+  transform: scale(var(--sk-press));
+  box-shadow: var(--sk-pri-shadow-press);
+  filter: none;
+}
+@media (hover: hover) {
+  .btn:hover { transform: translateY(-1px); filter: none; box-shadow: var(--sk-pri-shadow-hover); }
+  .btn:hover:active { transform: scale(var(--sk-press)); box-shadow: var(--sk-pri-shadow-press); filter: none; }
+}
+.btn:focus-visible { outline: none; box-shadow: var(--te-focus, 0 0 0 3px rgba(42,91,215,.34)); }
+
+/* 次要按钮：Skip、Home、取消、先听一次示范 */
+.btn-ghost, .btn.ghost, .btn-g {
+  background: var(--te-surface, #fff);
+  color: var(--te-brand, #15357B);
+  border-color: var(--te-line, #DFE5F0);
+  box-shadow: none;
+}
+.btn-ghost:active, .btn-ghost.pressed, .btn-ghost[data-pressed],
+.btn.ghost:active, .btn.ghost.pressed, .btn.ghost[data-pressed],
+.btn-g:active {
+  transform: scale(var(--sk-press)); box-shadow: none; background: #F2F5FA;
+}
+@media (hover: hover) {
+  .btn-ghost:hover, .btn.ghost:hover, .btn-g:hover:not([disabled]) {
+    transform: translateY(-1px);
+    border-color: var(--te-brand-2, #2A5BD7);
+    box-shadow: var(--te-sh-sm);
+  }
+}
+
+/* 金色（奖励）：不再呼吸。金色只留给 XP 和奖励，不当一般按钮 */
+.btn-gold, .btn.sun {
+  background: var(--te-gold, #D9B56B);
+  color: #4A3217;
+  box-shadow: 0 6px 18px rgba(190,150,72,.28);
+  animation: none;
+}
+
+/* 录音：实色红。录音中的闪烁（.on）保留 —— 它在报告状态 */
+.btn-rec, .btn.coral {
+  background: var(--te-bad, #C0405C);
+  box-shadow: 0 6px 18px rgba(158,46,71,.24);
+}
+
+/* 不能按：只降透明度，不要变灰又变糊 */
+.btn[disabled], .btn:disabled {
+  opacity: .38;
+  filter: none;
+  box-shadow: none;
+  transform: none;
+}
+
+/* 答题後的底部面板：答对绿、答错红，按钮跟着那个颜色（实色，文字白色要读得清楚，所以用深一阶） */
+#feedback.ok .btn { background: var(--te-success-d, #3C8E6F); box-shadow: 0 6px 18px rgba(60,142,111,.28); }
+#feedback.no .btn { background: var(--te-bad, #C0405C);       box-shadow: 0 6px 18px rgba(158,46,71,.24); }
+#feedback .fb-inner { box-shadow: 0 -8px 30px rgba(14,36,86,.14); }
+
+/* -----------------------------------------------------------------------------
+   选项、词块、语言选择 —— 大块可点的东西
+   边框 2px → 1.5px、粗体 800 → 600；按下去缩一点、不回弹
+----------------------------------------------------------------------------- */
+.opt, .wchip, .langopt {
+  border-width: 1.5px;
+  border-color: var(--te-line, #DFE5F0);
+  font-weight: 600;
+  box-shadow: var(--te-sh-sm);
+  transition: transform var(--sk-dur) var(--sk-ease),
+              border-color var(--sk-dur) var(--sk-ease),
+              background-color var(--sk-dur) var(--sk-ease),
+              box-shadow var(--sk-dur) var(--sk-ease);
+}
+.opt:active, .opt.pressed, .opt[data-pressed] { transform: scale(.98); }
+.wchip:not(.used):not(:disabled):active,
+.wchip:not(.used):not(:disabled).pressed { transform: scale(.95); box-shadow: none; }
+.langopt:active, .langopt.pressed { transform: scale(.98); }
+.langopt .nm { font-weight: 700; }
+
+/* 选中：平台的「亮蓝」边框加一圈淡淡的光，而不是另一种灰蓝 */
+.opt.sel {
+  border-color: var(--te-brand-2, #2A5BD7);
+  background: var(--te-brand-soft, #EAF0FB);
+  box-shadow: 0 0 0 3px rgba(42,91,215,.12);
+}
+.opt.right { border-width: 1.5px; }
+.opt.wrong { border-width: 1.5px; }
+
+/* 词块原本底下有一条 2px 的实色影子（假装是一块积木），换成跟卡片一样的影子 */
+.wchip { box-shadow: var(--te-sh-sm); }
+.wchip.used { box-shadow: none; }
+
+/* -----------------------------------------------------------------------------
+   小按钮：顶栏的声音、语言，单字的喇叭，首页的 GO
+----------------------------------------------------------------------------- */
+.iconbtn, .langbtn {
+  border-radius: 999px;
+  background: #F2F5FA;
+  border: 1px solid var(--te-line, #DFE5F0);
+  box-shadow: none;
+  font-family: var(--te-font-body, sans-serif);
+  font-weight: 600;
+  transition: transform var(--sk-dur) var(--sk-ease), background-color var(--sk-dur) var(--sk-ease);
+}
+.iconbtn:active, .iconbtn.pressed, .langbtn:active, .langbtn.pressed { transform: scale(.92); }
+.iconbtn.off { background: #F2F5FA; color: var(--te-subtle, #8C97A8); }
+
+.spk {
+  background: var(--te-brand-soft, #EAF0FB);
+  color: var(--te-brand-2, #2A5BD7);
+  box-shadow: none;
+}
+.spk:active, .spk.pressed { background: #DCE6FA; }
+
+.cont .cgo {
+  background: var(--te-brand, #15357B);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-family: var(--te-font-body, sans-serif);
+  font-weight: 600;
+  box-shadow: var(--sk-pri-shadow);
+}
+.cont { border-color: var(--te-line, #DFE5F0); border-radius: 22px; box-shadow: var(--te-sh-md); }
+.cont:active, .cont.pressed { transform: scale(.985); }
+.cont .cb { background: var(--te-brand-soft, #EAF0FB); box-shadow: none; }
+
+.chip { font-weight: 700; box-shadow: none; }
+
+/* -----------------------------------------------------------------------------
+   首页的课程进度：原本是深蓝渐层加金色光晕，平台的主卡片是白底、上缘一条蓝
+   （.ui-hero）。进度条换成平台的实色蓝，金色只留在 XP。
+----------------------------------------------------------------------------- */
+.cp {
+  background: var(--te-surface, #fff);
+  color: var(--te-ink, #16202E);
+  border: 1px solid var(--te-line, #DFE5F0);
+  box-shadow: 0 16px 48px rgba(14,36,86,.16);
+  padding-top: 22px;
+}
+.cp::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 5px;
+  background: var(--te-brand, #15357B);
+}
+.cp::after { display: none; }
+.cp .cpl { color: var(--te-muted, #5C6779); }
+.cp .pct { color: var(--te-brand, #15357B); }
+.cp .pct span { color: var(--te-muted, #5C6779); }
+.cp .cpsub { color: var(--te-muted, #5C6779); font-weight: 600; }
+.cp .cpbar { background: var(--te-brand-soft, #EAF0FB); box-shadow: none; }
+.cp .cpbar i { background: var(--te-brand-2, #2A5BD7); box-shadow: none; }
+.cp .cpstats { color: var(--te-muted, #5C6779); font-weight: 600; }
+.cp .cpstats b { color: var(--te-ink, #16202E); }
+
+/* -----------------------------------------------------------------------------
+   首页地图：单元横幅和关卡圆点
+   原本底下都有一条 4~7px 的实色边（假装是一颗实体按钮）加一块模糊的亮点。
+   改成平的：实色、一层带着自己颜色的淡影子。颜色是平台九宫格那一组（课程 JS 的 MODCOLORS）。
+----------------------------------------------------------------------------- */
+.secband {
+  border-radius: 22px;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--md) 28%, transparent);
+}
+.secband .sb-k { font-family: var(--te-font-body, sans-serif); font-weight: 700; }
+.node .disc {
+  background: var(--mc);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--md) 34%, transparent);
+  transition: transform var(--sk-dur) var(--sk-ease), box-shadow var(--sk-dur) var(--sk-ease);
+}
+.node .disc::after { display: none; }
+.node .disc svg { filter: none; }
+.node:active .disc, .node.pressed .disc {
+  transform: scale(.94);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--md) 30%, transparent);
+}
+.node.done.boss .disc {
+  background: var(--te-gold, #D9B56B);
+  box-shadow: 0 8px 20px rgba(190,150,72,.34);
+}
+
+/* -----------------------------------------------------------------------------
+   Logo（原本是一个「T」，当时还没有 logo）
+   顶栏放完整字样；语言选择页的大圆圈放图形标志 —— 跟平台一样：
+   圆圈里放得下的是标志，字样要一整条才读得清楚（平台 nav.tsx 的 Logo）。
+----------------------------------------------------------------------------- */
+.brand .brandlogo { height: 34px; width: auto; display: block; }
+.langscreen .ring.ring-logo {
+  background: var(--te-surface, #fff);
+  border: 1px solid var(--te-line, #DFE5F0);
+  box-shadow: var(--te-sh-md);
+}
+.langscreen .ring.ring-logo img { width: 54%; height: auto; display: block; }
+
+/* 名字页那个圆圈放的是 👋，跟 logo 圆圈同一种白底 */
+.langscreen .ring:not(.ring-logo) {
+  background: var(--te-surface, #fff);
+  border: 1px solid var(--te-line, #DFE5F0);
+  box-shadow: var(--te-sh-md);
+}
+
+/* 标题：平台的标题字重 600~700、字距微收；原本是 .2px 的正字距 */
+h1, h2, h3 { letter-spacing: -.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .opt, .wchip, .langopt, .iconbtn, .langbtn, .cont { transition: opacity 150ms ease; }
+  .btn:active, .opt:active, .wchip:active, .cont:active { transform: none; }
+}

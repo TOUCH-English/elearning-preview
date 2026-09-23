@@ -681,12 +681,14 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .tb-hint{font-size:12.5px;color:rgba(255,255,255,.75);font-weight:600}
 body:has(#testbar){padding-bottom:64px}
 </style>
+<!-- 平台外皮：放在课程样式之後才盖得过去（shared/skin.css 档头） -->
+<link rel="stylesheet" href="../../shared/skin.css">
 </head>
 <body>
 
 <div class="topbar hidden" id="topbar">
  <div class="topbar-in">
-  <div class="brand"><span class="logo">T</span><span id="brandtxt">Touch English</span></div>
+  <div class="brand"><img class="brandlogo" src="../../shared/assets/brand/touch-logo.png" alt="TOUCH English"></div>
   <div class="chips">
    <span class="chip xp"><span class="ic">◆</span><span id="xpval">0</span> XP</span>
    <span class="chip streak"><span class="ic">🔥</span><span id="stval">0</span></span>
@@ -699,7 +701,7 @@ body:has(#testbar){padding-bottom:64px}
 <div class="wrap">
  <!-- LANGUAGE SELECT -->
  <div id="scr-lang" class="langscreen hidden">
-  <div class="ring">T</div>
+  <div class="ring ring-logo"><img src="../../shared/assets/brand/touch-mark.png" alt="TOUCH English"></div>
   <h1>Touch English</h1>
   <p>Pre-Beginner · 选择解释语言 / Pilih bahasa penerangan / Choose your explanation language</p>
   <button class="langopt" data-lang="zh"><span class="flag">中</span><span><span class="nm">中文</span><br><span class="sub">所有解释以中文显示</span></span></button>
@@ -1330,11 +1332,12 @@ function renderHome(){
  // ---- Duolingo-style candy path map ----
  const SIDES = ["c","l","c","r","c"];
  const MODCOLORS = [
-  {c:"#57B889", d:"#3E8E69"},   // green
-  {c:"#4A86C8", d:"#33639A"},   // sky blue
-  {c:"#D9A84F", d:"#A87C2E"},   // gold
-  {c:"#C0566E", d:"#96394F"},   // coral
-  {c:"#8B6CC0", d:"#67499B"},   // purple
+  /* 平台九宫格的同一组颜色（app/globals.css 的 --nav-*，2026-09-23 对齐）：中间调、不刺眼，五个放在一起像一组 */
+  {c:"#16A394", d:"#0F7F73"},   // green  --nav-green
+  {c:"#3B82C4", d:"#2C659B"},   // blue   --nav-blue
+  {c:"#E0922E", d:"#B87420"},   // amber  --nav-amber
+  {c:"#D957A8", d:"#B2428A"},   // pink   --nav-pink
+  {c:"#9B5FE0", d:"#7A45BB"},   // violet --nav-violet
  ];
  const rec = recommendedLesson();
  let gIdx = 0;

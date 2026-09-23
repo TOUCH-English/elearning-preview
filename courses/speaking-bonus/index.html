@@ -32,7 +32,7 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--font-b);min-hei
 
 /* ---------- top bar ---------- */
 .top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.logo{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:15px;letter-spacing:.02em}
+.logo{height:34px;width:auto;display:block}   /* 平台的字样 logo（原本是文字 TOUCH English） */
 .chips{margin-left:auto;display:flex;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-h);font-weight:600;font-size:12.5px;
   padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--brand-2)}
@@ -141,6 +141,8 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 .hidden{display:none !important}
 @media (prefers-reduced-motion:reduce){*{transition:none !important}}
 </style>
+<!-- 平台外皮：放在课程样式之後才盖得过去（shared/skin.css 档头） -->
+<link rel="stylesheet" href="../../shared/skin.css">
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -4362,7 +4364,7 @@ const addXP = (n) => { S.xp += n; save(); const c = $("xp"); if (c) c.textConten
 /* ---------- 顶栏 ---------- */
 function topBar() {
   return `<div class="top">
-    <span class="logo">TOUCH English</span>
+    <img class="logo" src="../../shared/assets/brand/touch-logo.png" alt="TOUCH English">
     <span class="chips">
       <span class="chip">◆ <b id="xp">${S.xp}</b> XP</span>
       <span class="chip">✓ <b>${Object.keys(S.done).length}</b>/${DAYS.length}</span>
