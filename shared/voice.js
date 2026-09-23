@@ -178,6 +178,69 @@
     } catch (e) { return false; }
   }
 
+  /* ---------------------------------------------------------------------------
+     带学生名字的句子
+
+     「My name is Marco.」每个学生不一样，没办法事先生成，以前整句退回机械音。
+     现在：名字前後的部分各播真人音档，名字的位置空一拍 —— 名字不念，
+     学生自己的名字他自己最会念（AI 连 Siti 都念成 City）。
+     单独点到名字本身（排句题的词块）也不念，不要冒出一个机械音。
+
+     课程设定 TouchVoice.names = ["Marco"]；课程原文里的 {NAME} 也认得。
+     nameParts() 跟 tools/build-audio.mjs 的同名函式必须一模一样。
+  --------------------------------------------------------------------------- */
+  var NAMES = [];
+  var NAME_GAP = 0.6;    // 名字那一拍空多久（秒）
+
+  function nameParts(s, name) {
+    var parts = String(s).split(name);
+    return parts.map(function (p, i) {
+      p = p.replace(/\s+/g, " ").replace(/\s+([.,!?;:])/g, "$1").replace(/^[\s.,!?;:]+/, "");
+      if (i < parts.length - 1) p = p.replace(/[\s.,!?;:]+$/, "");
+      return p.trim();
+    }).filter(function (p) { return /[A-Za-z0-9]/.test(p); });
+  }
+
+  /* 这句有名字 → 回传要播的段落（可能是空阵列＝整句就是名字）；没有名字 → null */
+  function withName(t) {
+    var list = ["{NAME}"].concat(NAMES);
+    for (var i = 0; i < list.length; i++) {
+      var n = list[i];
+      if (!n) continue;
+      var re = new RegExp("(^|[^A-Za-z])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![A-Za-z])");
+      if (!re.test(t)) continue;
+      /* 先把名字换成 {NAME}，再照生成端同一套规则切 */
+      var marked = t.split(re).length > 1 ? t.replace(new RegExp(re.source, "g"), "$1{NAME}") : t;
+      return nameParts(marked, "{NAME}");
+    }
+    return null;
+  }
+
+  function playSegments(segs, opt) {
+    if (!segs.length) return false;
+    var token = {};
+    cur = token;                                  // stop() 会把 cur 换掉，後面的段落就不再播
+    if (opt.btn) { curBtn = opt.btn; curBtn.classList.add("playing"); }
+    var i = 0;
+    (function next() {
+      if (cur !== token && !(cur && cur._seg === token)) return;
+      if (i >= segs.length) { cur = null; clearBtn(); return; }
+      var seg = segs[i++];
+      if (have && !have[key(seg)]) { next(); return; }
+      var a = new Audio(BASE + key(seg) + ".mp3");
+      a._seg = token;
+      a.playbackRate = (opt.rate != null) ? opt.rate : rateFor(opt.slow);
+      if ("preservesPitch" in a) a.preservesPitch = true;
+      if ("webkitPreservesPitch" in a) a.webkitPreservesPitch = true;
+      a.onended = function () { if (cur === a) setTimeout(next, NAME_GAP * 1000); };
+      a.onerror = function () { if (cur === a) next(); };
+      cur = a;
+      var p = a.play();
+      if (p && p.catch) p.catch(function () { if (cur === a) { cur = null; clearBtn(); } });
+    })();
+    return "audio";
+  }
+
   /* 主要入口。回传 "audio" / "tts" / false，方便测试与除错。 */
   function say(text, opt) {
     opt = opt || {};
@@ -194,7 +257,11 @@
     stop();
 
     var k = key(t);
-    if (have && !have[k]) return fallback(t, opt) ? "tts" : false;
+    if (have && !have[k]) {
+      var segs = withName(t);
+      if (segs) return playSegments(segs, opt);
+      return fallback(t, opt) ? "tts" : false;
+    }
 
     try {
       var a = new Audio(BASE + k + ".mp3");
@@ -206,7 +273,12 @@
       if (opt.btn) { curBtn = opt.btn; curBtn.classList.add("playing"); }
       a.onended = function () { if (cur === a) cur = null; clearBtn(); };
       /* 档案不在、或格式不支援 —— 静静退回浏览器语音，学生不会察觉 */
-      a.onerror = function () { if (cur === a) cur = null; clearBtn(); fallback(t, opt); };
+      a.onerror = function () {
+        if (cur === a) cur = null;
+        clearBtn();
+        var segs = withName(t);                    // manifest 还没载到时才会走到这里
+        if (segs) playSegments(segs, opt); else fallback(t, opt);
+      };
 
       cur = a;
       var p = a.play();
@@ -283,6 +355,9 @@
     rateFor: rateFor,
     /* 这一条有没有音档（manifest 还没载到时回传 null＝不知道） */
     has: function (t) { return have ? !!have[key(t)] : null; },
+    /* 学生自己的名字（课程在知道名字後设定）：这些字不念，句子在这里切开 */
+    get names() { return NAMES.slice(); },
+    set names(v) { NAMES = (v || []).map(function (x) { return String(x || "").trim(); }).filter(Boolean); },
     /* 这一页到目前为止，有哪些字没有音档、退回了机械音 */
     missing: function () { return MISSING.slice(); }
   };

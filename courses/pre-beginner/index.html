@@ -1078,7 +1078,10 @@ function save(){
 function T(){ return UI[S.lang||"en"]; }
 function tri(o){ return o ? (o[S.lang]||o.en||"") : ""; }
 const PRACTICE_NAME = "Alex";                      // neutral fallback when no profile name set
-function px(s){ return String(s).split("{NAME}").join((S.name||PRACTICE_NAME).trim()); }
+function px(s){ voiceNames(); return String(s).split("{NAME}").join((S.name||PRACTICE_NAME).trim()); }
+/* 句子里的学生名字不念，发音层在名字那里切开、空一拍（shared/voice.js「带学生名字的句子」）。
+   每次代入名字时顺手同步 —— 名字在导览页、设定页都可能改，这样不会漏。 */
+function voiceNames(){ if(globalThis.TouchVoice) TouchVoice.names = [(S.name||PRACTICE_NAME).trim()]; }
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function bumpStreak(){
  const t = todayStr();
