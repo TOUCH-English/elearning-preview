@@ -33,10 +33,17 @@
 (function (global) {
   "use strict";
 
-  /* 每个课程都在 courses/<名字>/index.html，启动页在根目录 */
-  var HREF = "../../index.html";
+  /* 每个课程都在 courses/<名字>/index.html，启动页在根目录。
+     在 TOUCH 平台里（storage.js 之前载入了 /api/learn/state.js）改回平台的 /learn ——
+     那里只列这个学生这一级的课程，静态启动页会把全部课程都露出来。 */
+  var PLATFORM = global.TOUCH_PLATFORM && typeof global.TOUCH_PLATFORM === "object" ? global.TOUCH_PLATFORM : null;
+  var HREF = PLATFORM ? (PLATFORM.homeUrl || "/learn") : "../../index.html";
 
-  var LABEL = {
+  var LABEL = PLATFORM ? {
+    zh: "‹ 我的课程",
+    ms: "‹ Kursus saya",
+    en: "‹ My courses"
+  } : {
     zh: "‹ 全部课程",
     ms: "‹ Semua kursus",
     en: "‹ All courses"
@@ -54,7 +61,7 @@
     catch (e) { return false; }
   })();
 
-  var hidden = embedded || !inLauncher;
+  var hidden = embedded || (!inLauncher && !PLATFORM);
 
   function label() {
     var P = global.TouchProfile;
