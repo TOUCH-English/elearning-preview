@@ -130,6 +130,7 @@
     } catch (e) {}
   })();
 
+  var MISSING = [];      // 退回机械音的字串（测试用）
   var cur = null;        // 正在播的 Audio
   var curBtn = null;
 
@@ -152,9 +153,17 @@
     if (!s) return false;
     if (opt.fallbackMaxWords && s.split(" ").length > opt.fallbackMaxWords) return false;
     if (/[㐀-鿿぀-ヿ가-힯]/.test(s)) return false;   // 中日韩不念
+    /* 哪些字退回了机械音 —— 测试时用 TouchVoice.missing 就看得到，
+       方便回头把漏掉的音档补生成。 */
+    MISSING.push(text);
+
     try {
       global.speechSynthesis.cancel();
-      var u = new global.SpeechSynthesisUtterance(s.toLowerCase());
+      /* 缩写要展开，否则机械音会把 Mr. 念成一个字母一个字母 */
+      var spoken = s.toLowerCase()
+        .replace(/\bmr\b/g, "mister").replace(/\bmrs\b/g, "missus")
+        .replace(/\bms\b/g, "miz").replace(/\bdr\b/g, "doctor");
+      var u = new global.SpeechSynthesisUtterance(spoken);
       var vs = global.speechSynthesis.getVoices() || [];
       var v = vs.filter(function (x) { return /^en[-_]?(US|GB)/i.test(x.lang); })[0] ||
               vs.filter(function (x) { return /^en/i.test(x.lang); })[0];
@@ -175,6 +184,12 @@
     if (opt.fallbackMaxWords === undefined) opt.fallbackMaxWords = 3;
     var t = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
     if (!t) return false;
+    /* 纯标点的词块（排句题里的「,」「.」）不发声 ——
+       机械音会把它念成「comma」「period」，学生会以为那是一个单字。 */
+    if (!/[A-Za-z0-9]/.test(t)) return false;
+    /* 讲解型的选项（「live in = my home now; from = my origin」）不发声。
+       那是给眼睛看的说明，不是一句英文，念出来学生会更乱。 */
+    if (/[=;]/.test(t)) return false;
 
     stop();
 
@@ -267,6 +282,8 @@
     rate: baseRate,          /* 这个课程现在用的速度 */
     rateFor: rateFor,
     /* 这一条有没有音档（manifest 还没载到时回传 null＝不知道） */
-    has: function (t) { return have ? !!have[key(t)] : null; }
+    has: function (t) { return have ? !!have[key(t)] : null; },
+    /* 这一页到目前为止，有哪些字没有音档、退回了机械音 */
+    missing: function () { return MISSING.slice(); }
   };
 })(typeof globalThis !== "undefined" ? globalThis : window);
