@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>发音速度后台 — TOUCH English</title>
+<meta name="robots" content="noindex, nofollow">
+<!-- =============================================================================
+     发音速度后台（只给 Marco 用，不发布给学生）
+
+     用法：双击这个档案打开（它必须留在专案根目录 —— 放进子资料夹的话，
+           浏览器用 file:// 开会拿不到上一层的音档） → 拉速度 → 按「试听」→ 满意了按「复制设定」
+           → 贴进 shared/voice-config.js 的 rate 里 → 叫我重新发布
+
+     为什么不能在这里按一下就生效：
+     这是一个静态网页，它改不了伺服器上的档案。它在这里记住的设定只存在
+     你这台电脑的浏览器里。要让学生拿到，设定必须写进 voice-config.js 再发布。
+     之後接上 Supabase，就可以在这里按「储存」直接写回去，学生下次打开就生效。
+============================================================================= -->
+<link rel="stylesheet" href="shared/theme.css">
+<script src="shared/voice-config.js"></script>
+<style>
+:root{
+  --canvas:var(--te-canvas,#F5F7FA); --surface:var(--te-surface,#fff);
+  --ink:var(--te-ink,#1B2433); --muted:var(--te-muted,#5C6675);
+  --line:var(--te-line,#DCE3EC); --brand:var(--te-brand,#1F3A5F);
+  --brand-2:var(--te-brand-2,#2E5685); --brand-soft:var(--te-brand-soft,#E6ECF4);
+  --gold-deep:var(--te-gold-deep,#BE9648);
+  --font-h:var(--te-font-display,"Fredoka","Nunito",system-ui,sans-serif);
+  --font-b:var(--te-font-body,"Nunito",system-ui,sans-serif);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--font-b);
+     padding:clamp(18px,4vw,40px);display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:720px}
+h1{font-family:var(--font-h);font-size:clamp(22px,4vw,30px);color:var(--brand);letter-spacing:-.02em;line-height:1.1}
+.sub{color:var(--muted);font-size:14px;margin:8px 0 22px;line-height:1.6;font-weight:600}
+.warn{background:#FFF8E8;border:1px solid rgba(191,150,72,.35);color:#6B5320;
+      border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.6;font-weight:600;margin-bottom:20px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--te-radius,18px);
+      padding:16px 18px;margin-bottom:12px;box-shadow:var(--te-sh-sm,0 1px 3px rgba(0,0,0,.06))}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.nm{font-family:var(--font-h);font-weight:600;font-size:17px;color:var(--brand);flex:1;min-width:150px}
+.val{font-family:var(--font-h);font-weight:700;font-size:17px;color:var(--brand-2);
+     min-width:58px;text-align:right;font-variant-numeric:tabular-nums}
+.hint{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:4px}
+input[type=range]{width:100%;margin:14px 0 6px;accent-color:var(--brand-2);height:28px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{font-family:var(--font-h);font-weight:600;font-size:14px;cursor:pointer;
+       border-radius:12px;padding:11px 16px;min-height:44px;border:1px solid var(--line);
+       background:var(--surface);color:var(--brand-2);-webkit-tap-highlight-color:transparent;
+       transition:transform .09s var(--te-ease-out,ease),background .15s}
+button:active{transform:scale(.97)}
+button.p{background:var(--brand);border-color:var(--brand);color:#fff}
+button.playing{background:var(--brand-soft)}
+.out{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+     line-height:1.6;background:#101828;color:#D6E2F0;border:none;border-radius:14px;
+     padding:14px;min-height:190px;white-space:pre;overflow:auto}
+.foot{color:var(--muted);font-size:12.5px;line-height:1.7;font-weight:600;margin-top:18px;
+      border-top:1px solid var(--line);padding-top:16px}
+.bad{color:#9E2E47}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>发音速度后台</h1>
+  <p class="sub">拉一拉、按试听，听到满意为止。学生那边不会看到任何速度选项 —— 他们打开就是你在这里定好的速度。</p>
+
+  <div class="warn" id="warn">
+    这里改的东西<b>只存在你这台电脑</b>。要让学生拿到，按下面的「复制设定」，贴进
+    <code>shared/voice-config.js</code>，再重新发布。之後接上 Supabase 就可以直接储存生效。
+  </div>
+
+  <div id="list"></div>
+
+  <div class="card">
+    <div class="row"><span class="nm">长按再慢一档</span><span class="val" id="sfVal"></span></div>
+    <input type="range" id="sf" min="0.6" max="1" step="0.05">
+    <p class="hint">学生长按喇叭时，在课程速度上再乘这个数。拉到 1 ＝ 关掉长按慢速这个功能。</p>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="nm">设定档内容</span>
+      <button class="p" id="copy">复制设定</button>
+      <button id="reset">还原预设</button>
+    </div>
+    <p class="hint" style="margin-bottom:10px">贴到 <code>shared/voice-config.js</code> 里的 <code>rate</code> 与 <code>slowFactor</code>。</p>
+    <textarea class="out" id="out" readonly></textarea>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="shared/voice.js"></script>
+<script>
+/* 后台页面本身的逻辑。刻意不依赖 TouchVoice 的课程判断 ——
+   这里要能「以任意速度试听任意课程的音档」，所以直接控制 Audio。 */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  var COURSES = [
+    { k:"default",        nm:"预设（找不到对应课程时用）", demo:"Hello, Mr. Tan." },
+    { k:"pre-beginner",   nm:"Pre-Beginner",  demo:"Good morning, boss." },
+    { k:"level-1",        nm:"Level 1",       demo:"I come from Ipoh, and I live in Johor Bahru now." },
+    { k:"level-2",        nm:"Level 2",       demo:"Yesterday, I went to the market with my family." },
+    { k:"speaking-bonus", nm:"Speaking Bonus", demo:"I went to work by bus." },
+    { k:"ipa",            nm:"IPA Pronunciation", demo:"hometown" }
+  ];
+
+  var DEFAULTS = JSON.parse(JSON.stringify(globalThis.TouchVoiceConfig || {rate:{},slowFactor:0.8}));
+  var LS = "touch:v1:voice-admin";
+
+  function load(){
+    try{ var s = JSON.parse(localStorage.getItem(LS)||"null"); if(s && s.rate) return s; }catch(e){}
+    return JSON.parse(JSON.stringify(DEFAULTS));
+  }
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify(cfg)); }catch(e){} }
+
+  var cfg = load();
+  if(cfg.slowFactor == null) cfg.slowFactor = 0.8;
+
+  /* ---- 试听 ---- */
+  var BASE = "shared/audio/";
+  var playing = null;
+  function slug(s){ return String(s).toLowerCase().replace(/[‘’“”]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40); }
+  function hash(s){ var h=5381; for(var i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); }
+  function key(t){ t=String(t).replace(/\s+/g," ").replace(/\s+([.,!?;:])/g,"$1").trim(); return (slug(t)||"x")+"-"+hash(t); }
+
+  /* 播放 ＋ 出事时讲清楚是哪一种问题。
+     按钮文字绝对不能改掉 —— 改掉就再也看不出那颗是「试听」还是「慢速」。
+     状态显示在卡片下方，几秒後自己消失。 */
+  function note(card, msg, bad){
+    if(!card) return;
+    var n = card.querySelector(".st");
+    if(!n){ n = document.createElement("p"); n.className = "hint st"; card.appendChild(n); }
+    n.textContent = msg || "";
+    n.className = "hint st" + (bad ? " bad" : "");
+    clearTimeout(n._t);
+    if(msg) n._t = setTimeout(function(){ n.textContent = ""; }, 6000);
+  }
+
+  function play(text, rate, btn){
+    if(playing){ try{ playing.pause(); }catch(e){} playing=null; }
+    document.querySelectorAll("button.playing").forEach(function(b){ b.classList.remove("playing"); });
+    var card = btn && btn.closest(".card");
+    var url = BASE + key(text) + ".mp3";
+    var a = new Audio(url);
+    a.playbackRate = rate;
+    if("preservesPitch" in a) a.preservesPitch = true;
+    if(btn) btn.classList.add("playing");
+
+    a.onplay  = function(){ note(card, "播放中 " + rate.toFixed(2) + "×"); };
+    a.onended = function(){ if(btn) btn.classList.remove("playing"); note(card, ""); };
+    a.onerror = function(){
+      if(btn) btn.classList.remove("playing");
+      note(card, isFile()
+        ? "拿不到音档。用 file:// 打开时浏览器会挡住读取档案 —— 请照页面最下面那一行开一个本机伺服器。"
+        : "找不到音档：" + url + "（这一句可能还没生成）", true);
+    };
+    playing = a;
+    a.play().catch(function(e){
+      if(btn) btn.classList.remove("playing");
+      var why = (e && e.name) === "NotAllowedError"
+        ? "浏览器挡住自动播放 —— 先在页面空白处点一下，再按试听。"
+        : isFile()
+          ? "用 file:// 打开时浏览器不让网页读取音档。请照页面最下面那一行开一个本机伺服器。"
+          : "播不出来：" + ((e && e.name) || "未知错误");
+      note(card, why, true);
+    });
+  }
+  function isFile(){ return !/^https?:$/.test(location.protocol); }   /* file: 、data: 都算本机直接打开 */
+
+  /* ---- 画面 ---- */
+  function render(){
+    $("list").innerHTML = COURSES.map(function(c){
+      var v = cfg.rate[c.k] != null ? cfg.rate[c.k] : (cfg.rate["default"] || 1);
+      return '<div class="card" data-k="'+c.k+'">'+
+        '<div class="row"><span class="nm">'+c.nm+'</span><span class="val">'+v.toFixed(2)+'×</span></div>'+
+        '<input type="range" min="0.7" max="1.1" step="0.01" value="'+v+'">'+
+        '<div class="btns">'+
+          '<button data-act="normal">▶ 试听</button>'+
+          '<button data-act="slow">▶ 长按慢速</button>'+
+          '<button data-act="one">▶ 原速对照</button>'+
+        '</div>'+
+        '<p class="hint">试听句：'+c.demo+'</p>'+
+      '</div>';
+    }).join("");
+
+    $("list").querySelectorAll(".card").forEach(function(card){
+      var k = card.dataset.k;
+      var c = COURSES.filter(function(x){ return x.k===k; })[0];
+      var rng = card.querySelector("input");
+      rng.oninput = function(){
+        cfg.rate[k] = Number(rng.value);
+        card.querySelector(".val").textContent = Number(rng.value).toFixed(2)+"×";
+        save(); out();
+      };
+      card.querySelectorAll("button").forEach(function(b){
+        b.onclick = function(){
+          var r = Number(rng.value);
+          if(b.dataset.act==="slow") r = r * cfg.slowFactor;
+          if(b.dataset.act==="one")  r = 1;
+          play(c.demo, r, b);
+        };
+      });
+    });
+
+    $("sf").value = cfg.slowFactor;
+    $("sfVal").textContent = Number(cfg.slowFactor).toFixed(2)+"×";
+    out();
+  }
+
+  $("sf").oninput = function(){
+    cfg.slowFactor = Number($("sf").value);
+    $("sfVal").textContent = cfg.slowFactor.toFixed(2)+"×";
+    save(); out();
+  };
+
+  function out(){
+    var lines = COURSES.map(function(c){
+      var v = cfg.rate[c.k] != null ? cfg.rate[c.k] : 1;
+      return '    "'+c.k+'":'+(new Array(Math.max(1,18-c.k.length)).join(" "))+v.toFixed(2)+',';
+    }).join("\n").replace(/,$/,"");
+    $("out").value =
+      "  rate: {\n" + lines + "\n  },\n\n" +
+      "  slowFactor: " + Number(cfg.slowFactor).toFixed(2) + ",";
+  }
+
+  $("copy").onclick = function(){
+    $("out").select();
+    var okd = false;
+    try{ okd = document.execCommand("copy"); }catch(e){}
+    if(navigator.clipboard) navigator.clipboard.writeText($("out").value).then(function(){ done(); }, function(){ if(okd) done(); });
+    else if(okd) done();
+    function done(){ $("copy").textContent = "已复制 ✓"; setTimeout(function(){ $("copy").textContent="复制设定"; }, 1600); }
+  };
+
+  $("reset").onclick = function(){
+    cfg = JSON.parse(JSON.stringify(DEFAULTS));
+    if(cfg.slowFactor == null) cfg.slowFactor = 0.8;
+    save(); render();
+  };
+
+  render();
+
+  $("foot").innerHTML =
+    (isFile()
+      ? "<b>你现在是用 file:// 打开的。</b>这样浏览器会挡住音档，试听会失败。<br>" +
+        "开终端机贴这一行，然后用它给的网址打开：<br>" +
+        "<code>cd ~/TOUCH-e-learning && python3 -m http.server 8080</code><br>" +
+        "→ 浏览器开 <code>http://localhost:8080/voice-admin.html</code><br><br>"
+      : "") +
+    "音档来源：<code>shared/audio/</code>（目前是每个课程第 1 课的试听版）。<br>" +
+    "速度建议范围 0.7～1.1：低於 0.7 会一顿一顿的，学生会跟着学到不自然的节奏。";
+})();
+</script>
+</body>
+</html>
