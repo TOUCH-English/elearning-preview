@@ -31,20 +31,23 @@
 ============================================================================= */
 
 :root {
-  /* ---------- 底色与文字 ---------- */
-  --te-canvas:        #F5F7FA;   /* 页面底色 */
+  /* ---------- 底色与文字 ----------
+     2026-09-23 起跟平台（touch-platform app/globals.css 的 .ui-c）对齐：
+     学生从平台的「我的课程」点进来，不应该觉得换了一个网站。
+     颜色、字体、圆角、阴影照平台；答对答错、金色 XP 这些课程自己的语意色不动。 */
+  --te-canvas:        #EEF2FB;   /* 页面底色 */
   --te-surface:       #FFFFFF;   /* 卡片底色 */
-  --te-ink:           #1B2433;   /* 主要文字 */
-  --te-muted:         #5C6675;   /* 次要文字 */
-  --te-subtle:        #98A2B3;   /* 更淡的说明文字 */
-  --te-line:          #DCE3EC;   /* 分隔线、外框 */
+  --te-ink:           #16202E;   /* 主要文字 */
+  --te-muted:         #5C6779;   /* 次要文字 */
+  --te-subtle:        #8C97A8;   /* 更淡的说明文字 */
+  --te-line:          #DFE5F0;   /* 分隔线、外框 */
 
   /* ---------- 品牌深蓝 ---------- */
-  --te-brand:         #1F3A5F;
-  --te-brand-d:       #19314F;
-  --te-brand-dd:      #142640;
-  --te-brand-2:       #2E5685;   /* 连结、次要强调 */
-  --te-brand-soft:    #E6ECF4;   /* 浅色底 */
+  --te-brand:         #15357B;
+  --te-brand-d:       #112C68;
+  --te-brand-dd:      #0D2253;
+  --te-brand-2:       #2A5BD7;   /* 连结、次要强调 */
+  --te-brand-soft:    #EAF0FB;   /* 浅色底 */
 
   /* ---------- 答对 ---------- */
   --te-success:       #4FAE8A;
@@ -67,17 +70,18 @@
   --te-gold-soft:     #F8EFDB;
 
   /* ---------- 圆角与阴影 ---------- */
-  --te-hairline:      rgba(31,58,95,.08);
-  --te-radius:        18px;
-  --te-sh-sm:         0 1px 2px rgba(27,36,51,.05),0 3px 8px rgba(27,36,51,.07);
-  --te-sh-md:         0 1px 2px rgba(27,36,51,.05),0 8px 22px rgba(27,36,51,.10);
-  --te-sh-lg:         0 2px 4px rgba(27,36,51,.06),0 18px 40px rgba(27,36,51,.14);
+  --te-hairline:      rgba(21,53,123,.08);
+  --te-radius:        22px;
+  --te-sh-sm:         0 1px 2px rgba(20,33,50,.05),0 4px 12px rgba(20,33,50,.05);
+  --te-sh-md:         0 1px 2px rgba(20,33,50,.05),0 8px 24px rgba(20,33,50,.06);
+  --te-sh-lg:         0 16px 48px rgba(14,36,86,.16);
 
   /* ---------- 字体 ----------
-     Fredoka 当标题（圆润、亲切），Nunito 当内文（好读、字重齐全）。
+     跟平台同一套（Marco 2026-09-23：课程搬进平台，外观要跟平台一致）：
+     Sora 当标题和数字，Plus Jakarta Sans 当内文。原本是 Fredoka／Nunito。
      中文没有对应的 webfont，交给系统字体处理。 */
-  --te-font-display:  'Fredoka','Nunito',-apple-system,'Segoe UI',sans-serif;
-  --te-font-body:     'Nunito',-apple-system,'Segoe UI','Noto Sans',sans-serif;
+  --te-font-display:  'Sora','Plus Jakarta Sans',-apple-system,'Segoe UI',sans-serif;
+  --te-font-body:     'Plus Jakarta Sans',-apple-system,'Segoe UI','Noto Sans',sans-serif;
   --te-font-cjk:      'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif;
 
   /* ---------- 分类用的辅助色 ----------
@@ -140,11 +144,11 @@
   --te-glass:       rgba(255,255,255,.72);
   --te-glass-blur:  saturate(180%) blur(20px);
   --te-glass-edge:  rgba(255,255,255,.55);   /* 上缘的亮边＝光打在材质上 */
-  --te-scrim:       rgba(20,38,64,.32);      /* 挡住底下内容的遮罩 */
+  --te-scrim:       rgba(14,36,86,.32);      /* 挡住底下内容的遮罩 */
 
   /* ---------- 焦点框 ----------
      键盘使用者要看得到自己在哪里，而且不能被卡片的圆角切掉。 */
-  --te-focus:       0 0 0 3px rgba(46,86,133,.34);
+  --te-focus:       0 0 0 3px rgba(42,91,215,.34);
 }
 
 /* -----------------------------------------------------------------------------
@@ -227,4 +231,22 @@
     --te-focus: 0 0 0 3px #1F3A5F;
   }
   .te-glass { border:1px solid var(--te-line); }
+}
+
+/* =============================================================================
+   底：跟平台同一片（平台的 .ui-c.ui-plane）
+   -----------------------------------------------------------------------------
+   课程各自在 body 画了自己的渐层；这里用 html body（权重比 body 高）盖过去，
+   七个课程不用各改一次。淡淡的四色光晕来自平台 —— 蓝、金、绿、红，TOUCH 的颜色。
+============================================================================= */
+html body {
+  background-color: var(--te-canvas);
+  background-image:
+    radial-gradient(34rem 34rem at 88% -6rem, rgb(31 159 230 / 0.18), transparent 70%),
+    radial-gradient(30rem 30rem at -4rem 10rem, rgb(235 177 42 / 0.16), transparent 70%),
+    radial-gradient(32rem 32rem at 56% 22rem, rgb(46 158 80 / 0.11), transparent 72%),
+    radial-gradient(38rem 38rem at 104% 40rem, rgb(232 71 43 / 0.09), transparent 72%),
+    linear-gradient(135deg, #EEF2FB, #E4EBF7);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
