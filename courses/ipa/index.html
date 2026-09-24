@@ -301,7 +301,7 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
 
 /* feedback footer */
 #feedback{position:sticky;bottom:0;z-index:20;transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
-#feedback.show{transform:none}
+#feedback.show{transform:none;z-index:26}   /* above #nav: on a page taller than the screen both stick to the bottom, and Continue must win */
 .fb-inner{padding:16px 18px calc(18px + env(safe-area-inset-bottom));border-top:1px solid;}
 #feedback.ok .fb-inner{background:#E6F4EE;border-color:#C2E2D4}
 #feedback.no .fb-inner{background:#F6E4E8;border-color:#E6C2CB}
@@ -532,6 +532,35 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
   background:#fff;border:2px solid var(--line);color:var(--ink-soft);box-shadow:var(--soft-sm)}
 .gp.on{background:#F8EFDB;border-color:var(--sun-d);color:var(--sun-d);box-shadow:0 1px 4px rgba(190,150,72,.32)}
 
+/* ---- how to make the sound (sound cards, Say it) ---- */
+.mouth{margin-top:12px;background:#EAF0FB;border:1px solid #C5D2E2;border-radius:14px;padding:12px 14px;
+  font-size:14px;font-weight:700;line-height:1.45;color:var(--teal-dd);display:flex;gap:9px;align-items:flex-start;text-align:left}
+.mouth b{display:block;font-size:11px;letter-spacing:.8px;text-transform:uppercase;opacity:.8;margin-bottom:2px}
+.sc-hero + .mouth{margin:-2px 0 14px}
+/* ---- Say it (speaking practice, not scored) ---- */
+.say-card{margin-top:14px;padding:18px 14px 16px;text-align:center}
+.say-words{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:10px 22px}
+.say-word{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;max-width:100%}
+.say-word b{font-family:var(--te-font-display,'Fredoka');font-size:28px;line-height:1.1;color:var(--ink);overflow-wrap:anywhere}
+.say-word small{font-size:11px;font-weight:800;color:var(--coral-d);text-transform:uppercase;letter-spacing:.6px}
+.say-word .ipa{font-size:17px;color:var(--teal-dd)}
+.say-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.say-row .btn{flex:1 1 140px;width:auto;padding:13px 12px;font-size:15px}
+.say-row[hidden]{display:none}
+.say-status{min-height:1.4em;text-align:center;font-weight:800;font-size:14px;color:var(--ink-soft);margin-top:10px}
+.say-status.go{color:var(--good-d)} .say-status.warn{color:var(--coral-d)}
+.say-free{font-size:12px;font-weight:700;color:var(--ink-soft);text-align:center;margin-top:12px}
+/* ---- word stress: syllables stay in order, tap the strong one ---- */
+.opts.syll{gap:8px}
+.opts.syll .opt.chipopt{font-size:19px;padding:13px 14px;min-width:54px}
+.q-tag{display:block;text-align:center;font-size:13px;font-weight:700;color:var(--ink-soft);margin-top:4px}
+.q-tag b{color:var(--coral-d);text-transform:uppercase;letter-spacing:.5px;font-size:11px;margin-right:4px}
+/* learn-page rule cards (endings, stress) */
+.rules{font-size:14.5px;line-height:1.65;font-weight:600;color:var(--ink)}
+/* map: a unit added after the learner had started */
+.stage-new{display:table;margin:4px auto 0;background:var(--sun);color:#5A3A1E;font-family:var(--te-font-display,'Fredoka');
+  font-weight:700;font-size:10.5px;letter-spacing:.6px;padding:3px 8px;border-radius:99px;box-shadow:0 2px 6px rgba(190,150,72,.35)}
+
 /* mobile polish */
 *{ -webkit-touch-callout:none }
 #screen{ -webkit-overflow-scrolling:touch }
@@ -555,6 +584,8 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
+<!-- 「开口说」步骤用的共用录音模组（倒数 → 说 → 停 → 回放，录音只存在这台装置的 IndexedDB） -->
+<script src="../../shared/record.js"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -626,16 +657,37 @@ const POS_TEXT = {
   middle: T("middle","中间的","di tengah"),
   last:   T("last","最后一个","terakhir")
 };
+// One word is the other plus a sound at the end (go / goat, walk / walked) —
+// the "dropped final consonant" pairs of the Final Consonants stage.
+// → {long, short, extra} or null
+function extraEnding(p){
+  const A=ipaTokens(p.ia), B=ipaTokens(p.ib);
+  const aShort = A.length<B.length, S = aShort?A:B, Lg = aShort?B:A;
+  if(S.length===Lg.length || !S.every((t,i)=>t===Lg[i])) return null;
+  return { short: aShort?p.a:p.b, long: aShort?p.b:p.a, extra: Lg.slice(S.length).join("") };
+}
+// voiceless → voiced partner. Declared here (not with VOICE_PAIRS further down)
+// because pairHint runs while the course data is being built.
+const VOICED_OF = {p:"b",t:"d",k:"ɡ",f:"v",θ:"ð",s:"z",ʃ:"ʒ",tʃ:"dʒ"};
 function pairHint(p){
   const d = pairDiff(p.ia, p.ib);
   const base = [`“${p.a}” = ${p.ia}`, `“${p.b}” = ${p.ib}`];
+  const x = d ? null : extraEnding(p);
+  if(x) return T(`${base[0]} and ${base[1]}. “${x.long}” ends with /${x.extra}/; “${x.short}” stops before it. Say that last sound clearly — don't drop it.`,
+                 `${base[0]}，${base[1]}。“${x.long}” 结尾多了 /${x.extra}/，“${x.short}” 在它前面就停了。最后那个音要念出来 —— 不要吞掉。`,
+                 `${base[0]} dan ${base[1]}. “${x.long}” berakhir dengan /${x.extra}/; “${x.short}” berhenti sebelum itu. Sebut bunyi akhir itu dengan jelas — jangan gugurkan.`);
   if(!d) return T(`${base[0]} and ${base[1]}. Compare them sound by sound.`,
                   `${base[0]}，${base[1]}。一个音一个音比一比。`,
                   `${base[0]} dan ${base[1]}. Bandingkan bunyi demi bunyi.`);
   const P = POS_TEXT[d.pos];
-  return T(`${base[0]} and ${base[1]}. Only the ${P.en} sound changes: /${d.a}/ in “${p.a}”, /${d.b}/ in “${p.b}”.`,
-           `${base[0]}，${base[1]}。只差在${P.zh}音：“${p.a}” 是 /${d.a}/，“${p.b}” 是 /${d.b}/。`,
-           `${base[0]} dan ${base[1]}. Hanya bunyi ${P.ms} yang berbeza: /${d.a}/ dalam “${p.a}”, /${d.b}/ dalam “${p.b}”.`);
+  // a voiceless/voiced ending (bat/bad, rice/rise): the vowel length is the other clue
+  const v = d.pos==="last" ? (VOICED_OF[d.a]===d.b ? d.b : VOICED_OF[d.b]===d.a ? d.a : "") : "";
+  const len = v ? T(` The vowel before a voiced final sound (/${v}/) is held a little longer — listen for that too.`,
+                    ` 在有声的尾音（/${v}/）前面，元音会拉长一点 —— 这也是分辨的线索。`,
+                    ` Vokal sebelum bunyi akhir bersuara (/${v}/) disebut sedikit lebih panjang — dengar itu juga.`) : T("","","");
+  return T(`${base[0]} and ${base[1]}. Only the ${P.en} sound changes: /${d.a}/ in “${p.a}”, /${d.b}/ in “${p.b}”.${len.en}`,
+           `${base[0]}，${base[1]}。只差在${P.zh}音：“${p.a}” 是 /${d.a}/，“${p.b}” 是 /${d.b}/。${len.zh}`,
+           `${base[0]} dan ${base[1]}. Hanya bunyi ${P.ms} yang berbeza: /${d.a}/ dalam “${p.a}”, /${d.b}/ dalam “${p.b}”.${len.ms}`);
 }
 
 /* =====================================================================
@@ -794,10 +846,13 @@ function confuserOf(w){ return CONFUSE[w] || null; }
 function genListen(pairs){                       // listening: hear word → choose it
   return pairs.map(p=>{
     const target = Math.random()<0.5 ? {w:p.a,o:p.b} : {w:p.b,o:p.a};
-    const d = pairDiff(p.ia, p.ib);
+    const d = pairDiff(p.ia, p.ib), x = d ? null : extraEnding(p);
     const where = d ? T(` — only the ${POS_TEXT[d.pos].en} sound changes (/${d.a}/ vs /${d.b}/)`,
                         ` —— 只差在${POS_TEXT[d.pos].zh}音（/${d.a}/ 和 /${d.b}/）`,
-                        ` — hanya bunyi ${POS_TEXT[d.pos].ms} berbeza (/${d.a}/ dan /${d.b}/)`) : T("","","");
+                        ` — hanya bunyi ${POS_TEXT[d.pos].ms} berbeza (/${d.a}/ dan /${d.b}/)`)
+                : x ? T(` — “${x.long}” has one more sound at the end: /${x.extra}/`,
+                        ` —— “${x.long}” 结尾多了一个音：/${x.extra}/`,
+                        ` — “${x.long}” ada satu bunyi lagi di hujung: /${x.extra}/`) : T("","","");
     return ex({kind:"Listen & choose", variant:"listen", word:target.w, sub:"Which word did you hear?",
       options:[opt(target.w,true),opt(target.o)], fam:p.f, gen:true, pair:[p.a,p.b], rpOnly:!!p.rp,
       hint:T(`These two sound close: “${p.a}” and “${p.b}”${where.en}. Tap 🔊 and listen for it.`,
@@ -883,6 +938,225 @@ function genDiphListen(){
   });
 }
 
+/* =====================================================================
+   FINAL CONSONANTS (stage s5) — added 2026-09-24
+   Malaysian English often drops or swallows a final /t d k/ (goat → "go",
+   card → "car") and devoices a final /z v/ (rise → "rice", save → "safe").
+   The -ed and plural -s endings are the same problem met every day.
+   ===================================================================== */
+// three words that differ only in the final stop — hand-written items
+const FINAL_TRIPLES = [
+  [["bat","/bæt/"],["bad","/bæd/"],["back","/bæk/"]],
+  [["pat","/pæt/"],["pad","/pæd/"],["pack","/pæk/"]],
+  [["sat","/sæt/"],["sad","/sæd/"],["sack","/sæk/"]],
+  [["seat","/siːt/"],["seed","/siːd/"],["seek","/siːk/"]],
+  [["not","/nɒt/"],["nod","/nɒd/"],["knock","/nɒk/"]],
+  [["late","/leɪt/"],["laid","/leɪd/"],["lake","/leɪk/"]]
+];
+// minimal pairs whose difference is the LAST sound (or a last sound dropped)
+const FINAL_PAIRS = [
+  {a:"write", b:"ride",   ia:"/raɪt/",  ib:"/raɪd/",  f:"final /t/ vs /d/"},
+  {a:"cart",  b:"card",   ia:"/kɑːt/",  ib:"/kɑːd/",  f:"final /t/ vs /d/"},
+  {a:"neat",  b:"need",   ia:"/niːt/",  ib:"/niːd/",  f:"final /t/ vs /d/"},
+  {a:"coat",  b:"code",   ia:"/kəʊt/",  ib:"/kəʊd/",  f:"final /t/ vs /d/"},
+  {a:"set",   b:"said",   ia:"/set/",   ib:"/sed/",   f:"final /t/ vs /d/"},
+  {a:"cap",   b:"cab",    ia:"/kæp/",   ib:"/kæb/",   f:"final /p/ vs /b/"},
+  {a:"rope",  b:"robe",   ia:"/rəʊp/",  ib:"/rəʊb/",  f:"final /p/ vs /b/"},
+  {a:"lap",   b:"lab",    ia:"/læp/",   ib:"/læb/",   f:"final /p/ vs /b/"},
+  {a:"pick",  b:"pig",    ia:"/pɪk/",   ib:"/pɪɡ/",   f:"final /k/ vs /ɡ/"},
+  {a:"lock",  b:"log",    ia:"/lɒk/",   ib:"/lɒɡ/",   f:"final /k/ vs /ɡ/"},
+  {a:"duck",  b:"dug",    ia:"/dʌk/",   ib:"/dʌɡ/",   f:"final /k/ vs /ɡ/"},
+  {a:"rice",  b:"rise",   ia:"/raɪs/",  ib:"/raɪz/",  f:"final /s/ vs /z/"},
+  {a:"price", b:"prize",  ia:"/praɪs/", ib:"/praɪz/", f:"final /s/ vs /z/"},
+  {a:"place", b:"plays",  ia:"/pleɪs/", ib:"/pleɪz/", f:"final /s/ vs /z/"},
+  {a:"bus",   b:"buzz",   ia:"/bʌs/",   ib:"/bʌz/",   f:"final /s/ vs /z/"},
+  {a:"peace", b:"peas",   ia:"/piːs/",  ib:"/piːz/",  f:"final /s/ vs /z/"},
+  {a:"ice",   b:"eyes",   ia:"/aɪs/",   ib:"/aɪz/",   f:"final /s/ vs /z/"},
+  {a:"advice",b:"advise", ia:"/ədˈvaɪs/",ib:"/ədˈvaɪz/",f:"final /s/ vs /z/"},
+  {a:"safe",  b:"save",   ia:"/seɪf/",  ib:"/seɪv/",  f:"final /f/ vs /v/"},
+  {a:"belief",b:"believe",ia:"/bɪˈliːf/",ib:"/bɪˈliːv/",f:"final /f/ vs /v/"},
+  {a:"proof", b:"prove",  ia:"/pruːf/", ib:"/pruːv/", f:"final /f/ vs /v/"},
+  {a:"surf",  b:"serve",  ia:"/sɜːf/",  ib:"/sɜːv/",  f:"final /f/ vs /v/"},
+  // the final sound dropped altogether
+  {a:"go",    b:"goat",   ia:"/ɡəʊ/",   ib:"/ɡəʊt/",  f:"final sound dropped"},
+  {a:"car",   b:"card",   ia:"/kɑː/",   ib:"/kɑːd/",  f:"final sound dropped"},
+  {a:"why",   b:"white",  ia:"/waɪ/",   ib:"/waɪt/",  f:"final sound dropped"},
+  {a:"see",   b:"seat",   ia:"/siː/",   ib:"/siːt/",  f:"final sound dropped"},
+  {a:"tie",   b:"tight",  ia:"/taɪ/",   ib:"/taɪt/",  f:"final sound dropped"},
+  {a:"fee",   b:"feel",   ia:"/fiː/",   ib:"/fiːl/",  f:"final sound dropped"},
+  {a:"go",    b:"goal",   ia:"/ɡəʊ/",   ib:"/ɡəʊl/",  f:"final sound dropped"},
+  {a:"pay",   b:"pale",   ia:"/peɪ/",   ib:"/peɪl/",  f:"final sound dropped"},
+  // the ending IS the grammar
+  {a:"walk",  b:"walked", ia:"/wɔːk/",  ib:"/wɔːkt/", f:"-ed ending"},
+  {a:"miss",  b:"missed", ia:"/mɪs/",   ib:"/mɪst/",  f:"-ed ending"},
+  {a:"clean", b:"cleaned",ia:"/kliːn/", ib:"/kliːnd/",f:"-ed ending"},
+  {a:"play",  b:"played", ia:"/pleɪ/",  ib:"/pleɪd/", f:"-ed ending"},
+  {a:"fix",   b:"fixed",  ia:"/fɪks/",  ib:"/fɪkst/", f:"-ed ending"},      // final clusters
+  {a:"test",  b:"tests",  ia:"/test/",  ib:"/tests/", f:"plural -s ending"},
+  {a:"desk",  b:"desks",  ia:"/desk/",  ib:"/desks/", f:"plural -s ending"},
+  {a:"book",  b:"books",  ia:"/bʊk/",   ib:"/bʊks/",  f:"plural -s ending"},
+  {a:"car",   b:"cars",   ia:"/kɑː/",   ib:"/kɑːz/",  f:"plural -s ending"},
+  {a:"price", b:"prices", ia:"/praɪs/", ib:"/ˈpraɪsɪz/",f:"plural -s ending"}
+];
+// [word, full RP IPA, ending]. The ending is decided by the LAST SOUND of the base word:
+//   -ed : voiceless → /t/ · voiced (vowels too) → /d/ · /t/ or /d/ → /ɪd/
+//   -s  : voiceless → /s/ · voiced (vowels too) → /z/ · /s z ʃ ʒ tʃ dʒ/ → /ɪz/
+const ED_WORDS = [
+  ["walked","/wɔːkt/","t"],["stopped","/stɒpt/","t"],["washed","/wɒʃt/","t"],["watched","/wɒtʃt/","t"],
+  ["laughed","/lɑːft/","t"],["asked","/ɑːskt/","t"],["helped","/helpt/","t"],["finished","/ˈfɪnɪʃt/","t"],
+  ["played","/pleɪd/","d"],["cleaned","/kliːnd/","d"],["called","/kɔːld/","d"],["lived","/lɪvd/","d"],
+  ["opened","/ˈəʊpənd/","d"],["tried","/traɪd/","d"],["changed","/tʃeɪndʒd/","d"],["enjoyed","/ɪnˈdʒɔɪd/","d"],
+  ["wanted","/ˈwɒntɪd/","ɪd"],["needed","/ˈniːdɪd/","ɪd"],["started","/ˈstɑːtɪd/","ɪd"],["visited","/ˈvɪzɪtɪd/","ɪd"],
+  ["decided","/dɪˈsaɪdɪd/","ɪd"],["waited","/ˈweɪtɪd/","ɪd"],["invited","/ɪnˈvaɪtɪd/","ɪd"],
+  ["fixed","/fɪkst/","t"],["texted","/ˈtekstɪd/","ɪd"]
+];
+const PL_WORDS = [
+  ["cats","/kæts/","s"],["books","/bʊks/","s"],["cups","/kʌps/","s"],["shops","/ʃɒps/","s"],
+  ["weeks","/wiːks/","s"],["students","/ˈstjuːdnts/","s"],
+  ["tests","/tests/","s"],["desks","/desks/","s"],["months","/mʌnθs/","s"],
+  ["dogs","/dɒɡz/","z"],["bags","/bæɡz/","z"],["pens","/penz/","z"],["days","/deɪz/","z"],
+  ["cars","/kɑːz/","z"],["friends","/frendz/","z"],["phones","/fəʊnz/","z"],
+  ["buses","/ˈbʌsɪz/","ɪz"],["watches","/ˈwɒtʃɪz/","ɪz"],["boxes","/ˈbɒksɪz/","ɪz"],["pages","/ˈpeɪdʒɪz/","ɪz"],
+  ["classes","/ˈklɑːsɪz/","ɪz"],["dishes","/ˈdɪʃɪz/","ɪz"],["oranges","/ˈɒrɪndʒɪz/","ɪz"]
+];
+function genTriples(){                       // hear one of bat / bad / back → pick it
+  return FINAL_TRIPLES.map(tr=>{
+    const w = tr[Math.floor(Math.random()*tr.length)][0];   // (pick() is declared further down)
+    const list = tr.map(([x,i])=>`${x} ${i}`).join(" · ");
+    return ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
+      options:tr.map(([x])=>opt(x, x===w)), fam:"final /t/ /d/ /k/", pair:tr.map(([x])=>x),
+      hint:T(`${list} — only the last sound changes. /t/ and /d/: tongue tip up behind the top teeth (/d/ buzzes, and the vowel before it is a little longer). /k/: the back of the tongue goes up. You heard “${w}”.`,
+             `${list} —— 只差在最后一个音。/t/ 和 /d/：舌尖顶住上排牙齿后面（/d/ 会震，前面的元音也拉长一点）。/k/：舌根抬起来。你听到的是 “${w}”。`,
+             `${list} — hanya bunyi terakhir berbeza. /t/ dan /d/: hujung lidah naik di belakang gigi atas (/d/ bergetar, dan vokal sebelumnya sedikit lebih panjang). /k/: belakang lidah naik. Anda dengar “${w}”.`)});
+  });
+}
+const ENDING_OPTS = { ed:["/t/","/d/","/ɪd/"], s:["/s/","/z/","/ɪz/"] };
+const HISS = ["s","z","ʃ","ʒ","tʃ","dʒ"];
+// fill the ending: "walked" /wɔːk__/ → /t/ /d/ /ɪd/
+function genEndings(list, kind){
+  return list.map(([w, ipa, end])=>{
+    const body = ipa.slice(0, -(end.length+1));           // "/ˈwɒnt" for "/ˈwɒntɪd/"
+    const base = body.replace(/ˈ/g,"");                     // no stress mark: it would give /ɪd/ away
+    const last = ipaTokens(base).pop();
+    const R = kind==="ed"
+      ? { t:T(`the verb ends in a voiceless sound (/${last}/), so -ed is a quiet /t/ — no extra syllable.`,
+              `动词结尾是无声的 /${last}/，所以 -ed 念成轻轻的 /t/ —— 不多一个音节。`,
+              `kata kerja berakhir dengan bunyi tidak bersuara (/${last}/), jadi -ed ialah /t/ yang perlahan — tiada suku kata tambahan.`),
+          d:T(`the verb ends in a voiced sound (/${last}/), so -ed is /d/ — no extra syllable.`,
+              `动词结尾是有声的 /${last}/，所以 -ed 念成 /d/ —— 不多一个音节。`,
+              `kata kerja berakhir dengan bunyi bersuara (/${last}/), jadi -ed ialah /d/ — tiada suku kata tambahan.`),
+          "ɪd":T(`the verb already ends in /${last}/, so -ed adds a syllable: /ɪd/.`,
+              `动词本来就是 /${last}/ 结尾，所以 -ed 要多一个音节：/ɪd/。`,
+              `kata kerja sudah berakhir dengan /${last}/, jadi -ed menambah satu suku kata: /ɪd/.`) }[end]
+      : { s:T(`the noun ends in a voiceless sound (/${last}/), so -s is /s/.`,
+              `名词结尾是无声的 /${last}/，所以 -s 念成 /s/。`,
+              `kata nama berakhir dengan bunyi tidak bersuara (/${last}/), jadi -s ialah /s/.`),
+          z:T(`the noun ends in a voiced sound (/${last}/), so -s buzzes: /z/.`,
+              `名词结尾是有声的 /${last}/，所以 -s 要震：/z/。`,
+              `kata nama berakhir dengan bunyi bersuara (/${last}/), jadi -s berdengung: /z/.`),
+          "ɪz":T(`the noun ends in a hissing sound (/${last}/), so -s adds a syllable: /ɪz/.`,
+              `名词结尾是嘶嘶的 /${last}/，所以 -s 要多一个音节：/ɪz/。`,
+              `kata nama berakhir dengan bunyi desis (/${last}/), jadi -s menambah satu suku kata: /ɪz/.`) }[end];
+    return ex({kind:"Fill the ending", variant:"fill", word:w, prompt:`${base}__/`, answer:end,
+      options:ENDING_OPTS[kind].map(o=>opt(o, o===`/${end}/`)),
+      fam: kind==="ed" ? "-ed ending" : "plural -s ending", gen:true, full:ipa,
+      okMsg:T(`Yes! “${w}” = ${ipa}`,`对！“${w}” = ${ipa}`,`Betul! “${w}” = ${ipa}`),
+      hint:T(`“${w}” = ${ipa}: ${R.en}`, `“${w}” = ${ipa}：${R.zh}`, `“${w}” = ${ipa}: ${R.ms}`)});
+  });
+}
+
+/* =====================================================================
+   WORD STRESS (stage s6) — added 2026-09-24
+   Each word: [word, syllables "pho|tog|ra|phy", index of the stressed one,
+   RP IPA (ˈ before the stressed syllable), rule]. The syllables are shown as
+   spelled, in order, and the learner taps the strong one.
+   rule: n = 2-syllable noun/adjective (usually 1st) · v = 2-syllable verb
+   (usually 2nd) · x = an exception to that · "" = a longer word, learn by ear
+   ===================================================================== */
+const STRESS_2 = [
+  ["doctor","doc|tor",0,"/ˈdɒktə/","n"],["pencil","pen|cil",0,"/ˈpensl/","n"],["window","win|dow",0,"/ˈwɪndəʊ/","n"],
+  ["office","of|fice",0,"/ˈɒfɪs/","n"],["teacher","teach|er",0,"/ˈtiːtʃə/","n"],["morning","morn|ing",0,"/ˈmɔːnɪŋ/","n"],
+  ["problem","prob|lem",0,"/ˈprɒbləm/","n"],["happy","hap|py",0,"/ˈhæpi/","n"],["money","mon|ey",0,"/ˈmʌni/","n"],
+  ["begin","be|gin",1,"/bɪˈɡɪn/","v"],["forget","for|get",1,"/fəˈɡet/","v"],["relax","re|lax",1,"/rɪˈlæks/","v"],
+  ["decide","de|cide",1,"/dɪˈsaɪd/","v"],["explain","ex|plain",1,"/ɪkˈspleɪn/","v"],["agree","a|gree",1,"/əˈɡriː/","v"],
+  ["repeat","re|peat",1,"/rɪˈpiːt/","v"],["invite","in|vite",1,"/ɪnˈvaɪt/","v"],["prefer","pre|fer",1,"/prɪˈfɜː/","v"],
+  ["hotel","ho|tel",1,"/həʊˈtel/","x"],["mistake","mis|take",1,"/mɪˈsteɪk/","x"],["advice","ad|vice",1,"/ədˈvaɪs/","x"],
+  ["police","po|lice",1,"/pəˈliːs/","x"],["Japan","Ja|pan",1,"/dʒəˈpæn/","x"]
+];
+// the same spelling, a different job, a different stress: [word, pos, syllables, index, IPA, phrase]
+const STRESS_NV = [
+  ["present","noun","pres|ent",0,"/ˈpreznt/","a birthday present"],["present","verb","pre|sent",1,"/prɪˈzent/","to present a report"],
+  ["record","noun","rec|ord",0,"/ˈrekɔːd/","a world record"],["record","verb","re|cord",1,"/rɪˈkɔːd/","to record a video"],
+  ["object","noun","ob|ject",0,"/ˈɒbdʒɪkt/","a strange object"],["object","verb","ob|ject",1,"/əbˈdʒekt/","to object to the plan"],
+  ["increase","noun","in|crease",0,"/ˈɪnkriːs/","a price increase"],["increase","verb","in|crease",1,"/ɪnˈkriːs/","to increase the price"],
+  ["progress","noun","prog|ress",0,"/ˈprəʊɡres/","good progress"],["progress","verb","pro|gress",1,"/prəˈɡres/","to progress quickly"],
+  ["export","noun","ex|port",0,"/ˈekspɔːt/","our main export"],["export","verb","ex|port",1,"/ɪkˈspɔːt/","to export palm oil"],
+  ["permit","noun","per|mit",0,"/ˈpɜːmɪt/","a parking permit"],["permit","verb","per|mit",1,"/pəˈmɪt/","to permit parking"]
+];
+const STRESS_LONG = [
+  ["comfortable","com|for|ta|ble",0,"/ˈkʌmftəbl/",""],["develop","de|vel|op",1,"/dɪˈveləp/",""],
+  ["photograph","pho|to|graph",0,"/ˈfəʊtəɡrɑːf/",""],["photography","pho|tog|ra|phy",1,"/fəˈtɒɡrəfi/",""],
+  ["photographic","pho|to|graph|ic",2,"/ˌfəʊtəˈɡræfɪk/",""],["beautiful","beau|ti|ful",0,"/ˈbjuːtɪfl/",""],
+  ["family","fam|i|ly",0,"/ˈfæməli/",""],["computer","com|pu|ter",1,"/kəmˈpjuːtə/",""],
+  ["important","im|por|tant",1,"/ɪmˈpɔːtnt/",""],["tomorrow","to|mor|row",1,"/təˈmɒrəʊ/",""],
+  ["education","ed|u|ca|tion",2,"/ˌedʒuˈkeɪʃn/",""],["engineer","en|gi|neer",2,"/ˌendʒɪˈnɪə/",""],
+  ["economy","e|con|o|my",1,"/ɪˈkɒnəmi/",""],["economic","ec|o|nom|ic",2,"/ˌiːkəˈnɒmɪk/",""],
+  ["Malaysia","Ma|lay|si|a",1,"/məˈleɪziə/",""],["manager","man|a|ger",0,"/ˈmænɪdʒə/",""],
+  ["category","cat|e|go|ry",0,"/ˈkætəɡəri/",""],["committee","com|mit|tee",1,"/kəˈmɪti/",""],
+  ["banana","ba|nan|a",1,"/bəˈnɑːnə/",""],["calendar","cal|en|dar",0,"/ˈkælɪndə/",""],
+  ["video","vid|e|o",0,"/ˈvɪdiəʊ/",""]
+];
+// extra teaching lines for the words learners most often get wrong
+const STRESS_NOTE = {
+  comfortable: T(" Many speakers say comFORtable — in British English the “for” almost disappears: /ˈkʌmftəbl/ (COMF-tə-bl)."," 很多人念成 comFORtable —— 英式英语里 “for” 几乎听不到：/ˈkʌmftəbl/（COMF-tə-bl）。"," Ramai orang sebut comFORtable — dalam bahasa Inggeris British “for” hampir hilang: /ˈkʌmftəbl/ (COMF-tə-bl)."),
+  photograph:  T(" Compare PHOtograph, phoTOGraphy, photoGRAPHic — the stress moves when the word grows."," 比一比 PHOtograph、phoTOGraphy、photoGRAPHic —— 字变长，重音会移动。"," Bandingkan PHOtograph, phoTOGraphy, photoGRAPHic — tekanan berpindah apabila perkataan bertambah panjang."),
+  economy:     T(" Compare eCONomy and ecoNOMic — the stress moves."," 比一比 eCONomy 和 ecoNOMic —— 重音会移动。"," Bandingkan eCONomy dan ecoNOMic — tekanan berpindah."),
+  manager:     T(" Not maNAger: the stress is on the first syllable."," 不是 maNAger：重音在第一个音节。"," Bukan maNAger: tekanan pada suku kata pertama."),
+  police:      T(" Not POlice: the stress is on the second syllable."," 不是 POlice：重音在第二个音节。"," Bukan POlice: tekanan pada suku kata kedua."),
+  hotel:       T(" Not HOtel: the stress is on the second syllable."," 不是 HOtel：重音在第二个音节。"," Bukan HOtel: tekanan pada suku kata kedua.")
+};
+STRESS_NOTE.photography = STRESS_NOTE.photographic = STRESS_NOTE.photograph;
+STRESS_NOTE.economic = STRESS_NOTE.economy;
+const STRESS_RULE = {
+  n: T(" Most two-syllable nouns and adjectives stress the first syllable."," 大部分两个音节的名词和形容词，重音在第一个音节。"," Kebanyakan kata nama dan kata sifat dua suku kata ditekan pada suku kata pertama."),
+  v: T(" Most two-syllable verbs stress the second syllable."," 大部分两个音节的动词，重音在第二个音节。"," Kebanyakan kata kerja dua suku kata ditekan pada suku kata kedua."),
+  x: T(" This noun breaks the usual rule — the stress is on the second syllable."," 这个名词不照一般规则 —— 重音在第二个音节。"," Kata nama ini tidak ikut peraturan biasa — tekanan pada suku kata kedua."),
+  noun: T(" As a noun, the first syllable is stressed."," 当名词用时，重音在第一个音节。"," Sebagai kata nama, suku kata pertama ditekan."),
+  verb: T(" As a verb, the second syllable is stressed."," 当动词用时，重音在第二个音节。"," Sebagai kata kerja, suku kata kedua ditekan.")
+};
+const POS_TEXT_NV = { noun:T("noun","名词","kata nama"), verb:T("verb","动词","kata kerja") };
+// pho·TOG·ra·phy
+function stressCaps(chunks, i){ return chunks.map((c,j)=>j===i?c.toUpperCase():c.toLowerCase()).join("·"); }
+function stressItem(word, syl, idx, ipa, fam, extra, more){
+  const ch = syl.split("|");
+  const caps = stressCaps(ch, idx);
+  const add = tjoin(extra || T("","",""), ipa.includes("ˌ")
+    ? T(" The low mark ˌ shows a lighter second stress."," 下面的 ˌ 表示比较轻的次重音。"," Tanda bawah ˌ menunjukkan tekanan kedua yang lebih ringan.")
+    : T("","",""));
+  return ex(Object.assign({kind:"Find the stress", variant:"stress", word, sub:"Tap the stressed syllable",
+    options:ch.map((c,j)=>opt(c, j===idx)), ordered:true, fam, gen:true, ipa,
+    okMsg:T(`Yes! ${caps} ${ipa}`,`对！${caps} ${ipa}`,`Betul! ${caps} ${ipa}`),
+    hint:T(`The stress is on “${ch[idx]}”: ${caps} ${ipa}. In IPA the mark ˈ comes just before the stressed syllable.${add.en}`,
+           `重音在 “${ch[idx]}”：${caps} ${ipa}。IPA 里的 ˈ 就放在重读音节的前面。${add.zh}`,
+           `Tekanan pada “${ch[idx]}”: ${caps} ${ipa}. Dalam IPA, tanda ˈ diletakkan betul-betul sebelum suku kata yang ditekan.${add.ms}`)}, more||{}));
+}
+const tjoin = (a,b)=>T((a.en||"")+(b.en||""),(a.zh||"")+(b.zh||""),(a.ms||"")+(b.ms||""));
+function genStress2(){ return STRESS_2.map(([w,s,i,ipa,r])=>stressItem(w,s,i,ipa,"stress: 2 syllables", tjoin(STRESS_RULE[r]||T("","",""), STRESS_NOTE[w]||T("","","")))); }
+function genStressLong(){ return STRESS_LONG.map(([w,s,i,ipa])=>stressItem(w,s,i,ipa,"stress: long words", STRESS_NOTE[w])); }
+function genStressNV(){
+  return STRESS_NV.map(([w,pos,s,i,ipa,phrase])=>
+    stressItem(w,s,i,ipa,"stress: noun or verb", STRESS_RULE[pos], {pos, phrase, say:phrase}));
+}
+
+/* =====================================================================
+   SAY IT — speaking practice inside every stage run (2 per run, 1 in
+   Welcome). Not scored: it never changes the 70% pass mark. The learner
+   hears the model (the example-word TTS until the recorded audio step),
+   records with shared/record.js, then plays model and self back to back.
+   Each item: words, their IPA, a one-line mouth instruction.
+   ===================================================================== */
+const sayIt = (w, ipa, tip, extra) => Object.assign({id:w.join("-"), w, ipa, tip}, extra||{});
+
 // split PAIRS into vowel-focused vs consonant-focused for natural distribution
 const VOWEL_PAIRS = PAIRS.filter(p=>/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
 const CONS_PAIRS  = PAIRS.filter(p=>!/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
@@ -913,6 +1187,11 @@ const COURSE = [
                Object.assign(opt("To memorize grammar rules"),{gloss:T("","为了背文法规则","Untuk menghafal peraturan tatabahasa")})],
       okMsg:T("Excellent! TOUCH focuses on communication first! 🎉","很好！TOUCH 先求沟通！🎉","Cemerlang! TOUCH mengutamakan komunikasi! 🎉"),
       hint:T("Think about the goal: being understood, not memorizing rules.","想想目标：是让人听懂，不是背规则。","Fikirkan matlamatnya: difahami, bukan menghafal peraturan.")})
+  ],
+  say:[
+    sayIt(["hello"],["/həˈləʊ/"],T("Just say it clearly, the way you normally would. This first one checks that your microphone works.",
+      "就用你平常的方式，清楚地说出来。这一个是先测试你的麦克风能不能用。",
+      "Sebut dengan jelas seperti biasa. Yang pertama ini untuk menguji mikrofon anda."))
   ],
   reward:{ xp:50, badge:"starter", title:"You're all set!" }
 },
@@ -996,6 +1275,23 @@ const COURSE = [
     ...vocabListen(VOCAB.everyday),
     ...vocabRead(VOCAB.daily)
   ],
+  say:[
+    sayIt(["ship","sheep"],["/ʃɪp/","/ʃiːp/"],T("ship: short and relaxed, lips loose. sheep: spread your lips into a smile and hold the vowel longer.",
+      "ship：短而放松，嘴唇松松的。sheep：嘴角往两边拉像微笑，元音拉长一点。",
+      "ship: pendek dan santai, bibir longgar. sheep: lebarkan bibir seperti senyum dan panjangkan vokal.")),
+    sayIt(["full","fool"],["/fʊl/","/fuːl/"],T("full: short, lips loosely rounded. fool: push your lips forward as if to whistle and hold it long.",
+      "full：短，嘴唇轻轻收圆。fool：嘴唇往前噘像要吹口哨，拉长。",
+      "full: pendek, bibir bulat longgar. fool: muncungkan bibir seperti hendak bersiul dan tahan panjang.")),
+    sayIt(["bed","bad"],["/bed/","/bæd/"],T("bed: mouth only a little open. bad: drop your jaw wide open and spread your lips.",
+      "bed：嘴巴只张开一点。bad：下巴往下张大，嘴唇往两边拉。",
+      "bed: mulut terbuka sedikit sahaja. bad: buka rahang luas dan lebarkan bibir.")),
+    sayIt(["cat","cut"],["/kæt/","/kʌt/"],T("cat: jaw wide open, lips spread. cut: mouth half open and relaxed — a short ‘uh’.",
+      "cat：下巴张大，嘴唇往两边拉。cut：嘴巴半开、放松 —— 短短的 “uh”。",
+      "cat: rahang terbuka luas, bibir melebar. cut: mulut separuh terbuka dan santai — ‘uh’ yang pendek.")),
+    sayIt(["live","leave"],["/lɪv/","/liːv/"],T("live: short, relaxed /ɪ/. leave: smile and hold /iː/. Both end with a buzzing /v/ — top teeth on your lower lip.",
+      "live：短而放松的 /ɪ/。leave：像微笑一样把 /iː/ 拉长。两个都用会震的 /v/ 结尾 —— 上排牙齿碰下嘴唇。",
+      "live: /ɪ/ pendek dan santai. leave: senyum dan tahan /iː/. Kedua-duanya berakhir dengan /v/ yang berdengung — gigi atas pada bibir bawah."))
+  ],
   reward:{ xp:200, badge:"vowel_master", title:"You're mastering English vowel sounds!" }
 },
 {
@@ -1071,6 +1367,23 @@ const COURSE = [
     ...genDiphListen(),
     ...vocabRead(VOCAB.daily)
   ],
+  say:[
+    sayIt(["wait","wet"],["/weɪt/","/wet/"],T("wait: start at /e/, then glide up to /ɪ/ — your jaw closes a little. wet: one short /e/, no glide.",
+      "wait：从 /e/ 开始，再往上滑到 /ɪ/ —— 下巴会稍微合起来。wet：一个短短的 /e/，不滑。",
+      "wait: mula pada /e/, kemudian luncur naik ke /ɪ/ — rahang tertutup sedikit. wet: satu /e/ pendek, tiada luncuran.")),
+    sayIt(["now","no"],["/naʊ/","/nəʊ/"],T("now: start with your jaw wide open, then round your lips. no: start relaxed on /ə/, then round your lips.",
+      "now：下巴先张大，再把嘴唇收圆。no：从放松的 /ə/ 开始，再把嘴唇收圆。",
+      "now: mula dengan rahang terbuka luas, kemudian bulatkan bibir. no: mula santai pada /ə/, kemudian bulatkan bibir.")),
+    sayIt(["phone","home"],["/fəʊn/","/həʊm/"],T("Start relaxed on /ə/, then round your lips into /ʊ/. Not a flat ‘fon’ or ‘hom’.",
+      "从放松的 /ə/ 开始，再把嘴唇收圆滑到 /ʊ/。不要念成平平的 “fon”、“hom”。",
+      "Mula santai pada /ə/, kemudian bulatkan bibir ke /ʊ/. Bukan ‘fon’ atau ‘hom’ yang rata.")),
+    sayIt(["here","hair"],["/hɪə/","/heə/"],T("here: start at /ɪ/ and relax into /ə/. hair: start more open at /e/, then relax into /ə/. No r at the end.",
+      "here：从 /ɪ/ 开始，放松滑到 /ə/。hair：从比较开的 /e/ 开始，再放松滑到 /ə/。结尾没有 r。",
+      "here: mula pada /ɪ/ dan santai ke /ə/. hair: mula lebih terbuka pada /e/, kemudian santai ke /ə/. Tiada r di hujung.")),
+    sayIt(["time","boy"],["/taɪm/","/bɔɪ/"],T("time: open your jaw for ‘a’, then glide up to /ɪ/. boy: start with rounded lips for ‘o’, then glide to /ɪ/.",
+      "time：下巴张开念 “a”，再往上滑到 /ɪ/。boy：先把嘴唇收圆念 “o”，再滑到 /ɪ/。",
+      "time: buka rahang untuk ‘a’, kemudian luncur naik ke /ɪ/. boy: mula dengan bibir bulat untuk ‘o’, kemudian luncur ke /ɪ/."))
+  ],
   reward:{ xp:300, badge:"diphthong_hero", title:"Your sound gliding is improving beautifully!" }
 },
 {
@@ -1134,7 +1447,177 @@ const COURSE = [
     ...vocabListen(VOCAB.workplace),
     ...vocabListen(VOCAB.daily)
   ],
+  say:[
+    sayIt(["think","sink"],["/θɪŋk/","/sɪŋk/"],T("think: put your tongue tip lightly between your teeth and blow. sink: tongue behind your teeth for a hiss.",
+      "think：舌尖轻轻放在上下牙齿之间，吹气。sink：舌头在牙齿后面，发出 “嘶” 声。",
+      "think: letak hujung lidah perlahan di antara gigi dan hembus. sink: lidah di belakang gigi untuk bunyi desis.")),
+    sayIt(["they","day"],["/ðeɪ/","/deɪ/"],T("they: tongue tip between your teeth, and let it buzz. day: tongue tip on the ridge behind your top teeth.",
+      "they：舌尖放在上下牙齿之间，让它震。day：舌尖顶住上排牙齿后面的牙龈。",
+      "they: hujung lidah di antara gigi, biar ia bergetar. day: hujung lidah pada gusi di belakang gigi atas.")),
+    sayIt(["vest","west"],["/vest/","/west/"],T("vest: top teeth on your lower lip, then buzz. west: no teeth on the lip — round your lips like /uː/, then open.",
+      "vest：上排牙齿碰下嘴唇，然后震。west：牙齿不碰嘴唇 —— 嘴唇像 /uː/ 一样收圆，再张开。",
+      "vest: gigi atas pada bibir bawah, kemudian berdengung. west: gigi tidak menyentuh bibir — bulatkan bibir seperti /uː/, kemudian buka.")),
+    sayIt(["fan","van"],["/fæn/","/væn/"],T("Same mouth for both: top teeth lightly on your lower lip. fan: only air. van: add your voice — feel the buzz.",
+      "两个嘴型一样：上排牙齿轻碰下嘴唇。fan：只有气。van：加上声音 —— 感觉那个震动。",
+      "Mulut sama untuk kedua-duanya: gigi atas perlahan pada bibir bawah. fan: udara sahaja. van: tambah suara — rasa getarannya.")),
+    sayIt(["thanks","tanks"],["/θæŋks/","/tæŋks/"],T("thanks: start with your tongue between your teeth (/θ/). tanks: tongue tip behind your top teeth — a quick /t/.",
+      "thanks：舌头先放在牙齿之间（/θ/）。tanks：舌尖在上排牙齿后面 —— 一个快快的 /t/。",
+      "thanks: mula dengan lidah di antara gigi (/θ/). tanks: hujung lidah di belakang gigi atas — /t/ yang cepat."))
+  ],
   reward:{ xp:400, badge:"consonant_champion", title:"You can now hear consonant differences much more clearly!" }
+},
+// ——— s5 and s6 were added 2026-09-24. They sit BEFORE the final review on the
+// map (the review stays last), so their ids are out of order on purpose: an id
+// is the key of the learner's saved progress, and s4 must keep meaning "final".
+{
+  id:"s5", title:"Final Consonants", short:"Finals", icon:"🏁", color:"coral", isNew:true,
+  learn:{
+    heading:T("Finish Every Word","把每个字念完整","Sebut Setiap Perkataan Hingga Habis"),
+    intro:T("In English the <b>last sound</b> often carries the meaning: <b>bat, bad, back</b> are three different words, and <b>go</b> is not <b>goat</b>. Don't drop the final sound or swallow it — close it clearly. Before a <b>voiced</b> ending (/b d ɡ z v/) the vowel is held a little <b>longer</b>. And don't cut the word off in your throat: bat and back must sound different.",
+            "英文里<b>最后一个音</b>常常决定意思：<b>bat、bad、back</b> 是三个不同的字，<b>go</b> 也不是 <b>goat</b>。字尾的音不要省掉、不要吞掉 —— 要清楚地收好。在<b>有声</b>的尾音（/b d ɡ z v/）前面，元音会拉<b>长</b>一点。也不要在喉咙里一卡就停：bat 和 back 听起来一定要不一样。",
+            "Dalam bahasa Inggeris, <b>bunyi terakhir</b> selalunya membawa makna: <b>bat, bad, back</b> ialah tiga perkataan berbeza, dan <b>go</b> bukan <b>goat</b>. Jangan gugurkan atau telan bunyi akhir — tutup dengan jelas. Sebelum hujung yang <b>bersuara</b> (/b d ɡ z v/), vokal ditahan sedikit <b>lebih lama</b>. Jangan juga putuskan bunyi di kerongkong: bat dan back mesti berbunyi berbeza."),
+    groups:[
+      {title:T("Stops at the end","字尾的塞音","Bunyi henti di hujung"), cls:"", items:[["t","bat"],["d","bad"],["k","back"],["p","cap"],["b","cab"],["ɡ","bag"]]},
+      {title:T("Hiss or buzz at the end","字尾：嘶嘶还是嗡嗡","Desis atau dengung di hujung"), cls:"", items:[["s","rice"],["z","rise"],["f","safe"],["v","save"]]}
+    ],
+    cards:[
+      {title:T("-ed endings: /t/, /d/ or /ɪd/","-ed 的三种念法：/t/、/d/、/ɪd/","Hujung -ed: /t/, /d/ atau /ɪd/"),
+       html:T("<b>/t/</b> after a voiceless sound: walked, stopped, washed<br><b>/d/</b> after a voiced sound (vowels too): played, cleaned, lived<br><b>/ɪd/</b> after /t/ or /d/: wanted, needed — one extra syllable",
+              "<b>/t/</b>：前面是无声的音 —— walked、stopped、washed<br><b>/d/</b>：前面是有声的音（元音也算）—— played、cleaned、lived<br><b>/ɪd/</b>：前面是 /t/ 或 /d/ —— wanted、needed，多一个音节",
+              "<b>/t/</b> selepas bunyi tidak bersuara: walked, stopped, washed<br><b>/d/</b> selepas bunyi bersuara (termasuk vokal): played, cleaned, lived<br><b>/ɪd/</b> selepas /t/ atau /d/: wanted, needed — satu suku kata tambahan")},
+      {title:T("Plural -s: /s/, /z/ or /ɪz/","复数 -s 的三种念法：/s/、/z/、/ɪz/","Jamak -s: /s/, /z/ atau /ɪz/"),
+       html:T("<b>/s/</b> after a voiceless sound: cats, books, cups<br><b>/z/</b> after a voiced sound (vowels too): dogs, bags, days<br><b>/ɪz/</b> after a hissing sound (/s z ʃ ʒ tʃ dʒ/): buses, watches, pages — one extra syllable",
+              "<b>/s/</b>：前面是无声的音 —— cats、books、cups<br><b>/z/</b>：前面是有声的音（元音也算）—— dogs、bags、days<br><b>/ɪz/</b>：前面是嘶嘶的音（/s z ʃ ʒ tʃ dʒ/）—— buses、watches、pages，多一个音节",
+              "<b>/s/</b> selepas bunyi tidak bersuara: cats, books, cups<br><b>/z/</b> selepas bunyi bersuara (termasuk vokal): dogs, bags, days<br><b>/ɪz/</b> selepas bunyi desis (/s z ʃ ʒ tʃ dʒ/): buses, watches, pages — satu suku kata tambahan")}
+    ],
+    note:T("Tip: rest a finger on your throat — the buzz of /z/ in “rise” and /v/ in “save” should last to the very end of the word.",
+           "小提示：手指按在喉咙上 —— “rise” 的 /z/ 和 “save” 的 /v/，那个震动要一直维持到字的最后。",
+           "Petua: letak jari pada kerongkong — getaran /z/ dalam “rise” dan /v/ dalam “save” patut berterusan hingga hujung perkataan.")
+  },
+  // dropped /t d k/, a devoiced /z v/, and both grammar endings in every run
+  must:[{any:["final /t/ /d/ /k/","final /t/ vs /d/","final sound dropped"],n:2},{any:["final /s/ vs /z/","final /f/ vs /v/"],n:2},
+        {any:["final /p/ vs /b/","final /k/ vs /ɡ/"],n:1},{any:["-ed ending"],n:2},{any:["plural -s ending"],n:2}],
+  exercises:[
+    // bat / bad / back — one of the three, heard
+    ...genTriples(),
+    // which word ENDS in this sound (the options' 🔊 plays each one)
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/d/", sub:"Which word ends in this sound?", fam:"final /t/ /d/ /k/",
+      options:[opt("bad",true),opt("bat"),opt("back")],
+      hint:T("bad /bæd/ ends in a voiced /d/. bat /bæt/ ends in /t/, back /bæk/ in /k/.","bad /bæd/ 用有声的 /d/ 结尾。bat /bæt/ 是 /t/，back /bæk/ 是 /k/。","bad /bæd/ berakhir dengan /d/ bersuara. bat /bæt/ berakhir dengan /t/, back /bæk/ dengan /k/.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/z/", sub:"Which word ends in this sound?", fam:"final /s/ vs /z/",
+      options:[opt("rise",true),opt("rice"),opt("price")],
+      hint:T("rise /raɪz/ ends with a buzzing /z/. rice /raɪs/ and price /praɪs/ end with a hissing /s/.","rise /raɪz/ 用会震的 /z/ 结尾。rice /raɪs/ 和 price /praɪs/ 用嘶嘶的 /s/ 结尾。","rise /raɪz/ berakhir dengan /z/ yang berdengung. rice /raɪs/ dan price /praɪs/ berakhir dengan /s/ yang berdesis.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/v/", sub:"Which word ends in this sound?", fam:"final /f/ vs /v/",
+      options:[opt("save",true),opt("safe"),opt("face")],
+      hint:T("save /seɪv/ ends with a voiced /v/ — your lower lip buzzes. safe /seɪf/ ends in /f/, face /feɪs/ in /s/.","save /seɪv/ 用有声的 /v/ 结尾 —— 下嘴唇会震。safe /seɪf/ 是 /f/，face /feɪs/ 是 /s/。","save /seɪv/ berakhir dengan /v/ bersuara — bibir bawah bergetar. safe /seɪf/ berakhir dengan /f/, face /feɪs/ dengan /s/.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ɪd/", sub:"Which word ends in this sound?", fam:"-ed ending",
+      options:[opt("needed",true),opt("cleaned"),opt("stopped")],
+      hint:T("needed /ˈniːdɪd/: need ends in /d/, so -ed adds a syllable. cleaned /kliːnd/ ends in /d/, stopped /stɒpt/ in /t/ — no extra syllable.","needed /ˈniːdɪd/：need 本来是 /d/ 结尾，所以 -ed 多一个音节。cleaned /kliːnd/ 是 /d/，stopped /stɒpt/ 是 /t/ —— 都不多音节。","needed /ˈniːdɪd/: need berakhir dengan /d/, jadi -ed menambah satu suku kata. cleaned /kliːnd/ berakhir dengan /d/, stopped /stɒpt/ dengan /t/ — tiada suku kata tambahan.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ɪz/", sub:"Which word ends in this sound?", fam:"plural -s ending",
+      options:[opt("watches",true),opt("watched"),opt("cats")],
+      hint:T("watches /ˈwɒtʃɪz/: watch ends in /tʃ/, so -es adds a syllable. watched /wɒtʃt/ ends in /t/, cats /kæts/ in /s/.","watches /ˈwɒtʃɪz/：watch 是 /tʃ/ 结尾，所以 -es 多一个音节。watched /wɒtʃt/ 是 /t/，cats /kæts/ 是 /s/。","watches /ˈwɒtʃɪz/: watch berakhir dengan /tʃ/, jadi -es menambah satu suku kata. watched /wɒtʃt/ berakhir dengan /t/, cats /kæts/ dengan /s/.")}),
+    // ——— generated pools ———
+    ...genPairIPA(FINAL_PAIRS),
+    ...genReadPair(FINAL_PAIRS),
+    ...genListen(FINAL_PAIRS),
+    ...genEndings(ED_WORDS, "ed"),
+    ...genEndings(PL_WORDS, "s")
+  ],
+  say:[
+    sayIt(["cap","cab"],["/kæp/","/kæb/"],T("cap: close your lips and stop. cab: hold the vowel a little longer, then close your lips with a voiced /b/. Don't drop the last sound.",
+      "cap：嘴唇合起来就停。cab：元音拉长一点，再用有声的 /b/ 把嘴唇合起来。最后一个音不要省掉。",
+      "cap: tutup bibir dan berhenti. cab: tahan vokal sedikit lebih lama, kemudian tutup bibir dengan /b/ bersuara. Jangan gugurkan bunyi akhir.")),
+    sayIt(["rice","rise"],["/raɪs/","/raɪz/"],T("rice: end with a hiss /s/. rise: hold /aɪ/ a little longer and end with a buzzing /z/.",
+      "rice：用嘶嘶的 /s/ 结尾。rise：/aɪ/ 拉长一点，用会震的 /z/ 结尾。",
+      "rice: akhiri dengan desis /s/. rise: tahan /aɪ/ sedikit lebih lama dan akhiri dengan /z/ yang berdengung.")),
+    sayIt(["bat","bad","back"],["/bæt/","/bæd/","/bæk/"],T("Finish every word. bat: tongue tip up for /t/. bad: same place, but voiced — and a slightly longer vowel. back: the back of your tongue goes up for /k/.",
+      "每个字都要念完。bat：舌尖顶上去念 /t/。bad：同一个位置但有声 —— 元音也长一点。back：舌根抬起来念 /k/。",
+      "Sebut setiap perkataan hingga habis. bat: hujung lidah naik untuk /t/. bad: tempat yang sama, tetapi bersuara — dan vokal sedikit lebih panjang. back: belakang lidah naik untuk /k/.")),
+    sayIt(["walked","played","wanted"],["/wɔːkt/","/pleɪd/","/ˈwɒntɪd/"],T("-ed has three sounds: walked ends in a quiet /t/, played in /d/, and wanted adds a syllable: /ɪd/.",
+      "-ed 有三种念法：walked 用轻轻的 /t/ 结尾，played 用 /d/，wanted 要多一个音节：/ɪd/。",
+      "-ed ada tiga bunyi: walked berakhir dengan /t/ yang perlahan, played dengan /d/, dan wanted menambah satu suku kata: /ɪd/.")),
+    sayIt(["books","bags","buses"],["/bʊks/","/bæɡz/","/ˈbʌsɪz/"],T("Plural -s: books ends in /s/, bags in a buzzing /z/, and buses adds a syllable: /ɪz/.",
+      "复数 -s：books 用 /s/ 结尾，bags 用会震的 /z/，buses 要多一个音节：/ɪz/。",
+      "Jamak -s: books berakhir dengan /s/, bags dengan /z/ yang berdengung, dan buses menambah satu suku kata: /ɪz/.")),
+    sayIt(["go","goat"],["/ɡəʊ/","/ɡəʊt/"],T("go ends on the glide /əʊ/. goat: the same glide, then touch your tongue tip up behind your teeth for a clear /t/.",
+      "go 在滑音 /əʊ/ 就结束了。goat：一样的滑音，最后舌尖顶到牙齿后面，清楚地念出 /t/。",
+      "go berakhir pada luncuran /əʊ/. goat: luncuran yang sama, kemudian sentuh hujung lidah di belakang gigi untuk /t/ yang jelas.")),
+    sayIt(["safe","save"],["/seɪf/","/seɪv/"],T("safe: top teeth on your lower lip, air only. save: the same, but buzz /v/ — and hold the vowel a little longer.",
+      "safe：上排牙齿碰下嘴唇，只有气。save：一样，但 /v/ 要震 —— 元音也拉长一点。",
+      "safe: gigi atas pada bibir bawah, udara sahaja. save: sama, tetapi /v/ berdengung — dan tahan vokal sedikit lebih lama."))
+  ],
+  reward:{ xp:400, badge:"final_pro", title:"You finish your words clearly now!" }
+},
+{
+  id:"s6", title:"Word Stress", short:"Stress", icon:"🥁", color:"sky", isNew:true,
+  learn:{
+    heading:T("The Beat of a Word","单词的节奏","Rentak Perkataan"),
+    intro:T("Every English word with two or more syllables has <b>one stressed syllable</b>: it is <b>longer, louder and a little higher</b>. The other syllables get weaker, often to /ə/. In IPA the mark <b>ˈ</b> goes just <b>before</b> the stressed syllable: /fəˈtɒɡrəfi/ = pho-TOG-ra-phy. Long words can also have a lighter second stress, marked ˌ: /ˌedʒuˈkeɪʃn/.",
+            "英文里两个音节以上的字，都有<b>一个重读的音节</b>：它念得<b>比较长、比较大声、音调也高一点</b>。其他音节会变弱，常常弱成 /ə/。在 IPA 里，<b>ˈ</b> 这个符号放在重读音节的<b>前面</b>：/fəˈtɒɡrəfi/ = pho-TOG-ra-phy。长的字还可能有一个比较轻的次重音，用 ˌ 表示：/ˌedʒuˈkeɪʃn/。",
+            "Setiap perkataan Inggeris dengan dua suku kata atau lebih ada <b>satu suku kata yang ditekan</b>: ia <b>lebih panjang, lebih kuat dan sedikit lebih tinggi</b>. Suku kata lain menjadi lemah, selalunya /ə/. Dalam IPA, tanda <b>ˈ</b> diletakkan betul-betul <b>sebelum</b> suku kata yang ditekan: /fəˈtɒɡrəfi/ = pho-TOG-ra-phy. Perkataan panjang boleh ada tekanan kedua yang lebih ringan, ditanda ˌ: /ˌedʒuˈkeɪʃn/."),
+    cards:[
+      {title:T("Two syllables: noun or verb?","两个音节：名词还是动词？","Dua suku kata: kata nama atau kata kerja?"),
+       html:T("Most two-syllable <b>nouns and adjectives</b> stress the <b>first</b> syllable: <b>DOC</b>tor, <b>HAP</b>py.<br>Most two-syllable <b>verbs</b> stress the <b>second</b>: be<b>GIN</b>, re<b>LAX</b>.<br>Some words change with their job: a <b>PRES</b>ent → to pre<b>SENT</b>, a <b>REC</b>ord → to re<b>CORD</b>.",
+              "大部分两个音节的<b>名词和形容词</b>，重音在<b>第一个</b>音节：<b>DOC</b>tor、<b>HAP</b>py。<br>大部分两个音节的<b>动词</b>，重音在<b>第二个</b>音节：be<b>GIN</b>、re<b>LAX</b>。<br>有些字的重音会跟着词性改变：a <b>PRES</b>ent（礼物）→ to pre<b>SENT</b>（介绍、呈交），a <b>REC</b>ord（纪录）→ to re<b>CORD</b>（录下来）。",
+              "Kebanyakan <b>kata nama dan kata sifat</b> dua suku kata ditekan pada suku kata <b>pertama</b>: <b>DOC</b>tor, <b>HAP</b>py.<br>Kebanyakan <b>kata kerja</b> dua suku kata ditekan pada suku kata <b>kedua</b>: be<b>GIN</b>, re<b>LAX</b>.<br>Sesetengah perkataan berubah mengikut fungsinya: a <b>PRES</b>ent (hadiah) → to pre<b>SENT</b> (membentangkan), a <b>REC</b>ord (rekod) → to re<b>CORD</b> (merakam).")},
+      {title:T("Longer words: learn them by ear","比较长的字：用耳朵记","Perkataan panjang: belajar melalui pendengaran"),
+       html:T("<b>COM</b>fortable (not comFORtable) · de<b>VEL</b>op · <b>PHO</b>tograph → pho<b>TOG</b>raphy → photo<b>GRAPH</b>ic · <b>MAN</b>ager · po<b>LICE</b> · ho<b>TEL</b>",
+              "<b>COM</b>fortable（不是 comFORtable）· de<b>VEL</b>op · <b>PHO</b>tograph → pho<b>TOG</b>raphy → photo<b>GRAPH</b>ic · <b>MAN</b>ager · po<b>LICE</b> · ho<b>TEL</b>",
+              "<b>COM</b>fortable (bukan comFORtable) · de<b>VEL</b>op · <b>PHO</b>tograph → pho<b>TOG</b>raphy → photo<b>GRAPH</b>ic · <b>MAN</b>ager · po<b>LICE</b> · ho<b>TEL</b>")}
+    ],
+    note:T("Tip: tap the table on the stressed syllable while you say the word — one strong tap, the rest soft.",
+           "小提示：一边念一边在重读的音节上拍一下桌子 —— 重的拍一下，其他轻轻带过。",
+           "Petua: ketuk meja pada suku kata yang ditekan sambil menyebut perkataan — satu ketukan kuat, yang lain perlahan.")
+  },
+  must:[{any:["stress: 2 syllables"],n:2},{any:["stress: noun or verb"],n:2},{any:["stress: long words"],n:3}],
+  exercises:[
+    // which transcription has the stress in the right place
+    ex({kind:"Choose the IPA", prompt:"photography", fam:"stress: long words", options:[opt("/fəˈtɒɡrəfi/",true),opt("/ˈfəʊtəɡrəfi/")],
+      hint:T("pho-TOG-ra-phy: /fəˈtɒɡrəfi/. The ˈ sits before “tog”, and the first syllable weakens to /fə/. PHOtograph moves the stress to the front.","pho-TOG-ra-phy：/fəˈtɒɡrəfi/。ˈ 在 “tog” 前面，第一个音节弱成 /fə/。PHOtograph 的重音才在最前面。","pho-TOG-ra-phy: /fəˈtɒɡrəfi/. Tanda ˈ sebelum “tog”, dan suku kata pertama menjadi lemah /fə/. PHOtograph pula ditekan di hadapan.")}),
+    ex({kind:"Choose the IPA", prompt:"comfortable", fam:"stress: long words", options:[opt("/ˈkʌmftəbl/",true),opt("/kʌmˈfɔːtəbl/")],
+      hint:T("COMF-tə-bl: /ˈkʌmftəbl/. The stress is on the first syllable and the “for” almost disappears. comFORtable is a very common mistake.","COMF-tə-bl：/ˈkʌmftəbl/。重音在第一个音节，“for” 几乎听不到。念成 comFORtable 是很常见的错误。","COMF-tə-bl: /ˈkʌmftəbl/. Tekanan pada suku kata pertama dan “for” hampir hilang. comFORtable ialah kesilapan yang sangat biasa.")}),
+    ex({kind:"Choose the IPA", prompt:"develop", fam:"stress: long words", options:[opt("/dɪˈveləp/",true),opt("/ˈdevələp/")],
+      hint:T("de-VEL-op: /dɪˈveləp/. The stress is in the middle; the first and last syllables are short and weak.","de-VEL-op：/dɪˈveləp/。重音在中间，第一个和最后一个音节都短而弱。","de-VEL-op: /dɪˈveləp/. Tekanan di tengah; suku kata pertama dan terakhir pendek dan lemah.")}),
+    ex({kind:"Choose the IPA", prompt:"hotel", fam:"stress: 2 syllables", options:[opt("/həʊˈtel/",true),opt("/ˈhəʊtel/")],
+      hint:T("ho-TEL: /həʊˈtel/. A noun, but the stress is on the second syllable — an exception to the usual rule.","ho-TEL：/həʊˈtel/。是名词，但重音在第二个音节 —— 一般规则的例外。","ho-TEL: /həʊˈtel/. Kata nama, tetapi tekanan pada suku kata kedua — pengecualian kepada peraturan biasa.")}),
+    ex({kind:"Choose the IPA", prompt:"manager", fam:"stress: long words", options:[opt("/ˈmænɪdʒə/",true),opt("/məˈnædʒə/")],
+      hint:T("MAN-a-ger: /ˈmænɪdʒə/. The stress is on the first syllable, not maNAger.","MAN-a-ger：/ˈmænɪdʒə/。重音在第一个音节，不是 maNAger。","MAN-a-ger: /ˈmænɪdʒə/. Tekanan pada suku kata pertama, bukan maNAger.")}),
+    ex({kind:"Choose the IPA", prompt:"police", fam:"stress: 2 syllables", options:[opt("/pəˈliːs/",true),opt("/ˈpəʊliːs/")],
+      hint:T("po-LICE: /pəˈliːs/. The first syllable is a weak /pə/; the long /iː/ carries the stress.","po-LICE：/pəˈliːs/。第一个音节是弱的 /pə/，重音在长的 /iː/。","po-LICE: /pəˈliːs/. Suku kata pertama ialah /pə/ yang lemah; /iː/ yang panjang membawa tekanan.")}),
+    // noun or verb: the prompt says which, the 🔊 says it in a phrase
+    ex({kind:"Choose the IPA", prompt:"record", promptText:T("record (verb)","record（动词）","record (kata kerja)"), say:"to record a video", fam:"stress: noun or verb",
+      options:[opt("/rɪˈkɔːd/",true),opt("/ˈrekɔːd/")],
+      hint:T("The verb is re-CORD /rɪˈkɔːd/ (to record a video). The noun is REC-ord /ˈrekɔːd/ (a world record).","动词是 re-CORD /rɪˈkɔːd/（to record a video）。名词是 REC-ord /ˈrekɔːd/（a world record）。","Kata kerja ialah re-CORD /rɪˈkɔːd/ (to record a video). Kata nama ialah REC-ord /ˈrekɔːd/ (a world record).")}),
+    ex({kind:"Choose the IPA", prompt:"present", promptText:T("present (noun)","present（名词）","present (kata nama)"), say:"a birthday present", fam:"stress: noun or verb",
+      options:[opt("/ˈpreznt/",true),opt("/prɪˈzent/")],
+      hint:T("The noun is PRES-ent /ˈpreznt/ (a birthday present). The verb is pre-SENT /prɪˈzent/ (to present a report).","名词是 PRES-ent /ˈpreznt/（a birthday present）。动词是 pre-SENT /prɪˈzent/（to present a report）。","Kata nama ialah PRES-ent /ˈpreznt/ (a birthday present). Kata kerja ialah pre-SENT /prɪˈzent/ (to present a report).")}),
+    // ——— generated pools: tap the stressed syllable ———
+    ...genStress2(),
+    ...genStressNV(),
+    ...genStressLong()
+  ],
+  say:[
+    sayIt(["photography"],["/fəˈtɒɡrəfi/"],T("Make TOG strong: longer, louder and a little higher. The other syllables stay short and weak: fə-TOG-rə-fi.",
+      "把 TOG 念重：长一点、大声一点、高一点。其他音节短而弱：fə-TOG-rə-fi。",
+      "Tekankan TOG: lebih panjang, lebih kuat dan sedikit tinggi. Suku kata lain pendek dan lemah: fə-TOG-rə-fi.")),
+    sayIt(["comfortable"],["/ˈkʌmftəbl/"],T("Stress the first syllable: COMF-tə-bl. The “for” almost disappears — not com-FOR-ta-ble.",
+      "重音放在第一个音节：COMF-tə-bl。“for” 几乎听不到 —— 不是 com-FOR-ta-ble。",
+      "Tekankan suku kata pertama: COMF-tə-bl. “for” hampir hilang — bukan com-FOR-ta-ble.")),
+    sayIt(["develop"],["/dɪˈveləp/"],T("de-VEL-op: make the middle syllable strong; the first and last are short and weak.",
+      "de-VEL-op：中间的音节念重，第一个和最后一个短而弱。",
+      "de-VEL-op: kuatkan suku kata tengah; yang pertama dan terakhir pendek dan lemah.")),
+    sayIt(["present","present"],["/ˈpreznt/","/prɪˈzent/"],T("Same spelling, the stress moves. Noun: PRES-ent (a birthday present). Verb: pre-SENT (to present a report).",
+      "拼法一样，重音会移动。名词：PRES-ent（a birthday present）。动词：pre-SENT（to present a report）。",
+      "Ejaan sama, tekanan berpindah. Kata nama: PRES-ent (a birthday present). Kata kerja: pre-SENT (to present a report)."),
+      {id:"present-noun-verb", tag:[POS_TEXT_NV.noun, POS_TEXT_NV.verb], tts:["a birthday present","to present a report"]}),
+    sayIt(["hotel"],["/həʊˈtel/"],T("ho-TEL: the stress is on the second syllable. Keep the first one light.",
+      "ho-TEL：重音在第二个音节，第一个轻轻带过。",
+      "ho-TEL: tekanan pada suku kata kedua. Sebut yang pertama dengan ringan.")),
+    sayIt(["Malaysia"],["/məˈleɪziə/"],T("ma-LAY-si-a: stress LAY. The first syllable is a short, weak /mə/.",
+      "ma-LAY-si-a：重音在 LAY。第一个音节是短而弱的 /mə/。",
+      "ma-LAY-si-a: tekankan LAY. Suku kata pertama ialah /mə/ yang pendek dan lemah."))
+  ],
+  reward:{ xp:400, badge:"stress_star", title:"Your words have the right beat now!" }
 },
 {
   id:"s4", title:"Bonus Final Review", short:"Final", icon:"🏆", color:"sun",
@@ -1148,7 +1631,9 @@ const COURSE = [
     note:"Remember: <b>Consistency is more important than perfection.</b> Show up, repeat, improve.",
     quote:{cn:"持之以恒，胜过完美", en:"Consistency beats perfection."}
   },
-  must:[{any:["/ɪ/ vs /iː/"],n:1},{any:["/θ/ vs /s/","/θ/ vs /t/","/ð/ vs /d/","/ð/ vs /z/","/θ/","/ð/"],n:1},{any:["glide /eɪ/","glide /əʊ/"],n:1}],
+  // + one final-consonant and one word-stress item since those units joined (2026-09-24)
+  must:[{any:["/ɪ/ vs /iː/"],n:1},{any:["/θ/ vs /s/","/θ/ vs /t/","/ð/ vs /d/","/ð/ vs /z/","/θ/","/ð/"],n:1},{any:["glide /eɪ/","glide /əʊ/"],n:1},
+        {any:["final /s/ vs /z/","final /t/ vs /d/","final sound dropped"],n:1},{any:["stress: 2 syllables","stress: long words"],n:1}],
   exercises:[
     // 10 mixed, harder, random-feeling
     ex({kind:"Choose the IPA", prompt:"thorough", options:[opt("/ˈθʌrə/",true),opt("/ˈθɜːrəʊ/")], fam:"/θ/",
@@ -1182,7 +1667,24 @@ const COURSE = [
     ...genListen(CONS_PAIRS),
     ...vocabRead(VOCAB.everyday),
     ...vocabRead(VOCAB.workplace),
-    ...vocabListen(VOCAB.daily)
+    ...vocabListen(VOCAB.daily),
+    // a small share of the two newer units: final consonants and word stress
+    ...genListen(FINAL_PAIRS.filter(p=>["final /t/ vs /d/","final /s/ vs /z/","final sound dropped"].includes(p.f)).filter((p,i)=>i%2===0)),
+    ...genStress2()
+  ],
+  say:[
+    sayIt(["thirty","dirty"],["/ˈθɜːti/","/ˈdɜːti/"],T("thirty: tongue between your teeth for /θ/, then a long /ɜː/. dirty: tongue tip behind your top teeth for /d/.",
+      "thirty：舌头放在牙齿之间念 /θ/，再接长的 /ɜː/。dirty：舌尖在上排牙齿后面念 /d/。",
+      "thirty: lidah di antara gigi untuk /θ/, kemudian /ɜː/ yang panjang. dirty: hujung lidah di belakang gigi atas untuk /d/.")),
+    sayIt(["weather"],["/ˈweðə/"],T("A short /e/, then your tongue between your teeth with a buzz for /ð/, and a weak /ə/ at the end — no r.",
+      "短的 /e/，接着舌头放在牙齿之间、带着震动念 /ð/，最后是弱的 /ə/ —— 不卷舌。",
+      "/e/ pendek, kemudian lidah di antara gigi dengan getaran untuk /ð/, dan /ə/ yang lemah di hujung — tiada r.")),
+    sayIt(["thank you"],["/ˈθæŋk juː/"],T("Tongue between your teeth for /θ/, open your jaw for /æ/, and don't drop the /k/ before “you”.",
+      "舌头放在牙齿之间念 /θ/，下巴张开念 /æ/，“you” 前面的 /k/ 不要吞掉。",
+      "Lidah di antara gigi untuk /θ/, buka rahang untuk /æ/, dan jangan gugurkan /k/ sebelum “you”.")),
+    sayIt(["world"],["/wɜːld/"],T("Round your lips for /w/, hold a long /ɜː/ without curling your tongue, then /l/ and a clear /d/ at the end.",
+      "嘴唇收圆念 /w/，拉长 /ɜː/、舌头不要卷，接着 /l/，最后清楚地念出 /d/。",
+      "Bulatkan bibir untuk /w/, tahan /ɜː/ yang panjang tanpa menggulung lidah, kemudian /l/ dan /d/ yang jelas di hujung."))
   ],
   reward:{ xp:1000, badge:"master", title:"Congratulations!", line:"You completed the TOUCH English IPA Pronunciation Course!", final:true }
 }
@@ -1199,13 +1701,17 @@ const BADGE_SVG = {
   shield:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   crown:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 18l-2-9 6 4 5-8 5 8 6-4-2 9z"/></svg>',
   flame:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2c2 4-2 5-2 8a2 2 0 0 0 4 0c2 2 3 4 3 6a5 5 0 0 1-10 0c0-4 3-6 5-14z"/></svg>',
-  gem:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9z" opacity=".95"/></svg>'
+  gem:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9z" opacity=".95"/></svg>',
+  target:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
+  beat:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="3" y="13" width="4" height="7" rx="1.2"/><rect x="10" y="4" width="4" height="16" rx="1.2"/><rect x="17" y="13" width="4" height="7" rx="1.2"/></svg>'
 };
 const BADGES = {
   starter:            {ic:"compass", tint:"teal",  name:"Starter",             desc:"Began your journey"},
   vowel_master:       {ic:"letterA", tint:"coral", name:"Vowel Master",         desc:"Cleared all vowels"},
   diphthong_hero:     {ic:"swap",    tint:"sky",   name:"Diphthong Hero",       desc:"Mastered the glides"},
   consonant_champion: {ic:"shield",  tint:"navy",  name:"Consonant Champ",      desc:"Tamed the consonants"},
+  final_pro:          {ic:"target",  tint:"coral", name:"Strong Finisher",      desc:"Finished every final sound"},
+  stress_star:        {ic:"beat",    tint:"sky",   name:"Stress Star",          desc:"Found the beat of words"},
   master:             {ic:"crown",   tint:"navy",  name:"Pronunciation Master", desc:"Completed the course"},
   hot_streak:         {ic:"flame",   tint:"coral", name:"Hot Streak",           desc:"5 correct in a row"},
   flawless:           {ic:"gem",     tint:"teal",  name:"Flawless",             desc:"A perfect stage"}
@@ -1373,7 +1879,10 @@ const Q_KIND = {
   "Fill the glide":  { zh:"填滑音",     ms:"Isi bunyi luncur" },
   "Quick check":     { zh:"快速检查",   ms:"Semakan pantas" },
   "Minimal pair":    { zh:"最小对立对", ms:"Pasangan minimal" },
-  "Spot the odd one":{ zh:"找出不一样的", ms:"Cari yang berbeza" }
+  "Spot the odd one":{ zh:"找出不一样的", ms:"Cari yang berbeza" },
+  "Fill the ending": { zh:"填词尾",     ms:"Isi hujung" },
+  "Find the stress": { zh:"找重音",     ms:"Cari tekanan" },
+  "Say it":          { zh:"开口说",     ms:"Sebut" }
 };
 const Q_SUB = {
   "Which word did you hear?":          { zh:"你听到的是哪一个字？", ms:"Perkataan mana yang anda dengar?" },
@@ -1382,7 +1891,9 @@ const Q_SUB = {
   "Type-free: which word did you hear?":{ zh:"不用打字：你听到的是哪一个字？", ms:"Tanpa menaip: perkataan mana yang anda dengar?" },
   "Pick the TOUCH way 👇":             { zh:"选出 TOUCH 的做法 👇", ms:"Pilih cara TOUCH 👇" },
   "Which word contains this glide?":   { zh:"哪一个字里面有这个滑音？", ms:"Perkataan mana mengandungi bunyi luncur ini?" },
-  "Which word has the buzzing “th”?":  { zh:"哪一个字的 th 是有声的（会震）？", ms:"Perkataan mana ada “th” yang bergetar?" }
+  "Which word has the buzzing “th”?":  { zh:"哪一个字的 th 是有声的（会震）？", ms:"Perkataan mana ada “th” yang bergetar?" },
+  "Which word ends in this sound?":    { zh:"哪一个字是用这个音结尾的？", ms:"Perkataan mana berakhir dengan bunyi ini?" },
+  "Tap the stressed syllable":         { zh:"点出重读的音节", ms:"Ketik suku kata yang ditekan" }
 };
 function trQ(str, table){
   const e = table[str];
@@ -1396,6 +1907,8 @@ const STAGE_TITLE = {
   "Short & Long Vowels": { zh:"长短元音",       ms:"Vokal Pendek & Panjang" },
   "Diphthongs":          { zh:"双元音",         ms:"Diftong" },
   "Consonants":          { zh:"辅音",           ms:"Konsonan" },
+  "Final Consonants":    { zh:"词尾辅音",       ms:"Konsonan Akhir" },
+  "Word Stress":         { zh:"单词重音",       ms:"Tekanan Perkataan" },
   "Bonus Final Review":  { zh:"加码：总复习",   ms:"Bonus: Ulang Kaji Akhir" },
   "Today's Review":      { zh:"今天的复习",     ms:"Ulang Kaji Hari Ini" },
   "Sound Practice":      { zh:"音标练习",       ms:"Latihan Bunyi" }
@@ -1405,6 +1918,8 @@ const BADGE_TEXT = {
   "Vowel Master":         { zh:"元音高手",   ms:"Pakar Vokal",      d:{ zh:"元音全过关",       ms:"Tamatkan semua vokal" } },
   "Diphthong Hero":       { zh:"双元音英雄", ms:"Wira Diftong",     d:{ zh:"滑音掌握了",       ms:"Menguasai bunyi luncur" } },
   "Consonant Champ":      { zh:"辅音冠军",   ms:"Juara Konsonan",   d:{ zh:"辅音全搞定",       ms:"Menakluk konsonan" } },
+  "Strong Finisher":      { zh:"收尾高手",   ms:"Penamat Hebat",    d:{ zh:"字尾的辅音都念完整了", ms:"Menyebut setiap bunyi akhir" } },
+  "Stress Star":          { zh:"重音之星",   ms:"Bintang Tekanan",  d:{ zh:"抓到了单词的节奏", ms:"Menguasai rentak perkataan" } },
   "Pronunciation Master": { zh:"发音大师",   ms:"Pakar Sebutan",    d:{ zh:"整个课程都完成了", ms:"Tamatkan keseluruhan kursus" } },
   "Hot Streak":           { zh:"连击中",     ms:"Rentetan Hebat",   d:{ zh:"连对 5 题",        ms:"5 betul berturut-turut" } },
   "Flawless":             { zh:"零失误",     ms:"Tanpa Silap",      d:{ zh:"一整关全对",       ms:"Satu peringkat sempurna" } }
@@ -1414,6 +1929,8 @@ const REWARD_TEXT = {
   "You're mastering English vowel sounds!":                   { zh:"英文元音你越掌握越好了！", ms:"Anda semakin menguasai bunyi vokal Inggeris!" },
   "Your sound gliding is improving beautifully!":             { zh:"你的滑音进步很明显！", ms:"Bunyi luncur anda makin baik!" },
   "You can now hear consonant differences much more clearly!":{ zh:"辅音的差别你现在听得清楚多了！", ms:"Anda kini dengar beza konsonan dengan lebih jelas!" },
+  "You finish your words clearly now!":                       { zh:"你现在每个字都念得完整了！", ms:"Kini anda menyebut setiap perkataan hingga habis dengan jelas!" },
+  "Your words have the right beat now!":                      { zh:"你的单词节奏抓对了！", ms:"Perkataan anda kini ada rentak yang betul!" },
   "Congratulations!":                                         { zh:"恭喜！", ms:"Tahniah!" },
   "Review complete!":                                         { zh:"复习完成！", ms:"Ulang kaji selesai!" },
   "Practice complete!":                                       { zh:"练习完成！", ms:"Latihan selesai!" },
@@ -1600,10 +2117,11 @@ const Audio$ = {
   },
   // speak several parts in order with a clear PAUSE between them
   // (e.g. phoneme sound → beat of silence → the word).
-  speakSeq(parts, gapMs){
-    if(!("speechSynthesis" in window)) return;
+  // onDone (optional): called once after the last part has been spoken — the
+  // Say it step uses it to play the learner's own recording right after the model
+  speakSeq(parts, gapMs, onDone){
     const list = (parts||[]).filter(Boolean);
-    if(!list.length) return;
+    if(!("speechSynthesis" in window) || !list.length){ if(onDone) onDone(); return; }
     const gap = gapMs==null ? 450 : gapMs;
     try{
       speechSynthesis.cancel();
@@ -1627,7 +2145,8 @@ const Audio$ = {
         const u = mk(text, rate);
         let advanced = false;
         const next = ()=>{ if(advanced) return; advanced=true;
-          if(i+1<list.length) setTimeout(()=>speakAt(i+1), gap); };
+          if(i+1<list.length) setTimeout(()=>speakAt(i+1), gap);
+          else if(onDone && this._seq===seq) setTimeout(onDone, 250); };
         u.onend = next;
         // fallback: if onend never fires (some engines), advance after an estimate
         setTimeout(next, 1200 + String(text).length*90);
@@ -1834,7 +2353,7 @@ function confetti(n=90){
 let view = {name:"map"};         // map | stage | profile | done
 let session = null;              // active exercise session
 const $screen = ()=>document.getElementById("screen");
-function go(v){ view=v; render(); window.scrollTo(0,0); }
+function go(v){ if(typeof sayCleanup==="function") sayCleanup(); view=v; render(); window.scrollTo(0,0); }
 
 function render(){
   // First run: ask for a language, then the learner's name, before the app.
@@ -2010,6 +2529,7 @@ function renderSoundCard(ipa){
         </button>
         ${groupTitle?`<div class="sc-group">${trLearn(groupTitle)}</div>`:""}
       </div>
+      ${MOUTH[ipa] ? `<div class="mouth">👄 <span><b>${L("How to make it","怎么发这个音","Cara menyebutnya")}</b>${L(...MOUTH[ipa])}</span></div>` : ""}
       ${ipa==="ʊə" ? `<div class="note">💡 <span>${L(
         "Many British speakers now say some of these words (like tour) with /ɔː/, as in door. Both are correct.",
         "现在很多英国人会把其中一些字（例如 tour）念成 /ɔː/，跟 door 一样。两种都对。",
@@ -2036,6 +2556,7 @@ function renderNav(){
 
 function renderMap(){
   let nodes="";
+  const hadOldProgress = ["s1","s2","s3","s4"].some(id=>S.stages[id]?.completed);
   const firstIncomplete = COURSE.find(s=>!S.stages[s.id]?.completed);
   COURSE.forEach((s,i)=>{
     const st = S.stages[s.id]||{};
@@ -2044,6 +2565,8 @@ function renderMap(){
     const side = i%2===0 ? "c" : (i%4===1?"l":"r");
     const badgeDot = done && BADGES[s.reward.badge] ? `<span class="badge-dot">${badgeMedal(BADGES[s.reward.badge]).replace('class="medal ','class="medal sm ')}</span>` : "";
     const start = (firstIncomplete && firstIncomplete.id===s.id) ? `<span class="start-flag">${L("START","从这里","MULA")}</span>` : "";
+    // a unit added after this learner had already passed stages of the old course
+    const fresh = s.isNew && !done && hadOldProgress ? `<span class="stage-new">${L("NEW","新","BARU")}</span>` : "";
     const checkSVG = '<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 18 19 6"/></svg>';
     const face = done ? checkSVG : s.icon;
     nodes += (i>0?`<div class="connector"></div>`:"") + `
@@ -2051,7 +2574,7 @@ function renderMap(){
         <div class="node ${cls}" data-action="openStage" data-id="${s.id}">
           ${start}${badgeDot}
           <div class="disc">${face}</div>
-          <div class="nm">${trStage(s.title)}</div>
+          <div class="nm">${trStage(s.title)}${fresh}</div>
         </div>
       </div>`;
   });
@@ -2084,12 +2607,14 @@ function renderMap(){
     <div class="card continue-card" ${allDone?'':`data-action="openStage" data-id="${nextStage.id}"`}>
       <div class="cc-badge">${allDone?'🏆':nextStage.icon}</div>
       <div class="cc-meta">
-        <div class="cc-kicker">${allDone?L("Course complete","课程完成","Kursus selesai"):(isNew?L("Start learning","开始学","Mula belajar"):L("Continue learning","继续学","Sambung belajar"))}</div>
+        <div class="cc-kicker">${allDone?L("Course complete","课程完成","Kursus selesai"):(isNew?L("Start learning","开始学","Mula belajar"):(S.courseDone&&nextStage.isNew)?L("New unit","新单元","Unit baharu"):L("Continue learning","继续学","Sambung belajar"))}</div>
         <b>${trStage(nextStage.title)}</b>
         <span>${allDone
           ? L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")
           : isNew
               ? L("Start with the first stage","从第一关开始","Mulakan dengan peringkat pertama")
+              : (S.courseDone && nextStage.isNew && !S.stages[nextStage.id]?.practised)
+                ? L("Added after you finished the course — your trophy stays.","你完成课程之后才加的新单元 —— 奖杯照样是你的。","Ditambah selepas anda tamatkan kursus — trofi anda kekal.")
               : S.stages[nextStage.id]?.practised
                 ? L(`Practised — reach ${Math.round(PASS*100)}% to complete it`,`练习过 —— 答对 ${Math.round(PASS*100)}% 就完成`,`Sudah berlatih — capai ${Math.round(PASS*100)}% untuk selesai`)
                 : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti")}</span>
@@ -2216,14 +2741,29 @@ function buildQueue(s){
   }
   return shuffle([...groups.values()]).flat();
 }
+// Say it: SAY_PER_RUN speaking steps are slotted between the scored questions of
+// a stage run (after about 1/3 and 2/3 of them). They are not scored — the pass
+// mark is counted over the questions only — but recording one earns SAY_XP.
+const SAY_PER_RUN = 2, SAY_XP = 5;
+function withSayIt(s, queue){
+  const picks = shuffle(s.say||[]).slice(0, SAY_PER_RUN);
+  const out = queue.slice();
+  picks.forEach((p,i)=>{
+    const at = Math.min(out.length, Math.round(queue.length*(i+1)/(picks.length+1)) + i);
+    out.splice(at, 0, Object.assign({kind:"Say it", variant:"say"}, p));
+  });
+  return out;
+}
+const isSay = q => q && q.variant==="say";
 function startStage(id){
   const s = COURSE.find(x=>x.id===id);
-  const queue = buildQueue(s);
+  const queue = withSayIt(s, buildQueue(s));
   // If this stage has no video in the current language (e.g. Welcome has no
   // English video), skip the Watch step and open straight into Learn.
   const hasVideo = s.video && ytId(videoUrl(s.video.key));
-  session = { stageId:id, step: hasVideo ? "video" : "learn", qi:0, correct:0, total:queue.length, earned:0,
-              perfect:true, comboStart:S.combo, queue };
+  session = { stageId:id, step: hasVideo ? "video" : "learn", qi:0, correct:0,
+              total:queue.filter(q=>!isSay(q)).length, earned:0,
+              perfect:true, comboStart:S.combo, queue, said:0, sayTotal:queue.filter(isSay).length, saidIds:{} };
   go({name:"stage"});
 }
 // accessor: the active question list (session queue, or full bank as fallback)
@@ -2297,6 +2837,148 @@ const SOUND_WORDS = {
 // Verified British-RP IPA for every curated SOUND_WORDS entry (317 words).
 // Hand-checked by a pronunciation teacher — shown on the Sound Reference Card.
 const WORD_IPA = {"about":"/əˈbaʊt/", "again":"/əˈɡen/", "air":"/eə/", "arm":"/ɑːm/", "bad":"/bæd/", "bag":"/bæɡ/", "ball":"/bɔːl/", "banana":"/bəˈnɑːnə/", "bar":"/bɑː/", "bat":"/bæt/", "bath":"/bɑːθ/", "bear":"/beə/", "bed":"/bed/", "bee":"/biː/", "beer":"/bɪə/", "beige":"/beɪʒ/", "bell":"/bel/", "beyond":"/bɪˈjɒnd/", "big":"/bɪɡ/", "bike":"/baɪk/", "bird":"/bɜːd/", "blue":"/bluː/", "boat":"/bəʊt/", "bone":"/bəʊn/", "book":"/bʊk/", "boot":"/buːt/", "box":"/bɒks/", "boy":"/bɔɪ/", "bridge":"/brɪdʒ/", "bring":"/brɪŋ/", "brother":"/ˈbrʌðə/", "brown":"/braʊn/", "brush":"/brʌʃ/", "bull":"/bʊl/", "burn":"/bɜːn/", "bus":"/bʌs/", "buzz":"/bʌz/", "cab":"/kæb/", "cage":"/keɪdʒ/", "cake":"/keɪk/", "call":"/kɔːl/", "camera":"/ˈkæmərə/", "cap":"/kæp/", "car":"/kɑː/", "card":"/kɑːd/", "care":"/keə/", "cash":"/kæʃ/", "casual":"/ˈkæʒuəl/", "cat":"/kæt/", "catch":"/kætʃ/", "chair":"/tʃeə/", "cheer":"/tʃɪə/", "cheese":"/tʃiːz/", "chip":"/tʃɪp/", "clear":"/klɪə/", "clock":"/klɒk/", "cloth":"/klɒθ/", "cloud":"/klaʊd/", "coat":"/kəʊt/", "coin":"/kɔɪn/", "comma":"/ˈkɒmə/", "cook":"/kʊk/", "cool":"/kuːl/", "corn":"/kɔːn/", "cow":"/kaʊ/", "cup":"/kʌp/", "cure":"/kjʊə/", "cut":"/kʌt/", "dark":"/dɑːk/", "data":"/ˈdeɪtə/", "day":"/deɪ/", "dear":"/dɪə/", "decision":"/dɪˈsɪʒn/", "deer":"/dɪə/", "desk":"/desk/", "detour":"/ˈdiːtʊə/","Europe":"/ˈjʊərəp/","bin":"/bɪn/","six":"/sɪks/","mop":"/mɒp/","pop":"/pɒp/","pot":"/pɒt/","put":"/pʊt/", "dish":"/dɪʃ/", "dog":"/dɒɡ/", "door":"/dɔː/", "down":"/daʊn/", "draw":"/drɔː/", "duck":"/dʌk/", "ear":"/ɪə/", "egg":"/eɡ/", "face":"/feɪs/", "fan":"/fæn/", "far":"/fɑː/", "father":"/ˈfɑːðə/", "fear":"/fɪə/", "feet":"/fiːt/", "first":"/fɜːst/", "fish":"/fɪʃ/", "five":"/faɪv/", "fly":"/flaɪ/", "food":"/fuːd/", "foot":"/fʊt/", "fork":"/fɔːk/", "four":"/fɔː/", "fourth":"/fɔːθ/", "fridge":"/frɪdʒ/", "fun":"/fʌn/", "game":"/ɡeɪm/", "garage":"/ˈɡærɑːʒ/", "gate":"/ɡeɪt/", "girl":"/ɡɜːl/", "give":"/ɡɪv/", "glue":"/ɡluː/", "go":"/ɡəʊ/", "good":"/ɡʊd/", "grass":"/ɡrɑːs/", "green":"/ɡriːn/", "gun":"/ɡʌn/", "hair":"/heə/", "hand":"/hænd/", "hang":"/hæŋ/", "hard":"/hɑːd/", "hat":"/hæt/", "help":"/help/", "hen":"/hen/", "here":"/hɪə/", "hill":"/hɪl/", "hit":"/hɪt/", "home":"/həʊm/", "hook":"/hʊk/", "hop":"/hɒp/", "hot":"/hɒt/", "house":"/haʊs/", "hug":"/hʌɡ/", "ice":"/aɪs/", "jacket":"/ˈdʒækɪt/", "jam":"/dʒæm/", "jar":"/dʒɑː/", "jazz":"/dʒæz/", "job":"/dʒɒb/", "join":"/dʒɔɪn/", "joy":"/dʒɔɪ/", "juice":"/dʒuːs/", "jump":"/dʒʌmp/", "key":"/kiː/", "kick":"/kɪk/", "kid":"/kɪd/", "king":"/kɪŋ/", "kiss":"/kɪs/", "kite":"/kaɪt/", "knife":"/naɪf/", "lamp":"/læmp/", "large":"/lɑːdʒ/", "late":"/leɪt/", "law":"/lɔː/", "lazy":"/ˈleɪzi/", "leaf":"/liːf/", "leg":"/leɡ/", "leisure":"/ˈleʒə/", "life":"/laɪf/", "light":"/laɪt/", "line":"/laɪn/", "lion":"/ˈlaɪən/", "lip":"/lɪp/", "live":"/lɪv/", "lock":"/lɒk/", "long":"/lɒŋ/", "look":"/lʊk/", "love":"/lʌv/", "luck":"/lʌk/", "lunch":"/lʌntʃ/", "man":"/mæn/", "map":"/mæp/", "match":"/mætʃ/", "maths":"/mæθs/", "jury":"/ˈdʒʊəri/", "curious":"/ˈkjʊəriəs/", "mature":"/məˈtʃʊə/", "measure":"/ˈmeʒə/", "meet":"/miːt/", "milk":"/mɪlk/", "moon":"/muːn/", "mother":"/ˈmʌðə/", "mouse":"/maʊs/", "mouth":"/maʊθ/", "much":"/mʌtʃ/", "mud":"/mʌd/", "mum":"/mʌm/", "my":"/maɪ/", "name":"/neɪm/", "near":"/nɪə/", "net":"/net/", "night":"/naɪt/", "nine":"/naɪn/", "no":"/nəʊ/", "noise":"/nɔɪz/", "nose":"/nəʊz/", "note":"/nəʊt/", "now":"/naʊ/", "nurse":"/nɜːs/", "nut":"/nʌt/", "off":"/ɒf/", "oil":"/ɔɪl/", "page":"/peɪdʒ/", "pan":"/pæn/", "panda":"/ˈpændə/", "park":"/pɑːk/", "path":"/pɑːθ/", "pear":"/peə/", "pen":"/pen/", "pet":"/pet/", "phone":"/fəʊn/", "pig":"/pɪɡ/", "pin":"/pɪn/", "pizza":"/ˈpiːtsə/", "play":"/pleɪ/", "pleasure":"/ˈpleʒə/", "point":"/pɔɪnt/", "pool":"/puːl/", "poor":"/pɔː/", "prize":"/praɪz/", "pull":"/pʊl/", "pure":"/pjʊə/", "push":"/pʊʃ/", "rain":"/reɪn/", "read":"/riːd/", "red":"/red/", "rich":"/rɪtʃ/", "ride":"/raɪd/", "ring":"/rɪŋ/", "river":"/ˈrɪvə/", "road":"/rəʊd/", "rock":"/rɒk/", "room":"/ruːm/", "rose":"/rəʊz/", "run":"/rʌn/", "sad":"/sæd/", "save":"/seɪv/", "saw":"/sɔː/", "sea":"/siː/", "secure":"/sɪˈkjʊə/", "see":"/siː/", "seven":"/ˈsevn/", "share":"/ʃeə/", "she":"/ʃiː/", "sheep":"/ʃiːp/", "ship":"/ʃɪp/", "shirt":"/ʃɜːt/", "shoe":"/ʃuː/", "shop":"/ʃɒp/", "sing":"/sɪŋ/", "sit":"/sɪt/", "size":"/saɪz/", "snow":"/snəʊ/", "sock":"/sɒk/", "sofa":"/ˈsəʊfə/", "soil":"/sɔɪl/", "song":"/sɒŋ/", "sound":"/saʊnd/", "spoon":"/spuːn/", "square":"/skweə/", "star":"/stɑː/", "stare":"/steə/", "strong":"/strɒŋ/", "sun":"/sʌn/", "sure":"/ʃɔː/", "tap":"/tæp/", "tea":"/tiː/", "teach":"/tiːtʃ/", "ten":"/ten/", "that":"/ðæt/", "the":"/ðə/", "them":"/ðem/", "then":"/ðen/", "they":"/ðeɪ/", "thick":"/θɪk/", "thin":"/θɪn/", "think":"/θɪŋk/", "third":"/θɜːd/", "this":"/ðɪs/", "tie":"/taɪ/", "time":"/taɪm/", "tooth":"/tuːθ/", "top":"/tɒp/", "tour":"/tʊə/", "tourist":"/ˈtʊərɪst/", "town":"/taʊn/", "toy":"/tɔɪ/", "train":"/treɪn/", "treasure":"/ˈtreʒə/", "tree":"/triː/", "turn":"/tɜːn/", "usual":"/ˈjuːʒuəl/", "van":"/væn/", "very":"/ˈveri/", "vision":"/ˈvɪʒn/", "voice":"/vɔɪs/", "wall":"/wɔːl/", "wash":"/wɒʃ/", "watch":"/wɒtʃ/", "water":"/ˈwɔːtə/", "we":"/wiː/", "wear":"/weə/", "weather":"/ˈweðə/", "week":"/wiːk/", "west":"/west/", "wet":"/wet/", "win":"/wɪn/", "wind":"/wɪnd/", "wing":"/wɪŋ/", "wood":"/wʊd/", "word":"/wɜːd/", "work":"/wɜːk/", "yard":"/jɑːd/", "yawn":"/jɔːn/", "year":"/jɪə/", "yellow":"/ˈjeləʊ/", "yes":"/jes/", "yet":"/jet/", "yoga":"/ˈjəʊɡə/", "you":"/juː/", "young":"/jʌŋ/", "zebra":"/ˈzebrə/", "zip":"/zɪp/", "zoo":"/zuː/"};
+
+// HOW TO MAKE EACH SOUND — shown on every Sound Reference Card (added 2026-09-24).
+// [en, zh, ms]. Plain words only: lips, teeth, tongue, jaw, and the one piece of
+// jargon the course already teaches — voiced (the throat buzzes) / voiceless.
+const MOUTH = {
+  // short vowels
+  "ɪ":["Short and relaxed. Open your mouth slightly with loose lips (not a smile); the tongue is high but relaxed. Keep it quick.",
+       "短而放松。嘴巴微开，嘴唇松松的（不要咧嘴笑）；舌头偏高但放松。念得快一点。",
+       "Pendek dan santai. Buka mulut sedikit dengan bibir longgar (bukan senyum); lidah tinggi tetapi santai. Sebut dengan cepat."],
+  "e":["Open a little more than for /ɪ/, lips relaxed and slightly spread; the tongue is at the front, half-way up. Short.",
+       "嘴巴比 /ɪ/ 再张开一点，嘴唇放松、微微往两边；舌头在前面、中等高度。要短。",
+       "Buka mulut lebih sedikit daripada /ɪ/, bibir santai dan sedikit melebar; lidah di hadapan, separa tinggi. Pendek."],
+  "æ":["Drop your jaw wide open and spread your lips; the tongue is low and at the front. Short.",
+       "下巴往下张大，嘴唇往两边拉；舌头压低、放在前面。要短。",
+       "Buka rahang luas dan lebarkan bibir; lidah rendah di hadapan. Pendek."],
+  "ʌ":["Mouth half open and relaxed, lips neither rounded nor spread; the tongue is low in the middle. A short ‘uh’.",
+       "嘴巴半开、放松，嘴唇不圆也不拉开；舌头低、放在中间。短短的 “uh”。",
+       "Mulut separuh terbuka dan santai, bibir tidak bulat dan tidak melebar; lidah rendah di tengah. ‘uh’ yang pendek."],
+  "ɒ":["Jaw open, lips slightly rounded, tongue low and pulled back. Short — don't stretch it into ‘aw’.",
+       "下巴张开，嘴唇稍微收圆，舌头低、往后缩。要短 —— 不要拉长成 “aw”。",
+       "Rahang terbuka, bibir sedikit bulat, lidah rendah dan ke belakang. Pendek — jangan panjangkan jadi ‘aw’."],
+  "ʊ":["Lips loosely rounded (not pushed out); the back of the tongue is high but relaxed. Short.",
+       "嘴唇轻轻收圆（不要噘出去）；舌头后部抬高但放松。要短。",
+       "Bibir bulat longgar (tidak dimuncungkan); belakang lidah tinggi tetapi santai. Pendek."],
+  "ə":["The weakest sound in English: everything relaxed, mouth slightly open, tongue resting in the middle. Very short, never stressed.",
+       "英文里最弱的音：全部放松，嘴巴微开，舌头平放在中间。非常短，永远不重读。",
+       "Bunyi paling lemah dalam bahasa Inggeris: semuanya santai, mulut sedikit terbuka, lidah rehat di tengah. Sangat pendek, tidak pernah ditekan."],
+  // long vowels
+  "iː":["Spread your lips into a smile; the front of the tongue is high and tense. Hold it long.",
+        "嘴角往两边拉，像微笑；舌头前面抬高、绷紧。拉长。",
+        "Lebarkan bibir seperti senyum; bahagian depan lidah tinggi dan tegang. Tahan panjang."],
+  "ɑː":["Open your jaw wide, as when a doctor says “say ah”; the tongue is low and back, lips relaxed. Long, with no r in British English.",
+        "像看医生时说 “啊”：下巴张大，舌头压低、往后，嘴唇放松。拉长，英式英语不念 r。",
+        "Buka rahang luas seperti ketika doktor minta anda sebut “ah”; lidah rendah di belakang, bibir santai. Panjang, tanpa bunyi r dalam bahasa Inggeris British."],
+  "ɔː":["Round your lips firmly and push them forward a little; the tongue is back. Hold it long, with no r.",
+        "嘴唇收得很圆、稍微往前推；舌头往后。拉长，不念 r。",
+        "Bulatkan bibir dengan kuat dan tolak sedikit ke depan; lidah ke belakang. Tahan panjang, tanpa r."],
+  "uː":["Round your lips and push them forward as if to whistle; the back of the tongue is high. Hold it long.",
+        "嘴唇收圆往前噘，像要吹口哨；舌头后部抬高。拉长。",
+        "Bulatkan dan muncungkan bibir seperti hendak bersiul; belakang lidah tinggi. Tahan panjang."],
+  "ɜː":["Lips neutral (not rounded, not smiling), tongue flat in the middle, jaw half open. Hold it long, without curling your tongue for r.",
+        "嘴唇自然（不圆也不笑），舌头平放在中间，下巴半开。拉长，舌头不要卷起来念 r。",
+        "Bibir neutral (tidak bulat, tidak senyum), lidah rata di tengah, rahang separuh terbuka. Tahan panjang, jangan gulung lidah untuk r."],
+  // diphthongs
+  "eɪ":["Start at /e/ (as in bed), then glide up towards /ɪ/ as your jaw closes a little. Don't stop on a flat ‘e’.",
+        "从 /e/（bed 的音）开始，再往 /ɪ/ 滑，下巴稍微合起来。不要停在平平的 “e”。",
+        "Mula dengan /e/ (seperti bed), kemudian luncur ke /ɪ/ sambil rahang tertutup sedikit. Jangan berhenti pada ‘e’ yang rata."],
+  "aɪ":["Start with your jaw open for ‘a’, then glide up to /ɪ/ as your jaw closes.",
+        "下巴张开念 “a”，再往上滑到 /ɪ/，下巴跟着合起来。",
+        "Mula dengan rahang terbuka untuk ‘a’, kemudian luncur naik ke /ɪ/ sambil rahang tertutup."],
+  "ɔɪ":["Start with rounded lips for ‘o’, then glide to /ɪ/ as your lips spread.",
+        "先把嘴唇收圆念 “o”，再滑到 /ɪ/，嘴唇跟着往两边展开。",
+        "Mula dengan bibir bulat untuk ‘o’, kemudian luncur ke /ɪ/ sambil bibir melebar."],
+  "aʊ":["Start with your jaw open for ‘a’, then close it and round your lips towards /ʊ/.",
+        "下巴张开念 “a”，再把嘴巴合起、嘴唇收圆，滑到 /ʊ/。",
+        "Mula dengan rahang terbuka untuk ‘a’, kemudian tutup dan bulatkan bibir ke arah /ʊ/."],
+  "əʊ":["Start relaxed in the middle (/ə/, as in about), then round your lips towards /ʊ/. Not a flat ‘o’.",
+        "从放松的 /ə/（about 的第一个音）开始，再把嘴唇收圆滑到 /ʊ/。不是平平的 “o”。",
+        "Mula santai di tengah (/ə/, seperti about), kemudian bulatkan bibir ke arah /ʊ/. Bukan ‘o’ yang rata."],
+  "ɪə":["Start at /ɪ/, then relax into /ə/. No r at the end in British English.",
+        "从 /ɪ/ 开始，再放松滑到 /ə/。英式英语结尾没有 r。",
+        "Mula pada /ɪ/, kemudian santai ke /ə/. Tiada r di hujung dalam bahasa Inggeris British."],
+  "eə":["Start at /e/ with the mouth fairly open, then relax into /ə/. No r at the end.",
+        "从嘴巴比较开的 /e/ 开始，再放松滑到 /ə/。结尾没有 r。",
+        "Mula pada /e/ dengan mulut agak terbuka, kemudian santai ke /ə/. Tiada r di hujung."],
+  "ʊə":["Start with loosely rounded lips at /ʊ/, then relax into /ə/.",
+        "嘴唇轻轻收圆念 /ʊ/，再放松滑到 /ə/。",
+        "Mula dengan bibir bulat longgar pada /ʊ/, kemudian santai ke /ə/."],
+  // consonants — pairs share a mouth position; only the voicing changes
+  "p":["Press your lips together, then open them with a small puff of air. Voiceless: no buzz.",
+       "双唇合起来，再带着一小股气流打开。无声：喉咙不震。",
+       "Rapatkan bibir, kemudian buka dengan hembusan udara kecil. Tidak bersuara: tiada getaran."],
+  "b":["Same lips as /p/ — press together and open — but voiced: your throat buzzes and there is no puff of air.",
+       "嘴唇动作跟 /p/ 一样 —— 合起来再打开 —— 但有声：喉咙会震，没有那一股气。",
+       "Bibir sama seperti /p/ — rapat dan buka — tetapi bersuara: kerongkong bergetar dan tiada hembusan udara."],
+  "t":["The tongue tip presses on the ridge just behind your top teeth, then lets go. Voiceless. At the end of a word, still close it — don't drop it.",
+       "舌尖顶住上排牙齿后面的牙龈，再放开。无声。在字尾也要把舌头顶上去 —— 不要吞掉。",
+       "Hujung lidah menekan gusi di belakang gigi atas, kemudian lepas. Tidak bersuara. Di hujung perkataan, tetap tutup — jangan gugurkan."],
+  "d":["Same tongue position as /t/ (tip on the ridge behind your top teeth), but voiced — your throat buzzes.",
+       "舌头位置跟 /t/ 一样（舌尖顶住上排牙齿后面的牙龈），但有声 —— 喉咙会震。",
+       "Kedudukan lidah sama seperti /t/ (hujung pada gusi di belakang gigi atas), tetapi bersuara — kerongkong bergetar."],
+  "k":["Raise the back of your tongue against the soft roof at the back of your mouth, then let go. Voiceless.",
+       "舌根抬起，顶住口腔后面软的上颚，再放开。无声。",
+       "Angkat belakang lidah ke lelangit lembut di belakang mulut, kemudian lepas. Tidak bersuara."],
+  "ɡ":["Same as /k/ (the back of the tongue against the soft roof of the mouth), but voiced — your throat buzzes.",
+       "跟 /k/ 一样（舌根顶住后面软的上颚），但有声 —— 喉咙会震。",
+       "Sama seperti /k/ (belakang lidah ke lelangit lembut), tetapi bersuara — kerongkong bergetar."],
+  "f":["Rest your top teeth lightly on your lower lip and blow air out between them. Voiceless.",
+       "上排牙齿轻轻碰下嘴唇，从中间吹气。无声。",
+       "Letak gigi atas perlahan pada bibir bawah dan hembus udara di celahnya. Tidak bersuara."],
+  "v":["Top teeth lightly on your lower lip, as for /f/ — but voiced: feel your lip buzz. Don't round your lips (that makes /w/).",
+       "上排牙齿轻碰下嘴唇，跟 /f/ 一样 —— 但有声：下嘴唇会麻麻地震。不要把嘴唇收圆（那是 /w/）。",
+       "Gigi atas perlahan pada bibir bawah, seperti /f/ — tetapi bersuara: rasa bibir bergetar. Jangan bulatkan bibir (itu /w/)."],
+  "θ":["Put the tip of your tongue lightly between your teeth and blow air out. Voiceless — no buzz. Not /t/, not /s/.",
+       "舌尖轻轻放在上下牙齿之间，往外吹气。无声 —— 不震。不是 /t/，也不是 /s/。",
+       "Letak hujung lidah perlahan di antara gigi dan hembus udara. Tidak bersuara — tiada getaran. Bukan /t/, bukan /s/."],
+  "ð":["Tongue tip lightly between your teeth, as for /θ/ — but voiced: your tongue and throat buzz. Not /d/.",
+       "舌尖轻轻放在上下牙齿之间，跟 /θ/ 一样 —— 但有声：舌头和喉咙都会震。不是 /d/。",
+       "Hujung lidah perlahan di antara gigi, seperti /θ/ — tetapi bersuara: lidah dan kerongkong bergetar. Bukan /d/."],
+  "s":["The tongue tip is close to (not touching) the ridge behind your top teeth; push air through the narrow gap for a hiss. Voiceless.",
+       "舌尖靠近（但不碰到）上排牙齿后面的牙龈，让气从窄缝里挤出来，发出 “嘶” 声。无声。",
+       "Hujung lidah dekat (tidak menyentuh) gusi di belakang gigi atas; tolak udara melalui celah sempit untuk bunyi desis. Tidak bersuara."],
+  "z":["Same as /s/, but voiced — it buzzes like a bee. Keep the buzz at the end of words (rise, prize).",
+       "跟 /s/ 一样，但有声 —— 像蜜蜂嗡嗡响。字尾也要保留这个震（rise、prize）。",
+       "Sama seperti /s/, tetapi bersuara — berdengung seperti lebah. Kekalkan dengung di hujung perkataan (rise, prize)."],
+  "ʃ":["Round your lips and push them forward a little, tongue a bit further back than for /s/; blow a soft ‘shh’. Voiceless.",
+       "嘴唇收圆、稍微往前，舌头比 /s/ 再往后一点；吹出轻轻的 “嘘”。无声。",
+       "Bulatkan bibir dan tolak sedikit ke depan, lidah lebih ke belakang daripada /s/; hembus ‘shh’ yang lembut. Tidak bersuara."],
+  "ʒ":["Same as /ʃ/ (rounded lips, the ‘shh’ position), but voiced — it buzzes, like the middle of “pleasure”.",
+       "跟 /ʃ/ 一样（嘴唇收圆，“嘘” 的位置），但有声 —— 会震，像 pleasure 中间的音。",
+       "Sama seperti /ʃ/ (bibir bulat, kedudukan ‘shh’), tetapi bersuara — berdengung, seperti bunyi tengah “pleasure”."],
+  "tʃ":["Start with the tongue pressed as for /t/, then let it go straight into /ʃ/ — one quick ‘ch’. Voiceless.",
+        "舌头先像 /t/ 一样顶住，再直接放成 /ʃ/ —— 一个快快的 “ch”。无声。",
+        "Mula dengan lidah ditekan seperti /t/, kemudian lepas terus ke /ʃ/ — satu ‘ch’ yang cepat. Tidak bersuara."],
+  "dʒ":["Like /tʃ/, but voiced: /d/ let go into /ʒ/ — one quick ‘j’ with a buzz.",
+        "跟 /tʃ/ 一样，但有声：/d/ 放成 /ʒ/ —— 一个带震动、快快的 “j”。",
+        "Seperti /tʃ/, tetapi bersuara: /d/ dilepaskan ke /ʒ/ — satu ‘j’ yang cepat dan berdengung."],
+  "h":["Mouth open, just breathe out from your throat — like fogging up a mirror. Voiceless.",
+       "嘴巴张开，从喉咙轻轻呼一口气 —— 像对着镜子哈气。无声。",
+       "Mulut terbuka, hembus nafas dari kerongkong — seperti menghembus nafas untuk mengaburkan cermin. Tidak bersuara."],
+  "m":["Close your lips and hum — the sound comes out through your nose.",
+       "双唇合起来哼 —— 声音从鼻子出来。",
+       "Rapatkan bibir dan berdengung — bunyi keluar melalui hidung."],
+  "n":["Tongue tip on the ridge behind your top teeth, lips open; hum through your nose.",
+       "舌尖顶住上排牙齿后面的牙龈，嘴巴张开；声音从鼻子出来。",
+       "Hujung lidah pada gusi di belakang gigi atas, bibir terbuka; berdengung melalui hidung."],
+  "ŋ":["The back of the tongue goes up against the soft roof of the mouth (as for /ɡ/) and you hum through your nose. Don't add a /ɡ/ at the end of “sing”.",
+       "舌根顶住后面软的上颚（跟 /ɡ/ 一样），声音从鼻子出来。sing 的结尾不要再多念一个 /ɡ/。",
+       "Belakang lidah naik ke lelangit lembut (seperti /ɡ/) dan berdengung melalui hidung. Jangan tambah /ɡ/ di hujung “sing”."],
+  "l":["The tongue tip touches the ridge behind your top teeth; let your voice flow out around the sides of the tongue. At the end of a word (feel, school, people) keep the tip up until the end — don't turn it into ‘o’ or drop it.",
+       "舌尖碰住上排牙齿后面的牙龈，让声音从舌头两边流出来。在字尾（feel、school、people）舌尖也要顶上去到最后 —— 不要变成 “o”，也不要省掉。",
+       "Hujung lidah menyentuh gusi di belakang gigi atas; biar suara mengalir keluar di tepi lidah. Di hujung perkataan (feel, school, people) kekalkan hujung lidah di atas hingga habis — jangan jadikan ‘o’ atau gugurkan."],
+  "r":["Curl the tongue tip up and slightly back without touching anything; lips a little rounded. Don't roll or tap it. In British English you only say /r/ before a vowel (red, very) — not in car or water.",
+       "舌尖往上、往后微微卷起，不要碰到任何地方；嘴唇稍微收圆。不要打舌、不要弹舌。英式英语只有后面接元音时才念 /r/（red、very）—— car、water 里不念。",
+       "Lengkungkan hujung lidah ke atas dan sedikit ke belakang tanpa menyentuh apa-apa; bibir sedikit bulat. Jangan getarkan atau ketuk lidah. Dalam bahasa Inggeris British, /r/ hanya disebut sebelum vokal (red, very) — bukan dalam car atau water."],
+  "w":["Round your lips and push them forward (as for /uː/), then open quickly into the next vowel. Your teeth don't touch your lip (that's /v/).",
+       "嘴唇收圆往前噘（像 /uː/），再很快张开接下一个元音。牙齿不碰嘴唇（那是 /v/）。",
+       "Bulatkan dan muncungkan bibir (seperti /uː/), kemudian cepat buka ke vokal seterusnya. Gigi tidak menyentuh bibir (itu /v/)."],
+  "j":["The front of the tongue is high (as for /iː/), then glides quickly into the next vowel.",
+       "舌头前面抬高（像 /iː/），再很快滑到下一个元音。",
+       "Bahagian depan lidah tinggi (seperti /iː/), kemudian cepat meluncur ke vokal seterusnya."]
+};
 
 const REVIEW_STAGE = { id:"review", title:"Today's Review", short:"Review", icon:"🔁", color:"coral",
   exercises:[], reward:{ xp:0, title:"Review complete!", line:"" } };
@@ -2577,24 +3259,30 @@ function ipaPills(items, cls){
       <b class="ipa">${it[0]}</b>${word?`<span class="w">${word}</span><span class="sp">${SPK_SVG}</span>`:""}
     </div>`;}).join("")}</div>`;
 }
+// learn text: the older stages use English strings looked up in LEARN_TEXT;
+// the stages added 2026-09-24 carry T(en,zh,ms) objects directly.
+function tl(v){ return (v && typeof v==="object") ? tx(v) : trLearn(v); }
 function renderLearn(s){
   const LN = s.learn;   // 不要叫 L —— 会遮盖全域的翻译函式 L(en,zh,ms)
-  let body = `<p class="sec-p">${trLearn(LN.intro)}</p>`;
+  let body = `<p class="sec-p">${tl(LN.intro)}</p>`;
   if(LN.bullets){
     body += `<div class="card block"><h3>${L("Why it matters","为什么这个重要","Kenapa ia penting")}</h3>${LN.bullets.map(b=>`
       <div style="display:flex;gap:11px;align-items:flex-start;margin:10px 0;font-weight:700;font-size:15px;line-height:1.4">
         <span style="font-size:20px">${b[0]}</span><span>${trLearn(b[1])}</span></div>`).join("")}</div>`;
   }
   if(LN.groups){
-    body += LN.groups.map(g=>`<div class="card block"><h3>${trLearn(g.title)}</h3>${ipaPills(g.items,g.cls)}</div>`).join("");
+    body += LN.groups.map(g=>`<div class="card block"><h3>${tl(g.title)}</h3>${ipaPills(g.items,g.cls)}</div>`).join("");
   }
-  if(LN.note) body += `<div class="note">💡 <span>${trLearn(LN.note)}</span></div>`;
+  if(LN.cards){
+    body += LN.cards.map(c=>`<div class="card block"><h3>${tl(c.title)}</h3><div class="rules">${tl(c.html)}</div></div>`).join("");
+  }
+  if(LN.note) body += `<div class="note">💡 <span>${tl(LN.note)}</span></div>`;
   if(LN.quote) body += `<div class="quote">“${LN.quote.cn}”<small>${LN.quote.en}</small></div>`;
   $screen().innerHTML = `
     ${topbar(1)}
     <div class="pad">
       <span class="sec-label">${L("Step 2 · Learn","第 2 步 · 学","Langkah 2 · Belajar")}</span>
-      <h2 class="sec-h">${trLearn(LN.heading)}</h2>
+      <h2 class="sec-h">${tl(LN.heading)}</h2>
       ${body}
       <div style="height:18px"></div>
       <button class="btn coral" data-action="toQuiz">${L("Start exercises →","开始练习 →","Mula latihan →")}</button>
@@ -2609,14 +3297,24 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.flo
 
 function renderExercise(s){
   const q = sessionExercises(s)[session.qi];
+  if(isSay(q)) return renderSay(q);
+  sayCleanup();
   if(!session._opts || session._optsFor!==session.qi){
-    session._opts = shuffle(q.options); session._optsFor=session.qi; session.sel=null; session.locked=false;
+    // syllables of a word must stay in their order
+    session._opts = q.ordered ? q.options.slice() : shuffle(q.options); session._optsFor=session.qi; session.sel=null; session.locked=false;
   }
   const opts = session._opts;
-  const isChip = q.variant==="fill";
+  const isStress = q.variant==="stress";
+  const isChip = q.variant==="fill" || isStress;
+  // question number among the SCORED items (Say it steps are not numbered)
+  const num = sessionExercises(s).slice(0, session.qi).filter(x=>!isSay(x)).length + 1;
   // prompt rendering by variant (with audio where a WORD is shown)
   let promptHTML="";
-  if(q.variant==="fill"){
+  if(isStress){
+    const tag = q.pos ? `<span class="q-tag"><b>${tx(POS_TEXT_NV[q.pos])}</b>“${q.phrase}”</span>` : "";
+    promptHTML = `<div class="q-sub">${trQ(q.sub, Q_SUB)}</div>
+                  <div class="q-prompt"><span class="big">${q.word}</span> ${speaker(q.say||q.word,q.audioSrc,"big")}</div>${tag}`;
+  } else if(q.variant==="fill"){
     const shown = q.prompt.replace(/_+/, `<span class="q-blank">&nbsp;?&nbsp;</span>`);
     promptHTML = `<div class="q-sub">${L("Complete the transcription of","把这个字的音标补完整：","Lengkapkan transkripsi")} <b>“${q.word}”</b> ${speaker(q.word,q.audioSrc)}</div>
                   <div class="q-prompt"><span class="big ipaword ipa">${shown}</span></div>`;
@@ -2633,10 +3331,10 @@ function renderExercise(s){
                   <div class="big-listen"><button class="listen-btn" data-action="listen" data-word="${q.word}"${q.audioSrc?` data-src="${q.audioSrc}"`:""}><span class="li-ic">${SPK_SVG}</span> ${L("Tap to listen","点一下听","Ketik untuk dengar")}</button></div>`;
   } else { // choose IPA for a word
     promptHTML = `<div class="q-sub">${q.sub ? trQ(q.sub, Q_SUB) : L("Choose the correct IPA for","选出正确的音标：","Pilih IPA yang betul untuk")}</div>
-                  <div class="q-prompt"><span class="big">${q.promptText ? tx(q.promptText) : q.prompt}</span> ${q.noSpeak ? "" : speaker(q.prompt,q.audioSrc,"big")}</div>`;
+                  <div class="q-prompt"><span class="big">${q.promptText ? tx(q.promptText) : q.prompt}</span> ${q.noSpeak ? "" : speaker(q.say||q.prompt,q.audioSrc,"big")}</div>`;
   }
   const optsHTML = opts.map((o,idx)=>{
-    const spk = (!q.noSpeak && isWordLabel(o.label)) ? speaker(o.label, o.src) : "";
+    const spk = (!q.noSpeak && !isStress && isWordLabel(o.label)) ? speaker(o.label, o.src) : "";
     // gloss = a translation under an English option that is not course content (Welcome question)
     const gloss = o.gloss && tx(o.gloss) ? `<small style="display:block;font-size:12px;font-weight:600;opacity:.7;margin-top:2px">${tx(o.gloss)}</small>` : "";
     return `
@@ -2649,9 +3347,9 @@ function renderExercise(s){
     ${topbar(2)}
     <div class="pad" style="position:relative">
       <div class="combo" id="comboMsg"></div>
-      <span class="q-kind">${trQ(q.kind, Q_KIND)} · ${session.qi+1}/${session.total}${q.lvl?` <span class="q-lvl ${q.lvl.toLowerCase()}">${q.lvl}</span>`:""}</span>
+      <span class="q-kind">${trQ(q.kind, Q_KIND)} · ${num}/${session.total}${q.lvl?` <span class="q-lvl ${q.lvl.toLowerCase()}">${q.lvl}</span>`:""}</span>
       ${promptHTML}
-      <div class="opts ${isChip?'wrap':''}" id="opts">${optsHTML}</div>
+      <div class="opts ${isChip?'wrap':''} ${isStress?'syll':''}" id="opts">${optsHTML}</div>
     </div>`;
   if(q.variant==="listen") setTimeout(()=>Audio$.play(q.word, q.audioSrc), 350);  // play once on load
 }
@@ -2858,7 +3556,152 @@ function compareSounds(aWord, bWord){
   if(!aWord||!bWord) return;
   Audio$.speakSeq([[aWord,0.8],[bWord,0.8]]);
 }
+/* =====================================================================
+   SAY IT — the speaking step (added 2026-09-24)
+   hear the model → record (3·2·1 → speak → stop) → play yourself →
+   "model, then me" plays both back to back. Nothing here is scored.
+   The recording is kept on this device under "say-<id>" (shared/record.js
+   saveAs), so the next time the same item comes up it can be replayed.
+   No microphone / permission refused / old browser: a clear message, and
+   Continue works exactly the same.
+   ===================================================================== */
+let REC;                                     // undefined = not opened yet, null = unavailable
+function recorder(){
+  if(REC===undefined){
+    try{ REC = (window.TouchRecord && TouchRecord.open("ipa")) || null; }catch(e){ REC = null; }
+  }
+  return REC;
+}
+let sayLive = null;                          // the capture in progress, if any
+function sayCleanup(){
+  if(sayLive){ clearTimeout(sayLive.timer); try{ sayLive.cap && sayLive.cap.cancel(); }catch(e){} sayLive = null; }
+  const r = REC; if(r){ try{ r.stopAll(); }catch(e){} }
+}
+const sayKey = q => "say-" + q.id;
+function sayModelParts(q){ return (q.tts || q.w).map(t=>[t, 0.8]); }
+function sayStillOn(q){ return !!(session && view.name==="stage" && session.step==="quiz" && sessionExercises(findStage(session.stageId))[session.qi]===q); }
+function renderSay(q){
+  sayCleanup();
+  const r = recorder(), can = !!(r && r.available);
+  session.sayBlob = null;
+  const words = q.w.map((w,i)=>`<div class="say-word">${q.tag?`<small>${tx(q.tag[i])}</small>`:""}<b>${w}</b><span class="ipa">${q.ipa[i]}</span></div>`).join("");
+  const n = q.w.length;
+  const lead = n>1 ? L(`Say ${n===2?"both":"all three"}, in order. Then compare with the model.`,
+                       `按顺序把${n===2?"两":"三"}个都说一次，再跟示范比一比。`,
+                       `Sebut ${n===2?"kedua-duanya":"ketiga-tiganya"} mengikut urutan. Kemudian bandingkan dengan contoh.`)
+                   : L("Say it out loud, then compare with the model.","把它说出来，再跟示范比一比。","Sebut dengan kuat, kemudian bandingkan dengan contoh.");
+  const hear = `<button class="btn" data-action="sayHear">🔊 ${L("Listen","听示范","Dengar")}</button>`;
+  const recUI = can ? `
+      <div class="say-row">
+        ${hear}
+        <button class="btn coral" id="sayRec" data-action="sayRec">🎙 ${L("Record","录音","Rakam")}</button>
+      </div>
+      <div class="say-status" id="sayStatus" role="status" aria-live="polite"></div>
+      <div class="say-row" id="sayPlay" hidden>
+        <button class="btn ghost" data-action="sayMe">▶ ${L("Play me","听我自己","Main suara saya")}</button>
+        <button class="btn ghost" data-action="sayCompare">🔁 ${L("Model, then me","先示范，再听我","Contoh, kemudian saya")}</button>
+      </div>`
+    : `<div class="say-row">${hear}</div>
+       <div class="note" style="text-align:left">🎙 <span>${L(
+        "Recording isn't available in this browser. Say it out loud anyway — tap Listen, copy the model, then Continue.",
+        "这个浏览器不能录音。还是请你大声说出来 —— 点「听示范」、跟着说，然后按继续。",
+        "Rakaman tidak tersedia dalam pelayar ini. Sebut juga dengan kuat — ketik Dengar, tiru contoh itu, kemudian Teruskan.")}</span></div>`;
+  $screen().innerHTML = `
+    ${topbar(2)}
+    <div class="pad">
+      <span class="q-kind">🎙 ${trQ(q.kind, Q_KIND)} · ${L("speaking practice","开口练习","latihan bertutur")}</span>
+      <div class="q-sub" style="margin-top:10px">${lead}</div>
+      <div class="card say-card">
+        <div class="say-words">${words}</div>
+        <div class="mouth">👄 <span>${tx(q.tip)}</span></div>
+        ${recUI}
+      </div>
+      <div class="say-free">${L("Not scored — this never changes your %.","不计分 —— 不会影响你的答对率。","Tidak diberi markah — ini tidak mengubah peratus anda.")}${can?" "+L(`Recording earns +${SAY_XP} XP.`,`录一次 +${SAY_XP} XP。`,`Rakaman memberi +${SAY_XP} XP.`):""}</div>
+    </div>`;
+  const fb = document.getElementById("feedback");
+  fb.className = "show";
+  fb.innerHTML = `<div class="fb-inner" style="background:#fff;border-color:var(--line)">
+    <button class="btn" data-action="next">${L("Continue","继续","Teruskan")}</button></div>`;
+  // a recording from an earlier run of the same item → offer it straight away
+  if(can) r.load(sayKey(q)).then(blob=>{
+    if(!blob || !sayStillOn(q) || session.sayBlob) return;
+    session.sayBlob = blob;
+    sayShowPlay(L("Your last recording is saved — play it, or record again.","上次的录音还在 —— 可以听，也可以重录。","Rakaman terakhir anda masih ada — main semula, atau rakam lagi."));
+  });
+}
+function saySetStatus(txt, cls){
+  const el = document.getElementById("sayStatus"); if(!el) return;
+  el.textContent = txt || ""; el.className = "say-status" + (cls ? " "+cls : "");
+}
+function sayShowPlay(msg){
+  const p = document.getElementById("sayPlay"); if(p) p.hidden = false;
+  if(msg) saySetStatus(msg);
+}
+function sayRecBtn(label, disabled){
+  const b = document.getElementById("sayRec"); if(!b) return;
+  b.innerHTML = label; b.disabled = !!disabled;
+}
+function sayRecord(){
+  const q = sessionExercises(findStage(session.stageId))[session.qi];
+  const r = recorder(); if(!r || !isSay(q)) return;
+  // tapping while speaking = stop
+  if(sayLive && sayLive.cap && sayLive.cap.phase==="speaking"){ clearTimeout(sayLive.timer); sayLive.cap.stop(); return; }
+  if(sayLive) return;                                   // counting down / saving: ignore
+  try{ r.stopAll(); }catch(e){}
+  if("speechSynthesis" in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+  const live = sayLive = { timer:null, cap:null };
+  const mine = ()=> sayLive===live && sayStillOn(q);
+  live.cap = r.capture({
+    saveAs: sayKey(q),
+    onCountdown: n => { if(!mine()) return; sayRecBtn(`⏳ ${n}`, true); saySetStatus(L(`Get ready… ${n}`,`准备… ${n}`,`Bersedia… ${n}`)); },
+    onSpeakNow:  () => { if(!mine()) return;
+      sayRecBtn(`■ ${L("Stop","停","Henti")}`, false);
+      saySetStatus(L("🟢 Speak now — tap Stop when you finish","🟢 现在说 —— 说完按「停」","🟢 Sebut sekarang — ketik Henti apabila selesai"), "go");
+      live.timer = setTimeout(()=>{ if(mine() && live.cap.phase==="speaking") live.cap.stop(); }, 8000);   // never left recording
+    },
+    onSaving:    () => { if(!mine()) return; sayRecBtn(`🎙 ${L("Record","录音","Rakam")}`, true); saySetStatus(L("Saving…","储存中…","Menyimpan…")); },
+    onDone: blob => {
+      if(sayLive===live){ clearTimeout(live.timer); sayLive = null; }
+      if(!sayStillOn(q)) return;
+      session.sayBlob = blob;
+      sayRecBtn(`🎙 ${L("Record again","再录一次","Rakam semula")}`, false);
+      sayShowPlay(L("✓ Recorded. Play it, or hear the model and you back to back.","✓ 录好了。听听自己，或者先听示范、再听你。","✓ Sudah dirakam. Main semula, atau dengar contoh dan anda berturut-turut."));
+      if(!session.saidIds[q.id]){                     // XP once per item per run
+        session.saidIds[q.id] = true; session.said++;
+        session.earned += SAY_XP;
+        awardXP(SAY_XP, document.getElementById("sayRec")); save();
+      }
+    },
+    onDenied: err => {
+      if(sayLive===live){ clearTimeout(live.timer); sayLive = null; }
+      if(!sayStillOn(q)) return;
+      const blocked = err && /NotAllowed|Security|Permission/i.test(err.name||"");
+      sayRecBtn(`🎙 ${L("Try again","再试一次","Cuba lagi")}`, false);
+      saySetStatus(blocked
+        ? L("Microphone blocked. Allow the microphone for this site in your browser settings — or just say it out loud and tap Continue.",
+            "麦克风被挡住了。请在浏览器设定里允许这个网站用麦克风 —— 或者直接大声说出来，再按继续。",
+            "Mikrofon disekat. Benarkan mikrofon untuk laman ini dalam tetapan pelayar — atau sebut sahaja dengan kuat dan ketik Teruskan.")
+        : L("No microphone found. Say it out loud anyway, then tap Continue.",
+            "找不到麦克风。还是请你大声说出来，再按继续。",
+            "Tiada mikrofon ditemui. Sebut juga dengan kuat, kemudian ketik Teruskan."), "warn");
+    }
+  });
+}
+function sayHear(){
+  const q = sessionExercises(findStage(session.stageId))[session.qi]; if(!isSay(q)) return;
+  if(REC){ try{ REC.stopAll(); }catch(e){} }
+  sfx("tap"); Audio$.speakSeq(sayModelParts(q), 500);
+}
+function sayMe(){ if(REC && session && session.sayBlob){ if("speechSynthesis" in window){ try{ speechSynthesis.cancel(); }catch(e){} } REC.play(session.sayBlob); } }
+function sayCompare(){
+  const q = sessionExercises(findStage(session.stageId))[session.qi]; if(!isSay(q) || !session.sayBlob) return;
+  if(REC){ try{ REC.stopAll(); }catch(e){} }
+  const blob = session.sayBlob;
+  Audio$.speakSeq(sayModelParts(q), 500, ()=>{ if(sayStillOn(q) && REC) REC.play(blob); });
+}
+
 function nextQuestion(){
+  sayCleanup();
   document.getElementById("feedback").className="";
   const s = findStage(session.stageId);
   session.qi++;
@@ -2874,8 +3717,12 @@ function nextQuestion(){
 // 已经存档的「完成」照旧保留，不会因为这条规则被收回。
 const PASS = 0.7;
 // the course (certificate screen + Pronunciation Master) needs every teaching
-// stage AND the final review passed; the welcome stage is not a test
-const CORE_STAGES = ["s1","s2","s3","s4"];
+// stage AND the final review passed; the welcome stage is not a test.
+// s5 (Final Consonants) and s6 (Word Stress) joined on 2026-09-24. S.courseDone
+// is saved and is only ever set, never cleared, so a learner who finished the
+// four-stage course keeps the trophy and the Master badge; for them the two new
+// stages show as NEW on the map, to do whenever they like.
+const CORE_STAGES = ["s1","s2","s3","s5","s6","s4"];
 function coreLeft(){ return CORE_STAGES.filter(id=>!S.stages[id]?.completed); }
 function finishStage(s){
   if(session.isReview){                                 // PRIORITY 3: review wrap-up
@@ -2954,6 +3801,7 @@ function renderReward(s){
         <div class="tally-row" style="animation-delay:.05s"><span class="ic">⚡</span><span class="lbl">${L("XP this stage","这一关的 XP","XP peringkat ini")}</span><span class="val">+${session.earned + (session.bonus||0)}</span></div>
         ${session.total?`<div class="tally-row" style="animation-delay:.15s"><span class="ic">🎯</span><span class="lbl">${L("Accuracy","准确度","Ketepatan")}</span><span class="val">${accPct}%</span></div>`:""}
         <div class="tally-row" style="animation-delay:.25s"><span class="ic">🔥</span><span class="lbl">${L("Best combo this round","这一轮最佳连击","Kombo terbaik pusingan ini")}</span><span class="val">${session.bestRun||0}</span></div>
+        ${session.sayTotal?`<div class="tally-row" style="animation-delay:.3s"><span class="ic">🎙</span><span class="lbl">${L("Said out loud (recorded)","开口说（有录音）","Disebut dengan kuat (dirakam)")}</span><span class="val">${session.said||0}/${session.sayTotal}</span></div>`:""}
         ${session.flawless?`<div class="tally-row" style="animation-delay:.35s"><span class="ic">💎</span><span class="lbl">${L("Flawless bonus","全对奖励","Bonus tanpa silap")}</span><span class="val">${L("unlocked!","拿到了！","dibuka!")}</span></div>`:""}
       </div>`;
   const passRule = L(`A stage counts as complete at ${passPct}% correct or more.`,
@@ -2980,7 +3828,7 @@ function renderReward(s){
   }
   // the badge card shows only a badge the learner actually holds
   const showBadge = r.badge && S.badges[r.badge];
-  // the course can be finished by ANY stage — whichever of s1–s4 is passed last
+  // the course can be finished by ANY stage — whichever core stage (CORE_STAGES) is passed last
   const trophy = (r.final && S.courseDone) || session.courseJustDone;
   const finalLine = COURSE.find(x=>x.reward.final).reward.line;
   const courseLine = trophy
@@ -3121,6 +3969,11 @@ document.addEventListener("click", e=>{
     case "check": checkAnswer(); break;
     case "next": nextQuestion(); window.scrollTo(0,0); break;
     case "compareSounds": compareSounds(t.dataset.a, t.dataset.b); break;
+    // Say it (speaking practice)
+    case "sayRec": sayRecord(); break;
+    case "sayHear": sayHear(); break;
+    case "sayMe": sayMe(); break;
+    case "sayCompare": sayCompare(); break;
     // audio (in-lesson playback)
     case "playword": playWord(t.dataset.word, t.dataset.src, t, t.dataset.ipa); break;
     case "speak": playWord(t.dataset.word, t.dataset.src, t); break;

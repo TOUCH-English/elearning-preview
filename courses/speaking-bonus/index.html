@@ -88,7 +88,7 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 .pat{background:var(--brand-soft);border:1px solid var(--hairline);border-radius:12px;padding:13px 15px;margin-top:12px}
 .pat .tp{font-family:var(--font-h);font-weight:600;font-size:16px;color:var(--brand)}
 .pat .tp b{color:var(--gold-deep)}
-.pat .nt{margin-top:4px;font-size:13px;color:var(--muted);font-weight:600;line-height:1.5}
+.pat .nt{margin-top:4px;font-size:13px;color:var(--muted);font-weight:600;line-height:1.5;white-space:pre-line}
 .pat .ex{margin-top:8px;font-size:14.5px;color:var(--ink);font-weight:700;line-height:1.55}
 .pat .ex span{display:block;padding-left:16px;position:relative}
 .pat .ex span::before{content:"›";position:absolute;left:0;color:var(--brand-2);font-weight:800}
@@ -210,27 +210,30 @@ const DAYS = [
   "items": [
    {
     "head": "I am + name",
-    "desc": "",
+    "desc": "Say “I am”, then your name.",
     "examples": [
      "I am Wesley."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am call Wesley. → ✓ I am Wesley."
    },
    {
     "head": "I am from + place",
-    "desc": "",
+    "desc": "Put “from” before the place, and don’t drop “am”.",
     "examples": [
      "I am from Malaysia."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I from Penang. → ✓ I am from Penang."
    },
    {
     "head": "I work as + job",
-    "desc": "",
+    "desc": "Put “a” or “an” before the job. Don’t add “am”.",
     "examples": [
      "I work as a teacher."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am work as teacher. → ✓ I work as a teacher."
    }
   ],
   "steps": [
@@ -238,11 +241,16 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I am + name",
-    "desc": "",
+    "desc": "Say “I am”, then your name.\n✗ I am call Wesley. → ✓ I am Wesley.",
     "examples": [
      "I am Wesley."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say “I am”, then your name.\n✗ I am call Wesley. → ✓ I am Wesley.",
+     "zh": "先说 “I am”，再说你的名字。\n✗ I am call Wesley. → ✓ I am Wesley.",
+     "ms": "Sebut “I am”, kemudian nama anda.\n✗ I am call Wesley. → ✓ I am Wesley."
+    }
    },
    {
     "k": "order",
@@ -277,11 +285,16 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "I am from + place",
-    "desc": "",
+    "desc": "Put “from” before the place, and don’t drop “am”.\n✗ I from Penang. → ✓ I am from Penang.",
     "examples": [
      "I am from Malaysia."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Put “from” before the place, and don’t drop “am”.\n✗ I from Penang. → ✓ I am from Penang.",
+     "zh": "地方前面要加 “from”，“am” 也不能漏掉。\n✗ I from Penang. → ✓ I am from Penang.",
+     "ms": "Letak “from” sebelum nama tempat, dan jangan tertinggal “am”.\n✗ I from Penang. → ✓ I am from Penang."
+    }
    },
    {
     "k": "order",
@@ -318,11 +331,16 @@ const DAYS = [
     "k": "patterns",
     "item": 2,
     "head": "I work as + job",
-    "desc": "",
+    "desc": "Put “a” or “an” before the job. Don’t add “am”.\n✗ I am work as teacher. → ✓ I work as a teacher.",
     "examples": [
      "I work as a teacher."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Put “a” or “an” before the job. Don’t add “am”.\n✗ I am work as teacher. → ✓ I work as a teacher.",
+     "zh": "工作前面加 “a” 或 “an”，不要再加 “am”。\n✗ I am work as teacher. → ✓ I work as a teacher.",
+     "ms": "Letak “a” atau “an” sebelum pekerjaan. Jangan tambah “am”.\n✗ I am work as teacher. → ✓ I work as a teacher."
+    }
    },
    {
     "k": "order",
@@ -412,12 +430,13 @@ const DAYS = [
   "items": [
    {
     "head": "I usually + verb + time/place",
-    "desc": "",
+    "desc": "Put “usually” before the action word, then add a time or a place.",
     "examples": [
      "I usually wake up at 7:00 a.m.",
      "I usually eat at home."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am usually wake up at 7:00 a.m. → ✓ I usually wake up at 7:00 a.m."
    }
   ],
   "steps": [
@@ -425,12 +444,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I usually + verb + time/place",
-    "desc": "",
+    "desc": "Put “usually” before the action word, then add a time or a place.\n✗ I am usually wake up at 7:00 a.m. → ✓ I usually wake up at 7:00 a.m.",
     "examples": [
      "I usually wake up at 7:00 a.m.",
      "I usually eat at home."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Put “usually” before the action word, then add a time or a place.\n✗ I am usually wake up at 7:00 a.m. → ✓ I usually wake up at 7:00 a.m.",
+     "zh": "“usually” 放在动作前面，后面加时间或地点。\n✗ I am usually wake up at 7:00 a.m. → ✓ I usually wake up at 7:00 a.m.",
+     "ms": "Letak “usually” sebelum kata kerja, kemudian tambah masa atau tempat.\n✗ I am usually wake up at 7:00 a.m. → ✓ I usually wake up at 7:00 a.m."
+    }
    },
    {
     "k": "order",
@@ -524,21 +548,23 @@ const DAYS = [
   "items": [
    {
     "head": "I like + noun",
-    "desc": "",
+    "desc": "Use it for a thing you like. Don’t add “am”.",
     "examples": [
      "I like coffee.",
      "I like music."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am like coffee. → ✓ I like coffee."
    },
    {
     "head": "I like to + verb",
-    "desc": "",
+    "desc": "For an action you enjoy, say “to” + the action word.",
     "examples": [
      "I like to watch movies.",
      "I like to drive."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I like watch movies. → ✓ I like to watch movies."
    }
   ],
   "steps": [
@@ -546,12 +572,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I like + noun",
-    "desc": "",
+    "desc": "Use it for a thing you like. Don’t add “am”.\n✗ I am like coffee. → ✓ I like coffee.",
     "examples": [
      "I like coffee.",
      "I like music."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Use it for a thing you like. Don’t add “am”.\n✗ I am like coffee. → ✓ I like coffee.",
+     "zh": "用来说你喜欢的东西，不要加 “am”。\n✗ I am like coffee. → ✓ I like coffee.",
+     "ms": "Untuk benda yang anda suka. Jangan tambah “am”.\n✗ I am like coffee. → ✓ I like coffee."
+    }
    },
    {
     "k": "order",
@@ -586,12 +617,17 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "I like to + verb",
-    "desc": "",
+    "desc": "For an action you enjoy, say “to” + the action word.\n✗ I like watch movies. → ✓ I like to watch movies.",
     "examples": [
      "I like to watch movies.",
      "I like to drive."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "For an action you enjoy, say “to” + the action word.\n✗ I like watch movies. → ✓ I like to watch movies.",
+     "zh": "喜欢做某件事，就用 “to” ＋ 动作。\n✗ I like watch movies. → ✓ I like to watch movies.",
+     "ms": "Untuk aktiviti yang anda suka, sebut “to” + kata kerja.\n✗ I like watch movies. → ✓ I like to watch movies."
+    }
    },
    {
     "k": "order",
@@ -680,21 +716,23 @@ const DAYS = [
   "items": [
    {
     "head": "I don’t like + noun",
-    "desc": "",
+    "desc": "Say “don’t” before “like” — not “not like”.",
     "examples": [
      "I don’t like spicy food.",
      "I don’t like noise."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I not like spicy food. → ✓ I don’t like spicy food."
    },
    {
     "head": "I don’t like to + verb",
-    "desc": "",
+    "desc": "For an action, add “to” before the action word.",
     "examples": [
      "I don’t like to wake up early.",
      "I don’t like to wait too long."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I don’t like wake up early. → ✓ I don’t like to wake up early."
    }
   ],
   "steps": [
@@ -702,12 +740,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I don’t like + noun",
-    "desc": "",
+    "desc": "Say “don’t” before “like” — not “not like”.\n✗ I not like spicy food. → ✓ I don’t like spicy food.",
     "examples": [
      "I don’t like spicy food.",
      "I don’t like noise."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say “don’t” before “like” — not “not like”.\n✗ I not like spicy food. → ✓ I don’t like spicy food.",
+     "zh": "在 “like” 前面加 “don’t”，不要说 “not like”。\n✗ I not like spicy food. → ✓ I don’t like spicy food.",
+     "ms": "Sebut “don’t” sebelum “like” — bukan “not like”.\n✗ I not like spicy food. → ✓ I don’t like spicy food."
+    }
    },
    {
     "k": "order",
@@ -744,12 +787,17 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "I don’t like to + verb",
-    "desc": "",
+    "desc": "For an action, add “to” before the action word.\n✗ I don’t like wake up early. → ✓ I don’t like to wake up early.",
     "examples": [
      "I don’t like to wake up early.",
      "I don’t like to wait too long."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "For an action, add “to” before the action word.\n✗ I don’t like wake up early. → ✓ I don’t like to wake up early.",
+     "zh": "说动作的时候，动作前面要加 “to”。\n✗ I don’t like wake up early. → ✓ I don’t like to wake up early.",
+     "ms": "Untuk aktiviti, tambah “to” sebelum kata kerja.\n✗ I don’t like wake up early. → ✓ I don’t like to wake up early."
+    }
    },
    {
     "k": "order",
@@ -840,21 +888,23 @@ const DAYS = [
   "items": [
    {
     "head": "I want + noun",
-    "desc": "",
+    "desc": "One thing → put “a” or “an” before it.",
     "examples": [
      "I want a new phone.",
      "I want more time."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I want new phone. → ✓ I want a new phone."
    },
    {
     "head": "I want to + verb",
-    "desc": "",
+    "desc": "For something you want to do, say “to” + the action word.",
     "examples": [
      "I want to improve my English.",
      "I want to find a better job."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I want improve my English. → ✓ I want to improve my English."
    }
   ],
   "steps": [
@@ -862,12 +912,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I want + noun",
-    "desc": "",
+    "desc": "One thing → put “a” or “an” before it.\n✗ I want new phone. → ✓ I want a new phone.",
     "examples": [
      "I want a new phone.",
      "I want more time."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "One thing → put “a” or “an” before it.\n✗ I want new phone. → ✓ I want a new phone.",
+     "zh": "说一样东西时，前面加 “a” 或 “an”。\n✗ I want new phone. → ✓ I want a new phone.",
+     "ms": "Untuk satu benda, letak “a” atau “an” di depannya.\n✗ I want new phone. → ✓ I want a new phone."
+    }
    },
    {
     "k": "order",
@@ -904,12 +959,17 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "I want to + verb",
-    "desc": "",
+    "desc": "For something you want to do, say “to” + the action word.\n✗ I want improve my English. → ✓ I want to improve my English.",
     "examples": [
      "I want to improve my English.",
      "I want to find a better job."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "For something you want to do, say “to” + the action word.\n✗ I want improve my English. → ✓ I want to improve my English.",
+     "zh": "想做某件事，就用 “to” ＋ 动作。\n✗ I want improve my English. → ✓ I want to improve my English.",
+     "ms": "Untuk perkara yang anda mahu buat, sebut “to” + kata kerja.\n✗ I want improve my English. → ✓ I want to improve my English."
+    }
    },
    {
     "k": "order",
@@ -999,21 +1059,23 @@ const DAYS = [
   "items": [
    {
     "head": "I need + noun",
-    "desc": "",
+    "desc": "“Need” is stronger than “want”: you must have it. Don’t add “am”.",
     "examples": [
      "I need help.",
      "I need more practice."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am need help. → ✓ I need help."
    },
    {
     "head": "I need to + verb",
-    "desc": "",
+    "desc": "For something you must do, add “to” before the action word.",
     "examples": [
      "I need to study.",
      "I need to improve my speaking."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I need study. → ✓ I need to study."
    }
   ],
   "steps": [
@@ -1021,12 +1083,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I need + noun",
-    "desc": "",
+    "desc": "“Need” is stronger than “want”: you must have it. Don’t add “am”.\n✗ I am need help. → ✓ I need help.",
     "examples": [
      "I need help.",
      "I need more practice."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "“Need” is stronger than “want”: you must have it. Don’t add “am”.\n✗ I am need help. → ✓ I need help.",
+     "zh": "“need” 比 “want” 更强：是你一定要有的。不要加 “am”。\n✗ I am need help. → ✓ I need help.",
+     "ms": "“Need” lebih kuat daripada “want”: anda mesti ada. Jangan tambah “am”.\n✗ I am need help. → ✓ I need help."
+    }
    },
    {
     "k": "order",
@@ -1061,12 +1128,17 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "I need to + verb",
-    "desc": "",
+    "desc": "For something you must do, add “to” before the action word.\n✗ I need study. → ✓ I need to study.",
     "examples": [
      "I need to study.",
      "I need to improve my speaking."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "For something you must do, add “to” before the action word.\n✗ I need study. → ✓ I need to study.",
+     "zh": "一定要做的事，动作前面加 “to”。\n✗ I need study. → ✓ I need to study.",
+     "ms": "Untuk perkara yang mesti dibuat, tambah “to” sebelum kata kerja.\n✗ I need study. → ✓ I need to study."
+    }
    },
    {
     "k": "order",
@@ -1154,51 +1226,57 @@ const DAYS = [
   "items": [
    {
     "head": "I am + name",
-    "desc": "",
+    "desc": "Say “I am”, then your name.",
     "examples": [
      "I am Wesley."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am call Wesley. → ✓ I am Wesley."
    },
    {
     "head": "I am from + place",
-    "desc": "",
+    "desc": "Put “from” before the place, and don’t drop “am”.",
     "examples": [
      "I am from Malaysia."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I from Penang. → ✓ I am from Penang."
    },
    {
     "head": "I work as + job",
-    "desc": "",
+    "desc": "Put “a” or “an” before the job. Don’t add “am”.",
     "examples": [
      "I work as a doctor."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ I am work as teacher. → ✓ I work as a teacher."
    },
    {
     "head": "I like + noun / I like to + verb",
-    "desc": "",
+    "desc": "A thing → no “to”: I like music.\nAn action → “to”: I like to cook.",
     "examples": [
      "I like music and coffee."
     ],
-    "words": []
+    "words": [],
+    "mistake": ""
    },
    {
     "head": "I want + noun / I want to + verb",
-    "desc": "",
+    "desc": "A thing → no “to”: I want a better job.\nAn action → “to”: I want to travel more.",
     "examples": [
      "I want to improve my English."
     ],
-    "words": []
+    "words": [],
+    "mistake": ""
    },
    {
     "head": "I need + noun / I need to + verb",
-    "desc": "",
+    "desc": "A thing → no “to”: I need more time.\nAn action → “to”: I need to practise every day.",
     "examples": [
      "I need more speaking practice."
     ],
-    "words": []
+    "words": [],
+    "mistake": ""
    }
   ],
   "steps": [
@@ -1206,11 +1284,16 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "I am + name",
-    "desc": "",
+    "desc": "Say “I am”, then your name.\n✗ I am call Wesley. → ✓ I am Wesley.",
     "examples": [
      "I am Wesley."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say “I am”, then your name.\n✗ I am call Wesley. → ✓ I am Wesley.",
+     "zh": "先说 “I am”，再说你的名字。\n✗ I am call Wesley. → ✓ I am Wesley.",
+     "ms": "Sebut “I am”, kemudian nama anda.\n✗ I am call Wesley. → ✓ I am Wesley."
+    }
    },
    {
     "k": "order",
@@ -1245,11 +1328,16 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "I am from + place",
-    "desc": "",
+    "desc": "Put “from” before the place, and don’t drop “am”.\n✗ I from Penang. → ✓ I am from Penang.",
     "examples": [
      "I am from Malaysia."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Put “from” before the place, and don’t drop “am”.\n✗ I from Penang. → ✓ I am from Penang.",
+     "zh": "地方前面要加 “from”，“am” 也不能漏掉。\n✗ I from Penang. → ✓ I am from Penang.",
+     "ms": "Letak “from” sebelum nama tempat, dan jangan tertinggal “am”.\n✗ I from Penang. → ✓ I am from Penang."
+    }
    },
    {
     "k": "order",
@@ -1286,11 +1374,16 @@ const DAYS = [
     "k": "patterns",
     "item": 2,
     "head": "I work as + job",
-    "desc": "",
+    "desc": "Put “a” or “an” before the job. Don’t add “am”.\n✗ I am work as teacher. → ✓ I work as a teacher.",
     "examples": [
      "I work as a doctor."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Put “a” or “an” before the job. Don’t add “am”.\n✗ I am work as teacher. → ✓ I work as a teacher.",
+     "zh": "工作前面加 “a” 或 “an”，不要再加 “am”。\n✗ I am work as teacher. → ✓ I work as a teacher.",
+     "ms": "Letak “a” atau “an” sebelum pekerjaan. Jangan tambah “am”.\n✗ I am work as teacher. → ✓ I work as a teacher."
+    }
    },
    {
     "k": "order",
@@ -1328,11 +1421,16 @@ const DAYS = [
     "k": "patterns",
     "item": 3,
     "head": "I like + noun / I like to + verb",
-    "desc": "",
+    "desc": "A thing → no “to”: I like music.\nAn action → “to”: I like to cook.",
     "examples": [
      "I like music and coffee."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "A thing → no “to”: I like music.\nAn action → “to”: I like to cook.",
+     "zh": "东西 → 不加 “to”：I like music.\n动作 → 加 “to”：I like to cook.",
+     "ms": "Benda → tanpa “to”: I like music.\nAktiviti → dengan “to”: I like to cook."
+    }
    },
    {
     "k": "order",
@@ -1371,11 +1469,16 @@ const DAYS = [
     "k": "patterns",
     "item": 4,
     "head": "I want + noun / I want to + verb",
-    "desc": "",
+    "desc": "A thing → no “to”: I want a better job.\nAn action → “to”: I want to travel more.",
     "examples": [
      "I want to improve my English."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "A thing → no “to”: I want a better job.\nAn action → “to”: I want to travel more.",
+     "zh": "东西 → 不加 “to”：I want a better job.\n动作 → 加 “to”：I want to travel more.",
+     "ms": "Benda → tanpa “to”: I want a better job.\nAktiviti → dengan “to”: I want to travel more."
+    }
    },
    {
     "k": "order",
@@ -1413,11 +1516,16 @@ const DAYS = [
     "k": "patterns",
     "item": 5,
     "head": "I need + noun / I need to + verb",
-    "desc": "",
+    "desc": "A thing → no “to”: I need more time.\nAn action → “to”: I need to practise every day.",
     "examples": [
      "I need more speaking practice."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "A thing → no “to”: I need more time.\nAn action → “to”: I need to practise every day.",
+     "zh": "东西 → 不加 “to”：I need more time.\n动作 → 加 “to”：I need to practise every day.",
+     "ms": "Benda → tanpa “to”: I need more time.\nAktiviti → dengan “to”: I need to practise every day."
+    }
    },
    {
     "k": "order",
@@ -1506,13 +1614,14 @@ const DAYS = [
   "items": [
    {
     "head": "Question word + do you + base verb",
-    "desc": "",
+    "desc": "Question word first, then “do you”, then the action word.",
     "examples": [
      "What do you do?",
      "Where do you live?",
      "When do you sleep?"
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ Where you live? → ✓ Where do you live?"
    }
   ],
   "steps": [
@@ -1520,13 +1629,18 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "Question word + do you + base verb",
-    "desc": "",
+    "desc": "Question word first, then “do you”, then the action word.\n✗ Where you live? → ✓ Where do you live?",
     "examples": [
      "What do you do?",
      "Where do you live?",
      "When do you sleep?"
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Question word first, then “do you”, then the action word.\n✗ Where you live? → ✓ Where do you live?",
+     "zh": "先说疑问词，再说 “do you”，最后是动作。\n✗ Where you live? → ✓ Where do you live?",
+     "ms": "Mula dengan kata tanya, kemudian “do you”, kemudian kata kerja.\n✗ Where you live? → ✓ Where do you live?"
+    }
    },
    {
     "k": "order",
@@ -1538,6 +1652,18 @@ const DAYS = [
      "do"
     ],
     "display": "What do you do?"
+   },
+   {
+    "k": "subst",
+    "item": 0,
+    "tpl": "What do you ___?",
+    "bank": [
+     "do",
+     "do on weekends",
+     "like to eat",
+     "want to learn",
+     "usually eat for breakfast"
+    ]
    },
    {
     "k": "speak",
@@ -1601,30 +1727,33 @@ const DAYS = [
   "items": [
    {
     "head": "Do you + base verb?",
-    "desc": "",
+    "desc": "Ask about habits. Answer: Yes, I do. / No, I don’t.",
     "examples": [
      "Do you work on weekends?",
      "Do you drink coffee?"
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ You drink coffee? → ✓ Do you drink coffee?"
    },
    {
     "head": "Can you + base verb?",
-    "desc": "",
+    "desc": "Ask if someone is able to do something. No “to” after “can”.",
     "examples": [
      "Can you speak English?",
      "Can you drive?"
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ Can you to drive? → ✓ Can you drive?"
    },
    {
     "head": "Are you + ...?",
-    "desc": "",
+    "desc": "Use it with a feeling, a job or a place. For an action, ask “Do you…?”.",
     "examples": [
      "Are you busy?",
      "Are you a student?"
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ Are you like spicy food? → ✓ Do you like spicy food?"
    }
   ],
   "steps": [
@@ -1632,12 +1761,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "Do you + base verb?",
-    "desc": "",
+    "desc": "Ask about habits. Answer: Yes, I do. / No, I don’t.\n✗ You drink coffee? → ✓ Do you drink coffee?",
     "examples": [
      "Do you work on weekends?",
      "Do you drink coffee?"
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Ask about habits. Answer: Yes, I do. / No, I don’t.\n✗ You drink coffee? → ✓ Do you drink coffee?",
+     "zh": "问习惯。回答：Yes, I do. / No, I don’t.\n✗ You drink coffee? → ✓ Do you drink coffee?",
+     "ms": "Untuk bertanya tentang tabiat. Jawab: Yes, I do. / No, I don’t.\n✗ You drink coffee? → ✓ Do you drink coffee?"
+    }
    },
    {
     "k": "order",
@@ -1673,12 +1807,17 @@ const DAYS = [
     "k": "patterns",
     "item": 1,
     "head": "Can you + base verb?",
-    "desc": "",
+    "desc": "Ask if someone is able to do something. No “to” after “can”.\n✗ Can you to drive? → ✓ Can you drive?",
     "examples": [
      "Can you speak English?",
      "Can you drive?"
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Ask if someone is able to do something. No “to” after “can”.\n✗ Can you to drive? → ✓ Can you drive?",
+     "zh": "问别人会不会做某件事。“can” 后面不加 “to”。\n✗ Can you to drive? → ✓ Can you drive?",
+     "ms": "Untuk bertanya sama ada seseorang boleh buat sesuatu. Tiada “to” selepas “can”.\n✗ Can you to drive? → ✓ Can you drive?"
+    }
    },
    {
     "k": "order",
@@ -1714,12 +1853,17 @@ const DAYS = [
     "k": "patterns",
     "item": 2,
     "head": "Are you + ...?",
-    "desc": "",
+    "desc": "Use it with a feeling, a job or a place. For an action, ask “Do you…?”.\n✗ Are you like spicy food? → ✓ Do you like spicy food?",
     "examples": [
      "Are you busy?",
      "Are you a student?"
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Use it with a feeling, a job or a place. For an action, ask “Do you…?”.\n✗ Are you like spicy food? → ✓ Do you like spicy food?",
+     "zh": "后面接感觉、身份或地方。问动作要用 “Do you…?”。\n✗ Are you like spicy food? → ✓ Do you like spicy food?",
+     "ms": "Guna dengan perasaan, pekerjaan atau tempat. Untuk aktiviti, tanya “Do you…?”.\n✗ Are you like spicy food? → ✓ Do you like spicy food?"
+    }
    },
    {
     "k": "order",
@@ -1816,12 +1960,13 @@ const DAYS = [
   "items": [
    {
     "head": "Main idea + because + reason",
-    "desc": "",
+    "desc": "Idea first, then “because” + the reason. Use “because” or “so”, not both.",
     "examples": [
      "I want to improve my English because I need it for work.",
      "I like online classes because they are flexible."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ Because I need it for work, so I study English. → ✓ I study English because I need it for work."
    }
   ],
   "steps": [
@@ -1829,12 +1974,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "Main idea + because + reason",
-    "desc": "",
+    "desc": "Idea first, then “because” + the reason. Use “because” or “so”, not both.\n✗ Because I need it for work, so I study English. → ✓ I study English because I need it for work.",
     "examples": [
      "I want to improve my English because I need it for work.",
      "I like online classes because they are flexible."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Idea first, then “because” + the reason. Use “because” or “so”, not both.\n✗ Because I need it for work, so I study English. → ✓ I study English because I need it for work.",
+     "zh": "先说想法，再说 “because” ＋ 原因。“because” 和 “so” 只用一个，不要一起用。\n✗ Because I need it for work, so I study English. → ✓ I study English because I need it for work.",
+     "ms": "Sebut idea dulu, kemudian “because” + sebab. Guna “because” atau “so”, bukan kedua-duanya.\n✗ Because I need it for work, so I study English. → ✓ I study English because I need it for work."
+    }
    },
    {
     "k": "subst",
@@ -1915,12 +2065,13 @@ const DAYS = [
   "items": [
    {
     "head": "Main idea + for example + example",
-    "desc": "",
+    "desc": "Say your idea first. Then “For example,” + one real thing you do.",
     "examples": [
      "I use English at work. For example, I need to reply to my customers in English.",
      "I want to improve my speaking. For example, I want to speak better during meetings."
     ],
-    "words": []
+    "words": [],
+    "mistake": "✗ For example like, I reply to customers. → ✓ For example, I reply to customers in English."
    }
   ],
   "steps": [
@@ -1928,12 +2079,29 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "Main idea + for example + example",
-    "desc": "",
+    "desc": "Say your idea first. Then “For example,” + one real thing you do.\n✗ For example like, I reply to customers. → ✓ For example, I reply to customers in English.",
     "examples": [
      "I use English at work. For example, I need to reply to my customers in English.",
      "I want to improve my speaking. For example, I want to speak better during meetings."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say your idea first. Then “For example,” + one real thing you do.\n✗ For example like, I reply to customers. → ✓ For example, I reply to customers in English.",
+     "zh": "先说想法，再说 “For example,” ＋ 一件你真的会做的事。\n✗ For example like, I reply to customers. → ✓ For example, I reply to customers in English.",
+     "ms": "Sebut idea dulu. Kemudian “For example,” + satu perkara sebenar yang anda buat.\n✗ For example like, I reply to customers. → ✓ For example, I reply to customers in English."
+    }
+   },
+   {
+    "k": "subst",
+    "item": 0,
+    "tpl": "I use English at work. For example, ___.",
+    "bank": [
+     "I need to reply to my customers in English",
+     "I write emails in English",
+     "I talk to customers on the phone",
+     "I speak in meetings",
+     "I read reports in English"
+    ]
    },
    {
     "k": "speak",
@@ -2804,6 +2972,18 @@ const DAYS = [
      "I think online learning is convenient. This is because it is flexible and saves time."
     ],
     "words": []
+   },
+   {
+    "k": "subst",
+    "item": 2,
+    "tpl": "I think online learning is convenient. This is because ___.",
+    "bank": [
+     "it is flexible and saves time",
+     "I can study at home",
+     "I can join after work",
+     "I don’t need to travel",
+     "I can learn at my own pace"
+    ]
    },
    {
     "k": "speak",
@@ -3999,33 +4179,34 @@ const DAYS = [
     "ms": "Menjadikan pembukaan lebih tersusun dan profesional"
    }
   ],
-  "outcome": "Good morning, everyone. Today, I’m going to talk about online learning. First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion.",
+  "outcome": "Good morning, everyone. Today, I’m going to talk about online learning. First, I will talk about the good points.",
   "items": [
    {
+    "desc": "Say hello to everyone before you start.",
+    "words": [],
     "head": "Greeting",
-    "desc": "",
     "examples": [
      "Good morning, everyone.",
      "Hello, everyone."
-    ],
-    "words": []
+    ]
    },
    {
-    "head": "Introduce your topic",
-    "desc": "",
+    "desc": "Say your topic in one short sentence.",
+    "words": [],
+    "head": "Today, I’m going to talk about + topic",
     "examples": [
-     "Today, I’m going to talk about online learning.",
-     "The topic of my presentation today is how to communicate effectively at work."
-    ],
-    "words": []
+     "Today, I’m going to talk about online learning."
+    ]
    },
    {
-    "head": "Introduce your main points",
-    "desc": "",
+    "desc": "Say your points in order: First, Then, Lastly.",
+    "words": [],
+    "head": "First / Then / Lastly",
     "examples": [
-     "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion."
-    ],
-    "words": []
+     "First, I will talk about the good points.",
+     "Then, I will talk about the problems.",
+     "Lastly, I will give my opinion."
+    ]
    }
   ],
   "steps": [
@@ -4033,12 +4214,17 @@ const DAYS = [
     "k": "patterns",
     "item": 0,
     "head": "Greeting",
-    "desc": "",
+    "desc": "Say hello to everyone before you start.",
     "examples": [
      "Good morning, everyone.",
      "Hello, everyone."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say hello to everyone before you start.",
+     "zh": "开始前先跟大家打招呼。",
+     "ms": "Beri salam kepada semua orang sebelum mula."
+    }
    },
    {
     "k": "order",
@@ -4051,6 +4237,16 @@ const DAYS = [
     "display": "Good morning, everyone."
    },
    {
+    "k": "subst",
+    "item": 0,
+    "tpl": "Good ___, everyone.",
+    "bank": [
+     "morning",
+     "afternoon",
+     "evening"
+    ]
+   },
+   {
     "k": "speak",
     "item": 0,
     "model": "Good morning, everyone.",
@@ -4059,13 +4255,17 @@ const DAYS = [
    {
     "k": "patterns",
     "item": 1,
-    "head": "Introduce your topic",
-    "desc": "",
+    "head": "Today, I’m going to talk about + topic",
+    "desc": "Say your topic in one short sentence.",
     "examples": [
-     "Today, I’m going to talk about online learning.",
-     "The topic of my presentation today is how to communicate effectively at work."
+     "Today, I’m going to talk about online learning."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say your topic in one short sentence.",
+     "zh": "用一句短短的话说出你的题目。",
+     "ms": "Sebut tajuk anda dalam satu ayat pendek."
+    }
    },
    {
     "k": "order",
@@ -4086,29 +4286,67 @@ const DAYS = [
     ]
    },
    {
+    "k": "subst",
+    "item": 1,
+    "tpl": "Today, I’m going to talk about ___.",
+    "bank": [
+     "online learning",
+     "my job",
+     "my hometown",
+     "my favourite food",
+     "my family",
+     "learning English"
+    ]
+   },
+   {
     "k": "speak",
     "item": 1,
     "model": "Today, I’m going to talk about online learning.",
-    "head": "Introduce your topic"
+    "head": "Today, I’m going to talk about + topic"
    },
    {
     "k": "patterns",
     "item": 2,
-    "head": "Introduce your main points",
-    "desc": "",
+    "head": "First / Then / Lastly",
+    "desc": "Say your points in order: First, Then, Lastly.",
     "examples": [
-     "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion."
+     "First, I will talk about the good points.",
+     "Then, I will talk about the problems.",
+     "Lastly, I will give my opinion."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say your points in order: First, Then, Lastly.",
+     "zh": "按顺序说你的重点：First、Then、Lastly。",
+     "ms": "Sebut isi anda mengikut urutan: First, Then, Lastly."
+    }
+   },
+   {
+    "k": "order",
+    "item": 2,
+    "words": [
+     "First",
+     "I",
+     "will",
+     "talk",
+     "about",
+     "the",
+     "good",
+     "points"
+    ],
+    "display": "First, I will talk about the good points.",
+    "alt": [
+     "I will talk about the good points first."
+    ]
    },
    {
     "k": "speak",
     "item": 2,
-    "model": "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion.",
-    "head": "Introduce your main points"
+    "model": "First, I will talk about the good points.",
+    "head": "First / Then / Lastly"
    }
   ],
-  "finalSpeak": "Good morning, everyone. Today, I’m going to talk about online learning. First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion."
+  "finalSpeak": "Good morning, everyone. Today, I’m going to talk about online learning. First, I will talk about the good points."
  },
  {
   "day": 22,
@@ -4159,46 +4397,41 @@ const DAYS = [
     "ms": "Menggunakan “Another point is...” untuk isi tambahan"
    }
   ],
-  "outcome": "First of all, I would like to talk about the importance of English.",
+  "outcome": "First of all, I will talk about why English is important. Next, I will talk about some common problems. Finally, I will talk about some easy ways to practise.",
   "items": [
    {
-    "head": "First of all / First and foremost",
     "desc": "Used to introduce the first main point.",
+    "words": [],
+    "head": "First of all + first point",
     "examples": [
-     "First of all, I would like to explain why speaking practice is important.",
-     "First and foremost, I would like to talk about the main problem."
-    ],
-    "words": []
+     "First of all, I will talk about why English is important."
+    ]
    },
    {
-    "head": "Next / Besides that / Another point is...",
     "desc": "Used to introduce the next or additional point.",
+    "words": [],
+    "head": "Next + next point",
     "examples": [
-     "Next, I will talk about the common speaking problems learners face.",
-     "Besides that, I will share some simple ways to improve.",
-     "Another point is the importance of regular practice."
-    ],
-    "words": []
+     "Next, I will talk about some common problems."
+    ]
    },
    {
-    "head": "Lastly / Finally",
     "desc": "Used to introduce the final point.",
+    "words": [],
+    "head": "Finally + last point",
     "examples": [
-     "Lastly, I will share my conclusion.",
-     "Finally, I will talk about what we can do next."
-    ],
-    "words": []
+     "Finally, I will talk about some easy ways to practise."
+    ]
    }
   ],
   "steps": [
    {
     "k": "patterns",
     "item": 0,
-    "head": "First of all / First and foremost",
+    "head": "First of all + first point",
     "desc": "Used to introduce the first main point.",
     "examples": [
-     "First of all, I would like to explain why speaking practice is important.",
-     "First and foremost, I would like to talk about the main problem."
+     "First of all, I will talk about why English is important."
     ],
     "words": [],
     "descT": {
@@ -4208,20 +4441,30 @@ const DAYS = [
     }
    },
    {
+    "k": "subst",
+    "item": 0,
+    "tpl": "First of all, I will talk about ___.",
+    "bank": [
+     "why English is important",
+     "my job",
+     "my hometown",
+     "my daily routine",
+     "online learning"
+    ]
+   },
+   {
     "k": "speak",
     "item": 0,
-    "model": "First of all, I would like to explain why speaking practice is important.",
-    "head": "First of all / First and foremost"
+    "model": "First of all, I will talk about why English is important.",
+    "head": "First of all + first point"
    },
    {
     "k": "patterns",
     "item": 1,
-    "head": "Next / Besides that / Another point is...",
+    "head": "Next + next point",
     "desc": "Used to introduce the next or additional point.",
     "examples": [
-     "Next, I will talk about the common speaking problems learners face.",
-     "Besides that, I will share some simple ways to improve.",
-     "Another point is the importance of regular practice."
+     "Next, I will talk about some common problems."
     ],
     "words": [],
     "descT": {
@@ -4231,19 +4474,33 @@ const DAYS = [
     }
    },
    {
+    "k": "order",
+    "item": 1,
+    "words": [
+     "Next",
+     "I",
+     "will",
+     "talk",
+     "about",
+     "some",
+     "common",
+     "problems"
+    ],
+    "display": "Next, I will talk about some common problems."
+   },
+   {
     "k": "speak",
     "item": 1,
-    "model": "Next, I will talk about the common speaking problems learners face.",
-    "head": "Next / Besides that / Another point is..."
+    "model": "Next, I will talk about some common problems.",
+    "head": "Next + next point"
    },
    {
     "k": "patterns",
     "item": 2,
-    "head": "Lastly / Finally",
+    "head": "Finally + last point",
     "desc": "Used to introduce the final point.",
     "examples": [
-     "Lastly, I will share my conclusion.",
-     "Finally, I will talk about what we can do next."
+     "Finally, I will talk about some easy ways to practise."
     ],
     "words": [],
     "descT": {
@@ -4256,38 +4513,27 @@ const DAYS = [
     "k": "order",
     "item": 2,
     "words": [
-     "Lastly",
+     "Finally",
      "I",
      "will",
-     "share",
-     "my",
-     "conclusion"
+     "talk",
+     "about",
+     "some",
+     "easy",
+     "ways",
+     "to",
+     "practise"
     ],
-    "display": "Lastly, I will share my conclusion."
+    "display": "Finally, I will talk about some easy ways to practise."
    },
    {
     "k": "speak",
     "item": 2,
-    "model": "Lastly, I will share my conclusion.",
-    "head": "Lastly / Finally"
-   },
-   {
-    "k": "speak",
-    "model": "Next, I will explain the common problems learners face.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "Besides that, I will share some ways to improve.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "Lastly, I will give my conclusion.",
-    "head": ""
+    "model": "Finally, I will talk about some easy ways to practise.",
+    "head": "Finally + last point"
    }
   ],
-  "finalSpeak": "First of all, I would like to talk about the importance of English."
+  "finalSpeak": "First of all, I will talk about why English is important. Next, I will talk about some common problems. Finally, I will talk about some easy ways to practise."
  },
  {
   "day": 23,
@@ -4338,39 +4584,26 @@ const DAYS = [
     "ms": "Membantu hadirin memahami maksud penceramah"
    }
   ],
-  "outcome": "Speaking practice is very important. In other words, learners should not only study English but also practise speaking it.",
+  "outcome": "My job is very busy. In other words, I have no free time in the day. This means I can only study at night.",
   "items": [
    {
-    "head": "This means + explanation",
     "desc": "Used to explain the meaning of an idea in a simpler way.",
+    "words": [],
+    "head": "This means + explanation",
     "examples": [
-     "Speaking practice is very important. This means learners need to use English more often and not only study it."
+     "Online classes are flexible. This means I can study at night."
     ],
-    "words": []
+    "build": "This means I can study at night."
    },
    {
-    "head": "In other words + rephrased idea",
     "desc": "Used to say the same idea again in a different and easier way.",
+    "words": [],
+    "head": "In other words + the same idea in easier words",
     "examples": [
-     "Online learning is convenient. In other words, learners can study from home and save more time."
+     "My job is very busy. In other words, I have no free time.",
+     "The class is online. In other words, you can join from home."
     ],
-    "words": []
-   },
-   {
-    "head": "Let me explain + fuller explanation",
-    "desc": "Used when you want to introduce a longer or more detailed explanation.",
-    "examples": [
-     "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve."
-    ],
-    "words": []
-   },
-   {
-    "head": "What I mean is + clarification",
-    "desc": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
-    "examples": [
-     "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English."
-    ],
-    "words": []
+    "build": "In other words, I have no free time."
    }
   ],
   "steps": [
@@ -4380,7 +4613,7 @@ const DAYS = [
     "head": "This means + explanation",
     "desc": "Used to explain the meaning of an idea in a simpler way.",
     "examples": [
-     "Speaking practice is very important. This means learners need to use English more often and not only study it."
+     "Online classes are flexible. This means I can study at night."
     ],
     "words": [],
     "descT": {
@@ -4390,18 +4623,45 @@ const DAYS = [
     }
    },
    {
+    "k": "order",
+    "item": 0,
+    "words": [
+     "This",
+     "means",
+     "I",
+     "can",
+     "study",
+     "at",
+     "night"
+    ],
+    "display": "This means I can study at night."
+   },
+   {
+    "k": "subst",
+    "item": 0,
+    "tpl": "Online classes are flexible. This means I can ___.",
+    "bank": [
+     "study at night",
+     "study at home",
+     "join after work",
+     "learn at my own pace",
+     "choose when to study"
+    ]
+   },
+   {
     "k": "speak",
     "item": 0,
-    "model": "Speaking practice is very important. This means learners need to use English more often and not only study it.",
+    "model": "Online classes are flexible. This means I can study at night.",
     "head": "This means + explanation"
    },
    {
     "k": "patterns",
     "item": 1,
-    "head": "In other words + rephrased idea",
+    "head": "In other words + the same idea in easier words",
     "desc": "Used to say the same idea again in a different and easier way.",
     "examples": [
-     "Online learning is convenient. In other words, learners can study from home and save more time."
+     "My job is very busy. In other words, I have no free time.",
+     "The class is online. In other words, you can join from home."
     ],
     "words": [],
     "descT": {
@@ -4411,70 +4671,40 @@ const DAYS = [
     }
    },
    {
+    "k": "order",
+    "item": 1,
+    "words": [
+     "In",
+     "other",
+     "words",
+     "I",
+     "have",
+     "no",
+     "free",
+     "time"
+    ],
+    "display": "In other words, I have no free time."
+   },
+   {
+    "k": "subst",
+    "item": 1,
+    "tpl": "My job is very busy. In other words, I ___.",
+    "bank": [
+     "have no free time",
+     "work long hours",
+     "work from morning to night",
+     "go home late",
+     "have no time to rest"
+    ]
+   },
+   {
     "k": "speak",
     "item": 1,
-    "model": "Online learning is convenient. In other words, learners can study from home and save more time.",
-    "head": "In other words + rephrased idea"
-   },
-   {
-    "k": "patterns",
-    "item": 2,
-    "head": "Let me explain + fuller explanation",
-    "desc": "Used when you want to introduce a longer or more detailed explanation.",
-    "examples": [
-     "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve."
-    ],
-    "words": [],
-    "descT": {
-     "en": "Used when you want to introduce a longer or more detailed explanation.",
-     "zh": "要带出较长、较详细的解释时用。",
-     "ms": "Digunakan apabila anda mahu memberi penjelasan yang lebih panjang atau terperinci."
-    }
-   },
-   {
-    "k": "speak",
-    "item": 2,
-    "model": "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve.",
-    "head": "Let me explain + fuller explanation"
-   },
-   {
-    "k": "patterns",
-    "item": 3,
-    "head": "What I mean is + clarification",
-    "desc": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
-    "examples": [
-     "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English."
-    ],
-    "words": [],
-    "descT": {
-     "en": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
-     "zh": "让意思更清楚、更直接，特别是别人可能误会的时候。",
-     "ms": "Untuk menjadikan maksud lebih jelas dan terus, terutamanya apabila orang mungkin salah faham."
-    }
-   },
-   {
-    "k": "speak",
-    "item": 3,
-    "model": "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English.",
-    "head": "What I mean is + clarification"
-   },
-   {
-    "k": "speak",
-    "model": "Speaking practice is very important. This means learners need to use English more often.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "Speaking practice is very important. Let me explain. When learners speak more, they gradually become more confident.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "Speaking practice is very important. What I mean is learners need to actually use English, not only memorise words.",
-    "head": ""
+    "model": "My job is very busy. In other words, I have no free time.",
+    "head": "In other words + the same idea in easier words"
    }
   ],
-  "finalSpeak": "Speaking practice is very important. In other words, learners should not only study English but also practise speaking it."
+  "finalSpeak": "My job is very busy. In other words, I have no free time in the day. This means I can only study at night."
  },
  {
   "day": 24,
@@ -4525,38 +4755,132 @@ const DAYS = [
     "ms": "Menjadikan jawapan lebih panjang, jelas dan semula jadi"
    }
   ],
-  "outcome": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near.",
+  "outcome": "Yes, I can because I stay calm. For example, I finish my work before the deadline.",
   "items": [
    {
-    "head": "Yes / No + because + one example",
-    "desc": "",
+    "desc": "Don’t stop at “Yes” or “No”. Add “because” + a reason.\nDo you…? → Yes, I do. Can you…? → Yes, I can.",
+    "words": [],
+    "head": "Yes / No + because + reason",
     "examples": [
-     "Yes, I do because it is flexible. One example is that I can join classes from home after work."
-    ],
-    "words": []
+     "Yes, I do because it is flexible.",
+     "No, I don’t because I like to meet people."
+    ]
+   },
+   {
+    "desc": "Then add one example from your life.",
+    "words": [],
+    "head": "For example + example",
+    "examples": [
+     "For example, I can join classes from home."
+    ]
    }
   ],
   "steps": [
    {
     "k": "patterns",
     "item": 0,
-    "head": "Yes / No + because + one example",
-    "desc": "",
+    "head": "Yes / No + because + reason",
+    "desc": "Don’t stop at “Yes” or “No”. Add “because” + a reason.\nDo you…? → Yes, I do. Can you…? → Yes, I can.",
     "examples": [
-     "Yes, I do because it is flexible. One example is that I can join classes from home after work."
+     "Yes, I do because it is flexible.",
+     "No, I don’t because I like to meet people."
     ],
     "words": [],
+    "descT": {
+     "en": "Don’t stop at “Yes” or “No”. Add “because” + a reason.\nDo you…? → Yes, I do. Can you…? → Yes, I can.",
+     "zh": "不要只说 “Yes” 或 “No”，加上 “because” ＋ 原因。\n问 Do you…? → 答 Yes, I do.；问 Can you…? → 答 Yes, I can.",
+     "ms": "Jangan berhenti pada “Yes” atau “No”. Tambah “because” + sebab.\nDo you…? → Yes, I do. Can you…? → Yes, I can."
+    },
     "q": "Do you like online learning?"
+   },
+   {
+    "k": "order",
+    "item": 0,
+    "words": [
+     "Yes",
+     "I",
+     "do",
+     "because",
+     "it",
+     "is",
+     "flexible"
+    ],
+    "display": "Yes, I do because it is flexible."
+   },
+   {
+    "k": "subst",
+    "item": 0,
+    "tpl": "Yes, I do because ___.",
+    "bank": [
+     "it is flexible",
+     "I can study at home",
+     "it saves time",
+     "I can join after work",
+     "I can learn at my own pace"
+    ]
    },
    {
     "k": "speak",
     "item": 0,
-    "model": "Yes, I do because it is flexible. One example is that I can join classes from home after work.",
-    "head": "Yes / No + because + one example",
+    "model": "Yes, I do because it is flexible.",
+    "head": "Yes / No + because + reason",
+    "q": "Do you like online learning?"
+   },
+   {
+    "k": "patterns",
+    "item": 1,
+    "head": "For example + example",
+    "desc": "Then add one example from your life.",
+    "examples": [
+     "For example, I can join classes from home."
+    ],
+    "words": [],
+    "descT": {
+     "en": "Then add one example from your life.",
+     "zh": "再加一个你生活里的例子。",
+     "ms": "Kemudian tambah satu contoh daripada hidup anda."
+    },
+    "q": "Do you like online learning?"
+   },
+   {
+    "k": "order",
+    "item": 1,
+    "words": [
+     "For",
+     "example",
+     "I",
+     "can",
+     "join",
+     "classes",
+     "from",
+     "home"
+    ],
+    "display": "For example, I can join classes from home.",
+    "alt": [
+     "I can join classes from home, for example."
+    ]
+   },
+   {
+    "k": "subst",
+    "item": 1,
+    "tpl": "For example, I can ___.",
+    "bank": [
+     "join classes from home",
+     "study at night",
+     "watch the lessons again",
+     "join from my office",
+     "learn at my own pace"
+    ]
+   },
+   {
+    "k": "speak",
+    "item": 1,
+    "model": "For example, I can join classes from home.",
+    "head": "For example + example",
     "q": "Do you like online learning?"
    }
   ],
-  "finalSpeak": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near.",
+  "finalSpeak": "Yes, I can because I stay calm. For example, I finish my work before the deadline.",
   "finalQ": "Can you work under pressure?"
  },
  {
@@ -4608,39 +4932,39 @@ const DAYS = [
     "ms": "Memanjangkan jawapan pendek menjadi jawapan lengkap"
    }
   ],
-  "outcome": "Speaking practice is important because learners need to use English more often. For example, they can answer simple questions in class or speak in daily conversations. So speaking practice can help learners become more confident.",
+  "outcome": "Speaking practice is important because we use English every day. For example, we speak English at work. So we need to practise every day.",
   "items": [
    {
-    "head": "P = Point",
     "desc": "Say your main idea.",
+    "words": [],
+    "head": "P = Point",
     "examples": [
      "Speaking practice is important."
-    ],
-    "words": []
+    ]
    },
    {
-    "head": "R = Reason",
     "desc": "Explain why.",
+    "words": [],
+    "head": "R = Reason",
     "examples": [
-     "Speaking practice is important because learners need to use English more often."
-    ],
-    "words": []
+     "It is important because we use English every day."
+    ]
    },
    {
-    "head": "E = Example",
     "desc": "Give one example to make the idea clearer.",
+    "words": [],
+    "head": "E = Example",
     "examples": [
-     "For example, they can answer simple questions in class or speak in daily conversations."
-    ],
-    "words": []
+     "For example, we speak English at work and in shops."
+    ]
    },
    {
-    "head": "E = Ending",
     "desc": "Give a simple closing sentence.",
+    "words": [],
+    "head": "E = Ending",
     "examples": [
-     "So speaking practice can help learners become more confident."
-    ],
-    "words": []
+     "So we need to practise every day."
+    ]
    }
   ],
   "steps": [
@@ -4682,7 +5006,7 @@ const DAYS = [
     "head": "R = Reason",
     "desc": "Explain why.",
     "examples": [
-     "Speaking practice is important because learners need to use English more often."
+     "It is important because we use English every day."
     ],
     "words": [],
     "descT": {
@@ -4692,9 +5016,37 @@ const DAYS = [
     }
    },
    {
+    "k": "order",
+    "item": 1,
+    "words": [
+     "It",
+     "is",
+     "important",
+     "because",
+     "we",
+     "use",
+     "English",
+     "every",
+     "day"
+    ],
+    "display": "It is important because we use English every day."
+   },
+   {
+    "k": "subst",
+    "item": 1,
+    "tpl": "It is important because ___.",
+    "bank": [
+     "we use English every day",
+     "it builds confidence",
+     "we need English at work",
+     "it helps us speak better",
+     "we talk to customers in English"
+    ]
+   },
+   {
     "k": "speak",
     "item": 1,
-    "model": "Speaking practice is important because learners need to use English more often.",
+    "model": "It is important because we use English every day.",
     "head": "R = Reason"
    },
    {
@@ -4703,7 +5055,7 @@ const DAYS = [
     "head": "E = Example",
     "desc": "Give one example to make the idea clearer.",
     "examples": [
-     "For example, they can answer simple questions in class or speak in daily conversations."
+     "For example, we speak English at work and in shops."
     ],
     "words": [],
     "descT": {
@@ -4713,9 +5065,42 @@ const DAYS = [
     }
    },
    {
+    "k": "order",
+    "item": 2,
+    "words": [
+     "For",
+     "example",
+     "we",
+     "speak",
+     "English",
+     "at",
+     "work",
+     "and",
+     "in",
+     "shops"
+    ],
+    "display": "For example, we speak English at work and in shops.",
+    "alt": [
+     "For example, we speak English in shops and at work.",
+     "We speak English at work and in shops, for example."
+    ]
+   },
+   {
+    "k": "subst",
+    "item": 2,
+    "tpl": "For example, we speak English ___.",
+    "bank": [
+     "at work and in shops",
+     "at work",
+     "with customers",
+     "in class",
+     "on the phone"
+    ]
+   },
+   {
     "k": "speak",
     "item": 2,
-    "model": "For example, they can answer simple questions in class or speak in daily conversations.",
+    "model": "For example, we speak English at work and in shops.",
     "head": "E = Example"
    },
    {
@@ -4724,7 +5109,7 @@ const DAYS = [
     "head": "E = Ending",
     "desc": "Give a simple closing sentence.",
     "examples": [
-     "So speaking practice can help learners become more confident."
+     "So we need to practise every day."
     ],
     "words": [],
     "descT": {
@@ -4738,25 +5123,23 @@ const DAYS = [
     "item": 3,
     "words": [
      "So",
-     "speaking",
-     "practice",
-     "can",
-     "help",
-     "learners",
-     "become",
-     "more",
-     "confident"
+     "we",
+     "need",
+     "to",
+     "practise",
+     "every",
+     "day"
     ],
-    "display": "So speaking practice can help learners become more confident."
+    "display": "So we need to practise every day."
    },
    {
     "k": "speak",
     "item": 3,
-    "model": "So speaking practice can help learners become more confident.",
+    "model": "So we need to practise every day.",
     "head": "E = Ending"
    }
   ],
-  "finalSpeak": "Speaking practice is important because learners need to use English more often. For example, they can answer simple questions in class or speak in daily conversations. So speaking practice can help learners become more confident."
+  "finalSpeak": "Speaking practice is important because we use English every day. For example, we speak English at work. So we need to practise every day."
  },
  {
   "day": 26,
@@ -4764,7 +5147,7 @@ const DAYS = [
   "tagline": "",
   "video": "H-f80Y8zY_c",
   "review": false,
-  "formula": "",
+  "formula": "Situation + What I did (Task + Action) + Result",
   "covers": [
    {
     "en": "Structuring answers for job interviews",
@@ -4807,128 +5190,188 @@ const DAYS = [
     "ms": "Menyusun idea sebelum bercakap"
    }
   ],
-  "outcome": "In my previous job, a customer was unhappy because an order was delayed. My task was to solve the issue quickly. First, I listened to the customer and checked the order status. Then, I contacted the delivery team and updated the customer. In the end, the customer accepted the solution and the problem was solved successfully.",
+  "outcome": "In my last job, a customer was angry. I listened to her and checked the order. In the end, the customer was happy.",
   "items": [
    {
-    "head": "S = Situation",
-    "desc": "Explain what happened and give the background.",
+    "desc": "Say what happened, in one short sentence.",
+    "words": [],
+    "head": "Situation: In my last job, + what happened",
     "examples": [
-     "In my previous job, one customer was unhappy because the order was delayed."
-    ],
-    "words": []
+     "In my last job, a customer was angry."
+    ]
    },
    {
-    "head": "T = Task",
-    "desc": "Explain what you needed to do or what your responsibility was.",
+    "desc": "Say what you did (the Task and the Action). Use past verbs: listened, checked, called.",
+    "words": [],
+    "head": "What I did: I + past action",
     "examples": [
-     "My task was to handle the customer and solve the issue quickly."
-    ],
-    "words": []
+     "I listened to her and checked the order."
+    ]
    },
    {
-    "head": "A = Action",
-    "desc": "Explain what you actually did to handle the situation.",
+    "desc": "Say how it ended.",
+    "words": [],
+    "head": "Result: In the end, + result",
     "examples": [
-     "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team."
-    ],
-    "words": []
-   },
-   {
-    "head": "R = Result",
-    "desc": "Explain what happened in the end.",
-    "examples": [
-     "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly."
-    ],
-    "words": []
+     "In the end, the customer was happy."
+    ]
    }
   ],
   "steps": [
    {
     "k": "patterns",
     "item": 0,
-    "head": "S = Situation",
-    "desc": "Explain what happened and give the background.",
+    "head": "Situation: In my last job, + what happened",
+    "desc": "Say what happened, in one short sentence.",
     "examples": [
-     "In my previous job, one customer was unhappy because the order was delayed."
+     "In my last job, a customer was angry."
     ],
     "words": [],
     "descT": {
-     "en": "Explain what happened and give the background.",
-     "zh": "说明发生了什么，交代背景。",
-     "ms": "Terangkan apa yang berlaku dan latar belakangnya."
-    }
+     "en": "Say what happened, in one short sentence.",
+     "zh": "用一句短短的话说发生了什么事。",
+     "ms": "Sebut apa yang berlaku, dalam satu ayat pendek."
+    },
+    "q": "Tell me about a problem you solved at work."
+   },
+   {
+    "k": "order",
+    "item": 0,
+    "words": [
+     "In",
+     "my",
+     "last",
+     "job",
+     "a",
+     "customer",
+     "was",
+     "angry"
+    ],
+    "display": "In my last job, a customer was angry.",
+    "alt": [
+     "A customer was angry in my last job."
+    ]
+   },
+   {
+    "k": "subst",
+    "item": 0,
+    "tpl": "In my last job, ___.",
+    "bank": [
+     "a customer was angry",
+     "an order was late",
+     "my team was very busy",
+     "a customer was unhappy",
+     "the computer system stopped working"
+    ]
    },
    {
     "k": "speak",
     "item": 0,
-    "model": "In my previous job, one customer was unhappy because the order was delayed.",
-    "head": "S = Situation"
+    "model": "In my last job, a customer was angry.",
+    "head": "Situation: In my last job, + what happened",
+    "q": "Tell me about a problem you solved at work."
    },
    {
     "k": "patterns",
     "item": 1,
-    "head": "T = Task",
-    "desc": "Explain what you needed to do or what your responsibility was.",
+    "head": "What I did: I + past action",
+    "desc": "Say what you did (the Task and the Action). Use past verbs: listened, checked, called.",
     "examples": [
-     "My task was to handle the customer and solve the issue quickly."
+     "I listened to her and checked the order."
     ],
     "words": [],
     "descT": {
-     "en": "Explain what you needed to do or what your responsibility was.",
-     "zh": "说明你需要做什么，或你的责任是什么。",
-     "ms": "Terangkan apa yang perlu anda buat atau tanggungjawab anda."
+     "en": "Say what you did (the Task and the Action). Use past verbs: listened, checked, called.",
+     "zh": "说你做了什么（STAR 的 Task 和 Action）。动词用过去式：listened、checked、called。",
+     "ms": "Sebut apa yang anda buat (Task dan Action dalam STAR). Guna kata kerja lampau: listened, checked, called."
     }
+   },
+   {
+    "k": "order",
+    "item": 1,
+    "words": [
+     "I",
+     "listened",
+     "to",
+     "her",
+     "and",
+     "checked",
+     "the",
+     "order"
+    ],
+    "display": "I listened to her and checked the order."
+   },
+   {
+    "k": "subst",
+    "item": 1,
+    "tpl": "I ___.",
+    "bank": [
+     "listened to her and checked the order",
+     "said sorry and called the delivery team",
+     "asked my manager for help",
+     "worked late to finish the work",
+     "found a quick solution"
+    ]
    },
    {
     "k": "speak",
     "item": 1,
-    "model": "My task was to handle the customer and solve the issue quickly.",
-    "head": "T = Task"
+    "model": "I listened to her and checked the order.",
+    "head": "What I did: I + past action"
    },
    {
     "k": "patterns",
     "item": 2,
-    "head": "A = Action",
-    "desc": "Explain what you actually did to handle the situation.",
+    "head": "Result: In the end, + result",
+    "desc": "Say how it ended.",
     "examples": [
-     "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team."
+     "In the end, the customer was happy."
     ],
     "words": [],
     "descT": {
-     "en": "Explain what you actually did to handle the situation.",
-     "zh": "说明你实际上做了什么来处理。",
-     "ms": "Terangkan apa yang anda benar-benar buat untuk mengendalikan situasi itu."
+     "en": "Say how it ended.",
+     "zh": "说最后的结果。",
+     "ms": "Sebut bagaimana ia berakhir."
     }
+   },
+   {
+    "k": "order",
+    "item": 2,
+    "words": [
+     "In",
+     "the",
+     "end",
+     "the",
+     "customer",
+     "was",
+     "happy"
+    ],
+    "display": "In the end, the customer was happy.",
+    "alt": [
+     "The customer was happy in the end."
+    ]
+   },
+   {
+    "k": "subst",
+    "item": 2,
+    "tpl": "In the end, ___.",
+    "bank": [
+     "the customer was happy",
+     "the problem was solved",
+     "the order arrived the next day",
+     "my manager thanked me",
+     "we finished on time"
+    ]
    },
    {
     "k": "speak",
     "item": 2,
-    "model": "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team.",
-    "head": "A = Action"
-   },
-   {
-    "k": "patterns",
-    "item": 3,
-    "head": "R = Result",
-    "desc": "Explain what happened in the end.",
-    "examples": [
-     "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly."
-    ],
-    "words": [],
-    "descT": {
-     "en": "Explain what happened in the end.",
-     "zh": "说明最后的结果。",
-     "ms": "Terangkan apa yang berlaku pada akhirnya."
-    }
-   },
-   {
-    "k": "speak",
-    "item": 3,
-    "model": "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly.",
-    "head": "R = Result"
+    "model": "In the end, the customer was happy.",
+    "head": "Result: In the end, + result"
    }
   ],
-  "finalSpeak": "In my previous job, a customer was unhappy because an order was delayed. My task was to solve the issue quickly. First, I listened to the customer and checked the order status. Then, I contacted the delivery team and updated the customer. In the end, the customer accepted the solution and the problem was solved successfully."
+  "finalSpeak": "In my last job, a customer was angry. I listened to her and checked the order. In the end, the customer was happy.",
+  "finalQ": "Tell me about a problem you solved at work."
  },
  {
   "day": 27,
