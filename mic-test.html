@@ -9,7 +9,7 @@
   录音延迟检测 —— 在学生的手机上量出「按下录音到真的收到声音」差多少。
 
   课程的录音流程（shared/record.js，Pre-Beginner / Level 1 / Level 2 各自一份同样的）：
-  按录音 → 开麦克风 → 3·2·1 倒数（每格 650ms）→ 录音器启动 → 400ms 後显示「现在说」。
+  按录音 → 开麦克风 → 录音器马上启动 → 400ms 後显示「现在说」（2026-09-24 前还有 3·2·1 倒数）。
   那 400ms（HEAD_BUF）是赌「录音器启动後 400ms 内一定已经在收音」。这一页量的就是这个赌注：
   录下来的档案开头有多长是完全没有讯号的（麦克风还没真的通），以及拍手的声音在档案里的位置。
 
@@ -43,7 +43,7 @@ small{color:var(--muted)}
 <p>量出这台手机「按下录音」到「真的开始收音」差多少，跟课程里的录音流程一模一样。</p>
 <div class="card">
  <ol>
-  <li>按「开始」，会跟课程一样倒数 3·2·1。</li>
+  <li>按「开始」。</li>
   <li>看到 <b style="color:var(--ok)">🟢 现在拍手</b> 的一瞬间，<b>马上拍一下手</b>，然後说「one two three」。</li>
   <li>说完按「停止」。结果会出现在下面。</li>
  </ol>
@@ -72,11 +72,7 @@ $("go").onclick = async () => {
   T.mic = performance.now();
   const track = stream.getAudioTracks()[0];
   const label = track && track.label || "";
-  let n = 3; $("stat").className = ""; $("stat").textContent = "准备… " + n;
-  await new Promise(res => {
-    const tick = () => { n--; if (n > 0) { $("stat").textContent = "准备… " + n; setTimeout(tick, CD_TICK); } else res(); };
-    setTimeout(tick, CD_TICK);
-  });
+  $("stat").className = ""; $("stat").textContent = "准备…";   // 课程 2026-09-24 起不再倒数
   const chunks = [];
   const rec = new MediaRecorder(stream);
   rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };

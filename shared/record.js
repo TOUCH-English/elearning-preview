@@ -7,8 +7,10 @@
    -----------------------------------------------------------------------------
    为什么不是直接 MediaRecorder.start() 就好 —— 三个时间缓冲的用意：
 
-   CD_TICK  (650ms)  3・2・1 倒数的节奏。倒数期间麦克风「已经开着但还没开始录」，
-                     学生这时不能说话。
+   CD_TICK  (650ms)  原本 3・2・1 倒数的节奏，2026-09-24 拿掉了（值留着给旧的呼叫端看）。
+                     倒数期间麦克风已经开着、iPhone 的橘色麦克风灯也亮了，但还没在录；
+                     学生看到灯亮就开口，那两秒全部没录到 —— Marco 说的「慢一拍」。
+                     现在麦克风一开，录音器就启动。
 
    HEAD_BUF (400ms)  倒数结束後，录音器先偷跑 400ms 才显示「🟢 Speak now」。
                      不这样做的话，学生一看到提示就开口，第一个音节会被切掉
@@ -171,16 +173,13 @@
         if (cancelled) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
         live.stream = stream;
 
-        var n = 3;
+        /* 不再倒数：麦克风一开就开始录（见档头 CD_TICK 的说明）。
+           onCountdown("") 只让画面显示「准备…」撑过 HEAD_BUF 那一下。 */
         phase = "count";
-        onCountdown(n);
+        onCountdown("");
 
-        var tick = function () {
+        (function () {
           if (cancelled) return;
-          n--;
-          if (n > 0) { onCountdown(n); later(tick, CD_TICK); return; }
-
-          /* 倒数结束 —— 录音器先偷跑，HEAD_BUF 之後才叫学生开口 */
           try {
             live.recorder = new MediaRecorder(live.stream);
             live.recorder.ondataavailable = function (e) { if (e.data) chunks.push(e.data); };
@@ -200,9 +199,7 @@
             phase = "speaking";
             onSpeakNow();
           }, HEAD_BUF);
-        };
-
-        later(tick, CD_TICK);
+        })();
       }).catch(function (err) {
         phase = "done";
         onDenied(err);                      // 使用者拒绝麦克风、或没有麦克风

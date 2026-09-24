@@ -1773,12 +1773,11 @@ function renderStep(){
    $("recbtn").classList.add("hidden");
    $("stoprec").classList.add("hidden");
    stat.classList.remove("go");
-   let n = 3;
+   // No 3·2·1 any more (2026-09-24): the mic light was on while nothing was recorded,
+   // so learners spoke into the countdown and lost it. The recorder starts as soon as the mic opens.
    phase = "count";
-   stat.textContent = t.getReady+" "+n;
+   stat.textContent = t.getReady;
    const tick = ()=>{
-    n--;
-    if(n>0){ stat.textContent = t.getReady+" "+n; recTimer(tick, CD_TICK); return; }
     // ---- start the recorder EARLY, before "Speak now" (head buffer) ----
     try{
      REC.recorder = new MediaRecorder(REC.stream);
@@ -1801,7 +1800,7 @@ function renderStep(){
      $("stoprec").classList.remove("hidden");
     }, HEAD_BUF);
    };
-   recTimer(tick, CD_TICK);
+   tick();
   };
   $("stoprec").onclick = ()=>{
    if(phase!=="speaking") return;
