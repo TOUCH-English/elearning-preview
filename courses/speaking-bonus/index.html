@@ -41,7 +41,12 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--font-b);min-hei
 .ltog button{border:0;background:transparent;cursor:pointer;font-family:var(--font-h);font-weight:600;
   font-size:11px;color:var(--muted);padding:5px 8px;border-radius:7px}
 .ltog button.on{background:var(--brand);color:#fff}
+/* 390px 的手机上「中文」会被挤成两行、「✓ 3 /30」也会断开 */
+.chip,.ltog button{white-space:nowrap}
 @media (max-width:380px){ .chips{gap:6px} .ltog button{padding:5px 6px;font-size:10.5px} }
+/* 不换行之後，XP 到三、四位数、完成数 30/30 时顶栏会比 390px 宽 —— 窄萤幕上整排收小一点 */
+@media (max-width:430px){ .top{gap:8px} .logo{height:28px} .chips{gap:5px}
+  .chip{padding:5px 8px;font-size:12px;gap:3px} .ltog button{padding:5px 6px} }
 
 /* ---------- home ---------- */
 h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(26px,5.5vw,36px);line-height:1.15}
@@ -61,6 +66,8 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 .day.rev{background:var(--gold-soft);border-color:rgba(191,150,72,.35)}
 .day.rev .n{color:var(--gold-deep)}
 .day.rev.done{background:var(--success-soft);border-color:var(--success)}
+.day.prac{border-color:var(--gold);border-style:dashed}
+.day.prac .n::after{content:" · " attr(data-prac);color:var(--gold-deep);text-transform:none;letter-spacing:0}
 
 /* ---------- day view ---------- */
 .back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;font:inherit;font-weight:700;
@@ -117,6 +124,9 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 .btn-row .btn{margin-top:0}
 
 /* speak */
+.qline{margin-top:12px;font-size:14px;font-weight:700;color:var(--muted)}
+.qline b{color:var(--brand)}
+.enote{margin-top:6px;font-size:12.5px;font-weight:700;color:var(--gold-deep)}
 .model{background:var(--gold-soft);border:1px solid rgba(191,150,72,.3);border-radius:12px;
   padding:14px 16px;margin-top:14px;font-size:16.5px;font-weight:700;color:var(--ink);line-height:1.5}
 .stat{text-align:center;font-family:var(--font-h);font-weight:600;font-size:16px;color:var(--muted);
@@ -165,12 +175,36 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Introducing your name",
-   "Saying where you are from",
-   "Talking about your job",
-   "Using simple sentence templates",
-   "Practising a complete 3-sentence self-introduction",
-   "Building confidence to speak without worrying too much about mistakes"
+   {
+    "en": "Introducing your name",
+    "zh": "介绍自己的名字",
+    "ms": "Memperkenalkan nama anda"
+   },
+   {
+    "en": "Saying where you are from",
+    "zh": "说自己从哪里来",
+    "ms": "Menyatakan asal anda"
+   },
+   {
+    "en": "Talking about your job",
+    "zh": "谈自己的工作",
+    "ms": "Bercakap tentang pekerjaan anda"
+   },
+   {
+    "en": "Using simple sentence templates",
+    "zh": "使用简单的句型模板",
+    "ms": "Menggunakan templat ayat mudah"
+   },
+   {
+    "en": "Practising a complete 3-sentence self-introduction",
+    "zh": "练习完整的三句自我介绍",
+    "ms": "Berlatih memperkenalkan diri dalam 3 ayat"
+   },
+   {
+    "en": "Building confidence to speak without worrying too much about mistakes",
+    "zh": "建立信心，开口说时不必太担心出错",
+    "ms": "Membina keyakinan untuk bercakap tanpa terlalu risau tentang kesilapan"
+   }
   ],
   "outcome": "Hi, I am Sarah. I am from Penang. I work as an admin executive.",
   "items": [
@@ -202,6 +236,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I am + name",
     "desc": "",
     "examples": [
@@ -211,6 +246,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "am",
@@ -220,23 +256,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I am ___.",
-    "slot": "name",
     "bank": [
      "Wesley",
      "Sarah",
      "Ahmad",
      "Mei Ling",
      "Kumar"
-    ]
+    ],
+    "field": "name"
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I am Wesley.",
     "head": "I am + name"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I am from + place",
     "desc": "",
     "examples": [
@@ -246,6 +285,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "am",
@@ -256,8 +296,8 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I am from ___.",
-    "slot": "place",
     "bank": [
      "Malaysia",
      "Penang",
@@ -265,15 +305,18 @@ const DAYS = [
      "Johor",
      "Ipoh",
      "Sabah"
-    ]
+    ],
+    "field": "place"
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I am from Malaysia.",
     "head": "I am from + place"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "I work as + job",
     "desc": "",
     "examples": [
@@ -283,6 +326,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "I",
      "work",
@@ -294,8 +338,8 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 2,
     "tpl": "I work as ___.",
-    "slot": "job",
     "bank": [
      "a teacher",
      "a doctor",
@@ -303,10 +347,12 @@ const DAYS = [
      "a nurse",
      "an admin executive",
      "a salesperson"
-    ]
+    ],
+    "field": "job"
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "I work as a teacher.",
     "head": "I work as + job"
    }
@@ -321,16 +367,48 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about your daily routine",
-   "Using “I usually” to describe something you often do",
-   "Understanding basic verbs / action words",
-   "Adding time to say when you do something",
-   "Adding place to say where you do something",
-   "Expanding short answers into clearer sentences",
-   "Using a simple speaking template to build more complete sentences",
-   "Practising the sentence slowly first, then saying it with more confidence"
+   {
+    "en": "Talking about your daily routine",
+    "zh": "谈自己的日常作息",
+    "ms": "Bercakap tentang rutin harian anda"
+   },
+   {
+    "en": "Using “I usually” to describe something you often do",
+    "zh": "用 “I usually” 说你常做的事",
+    "ms": "Menggunakan “I usually” untuk perkara yang anda selalu buat"
+   },
+   {
+    "en": "Understanding basic verbs / action words",
+    "zh": "认识基本动词（动作的字）",
+    "ms": "Memahami kata kerja asas"
+   },
+   {
+    "en": "Adding time to say when you do something",
+    "zh": "加上时间，说什么时候做",
+    "ms": "Menambah masa — bila anda membuatnya"
+   },
+   {
+    "en": "Adding place to say where you do something",
+    "zh": "加上地点，说在哪里做",
+    "ms": "Menambah tempat — di mana anda membuatnya"
+   },
+   {
+    "en": "Expanding short answers into clearer sentences",
+    "zh": "把简短的回答扩充成更清楚的句子",
+    "ms": "Memanjangkan jawapan pendek menjadi ayat yang lebih jelas"
+   },
+   {
+    "en": "Using a simple speaking template to build more complete sentences",
+    "zh": "用简单的口说模板造出更完整的句子",
+    "ms": "Menggunakan templat mudah untuk membina ayat yang lebih lengkap"
+   },
+   {
+    "en": "Practising the sentence slowly first, then saying it with more confidence",
+    "zh": "先慢慢练，再更有信心地说出来",
+    "ms": "Berlatih perlahan dahulu, kemudian sebut dengan lebih yakin"
+   }
   ],
-  "outcome": "I usually wake up at 7:00 a.m. I usually have lunch in the office. I usually sleep late.",
+  "outcome": "I usually wake up at 7:00 a.m. I usually have lunch in the office. I usually go to bed late.",
   "items": [
    {
     "head": "I usually + verb + time/place",
@@ -345,6 +423,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I usually + verb + time/place",
     "desc": "",
     "examples": [
@@ -355,36 +434,42 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "usually",
      "wake",
      "up",
      "at",
-     "700",
-     "am"
+     "7:00",
+     "a.m."
     ],
-    "display": "I usually wake up at 7:00 a.m."
+    "display": "I usually wake up at 7:00 a.m.",
+    "alt": [
+     "Usually, I wake up at 7:00 a.m."
+    ]
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I usually ___.",
-    "slot": "verb + time/place",
     "bank": [
-     "wake up at 7:00 a.m",
+     "wake up at 7:00 a.m.",
      "eat at home",
      "work in the office",
      "take the bus to work",
-     "have lunch at 1 p.m"
+     "have lunch at 1:00 p.m.",
+     "go to bed at 11:00 p.m."
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I usually wake up at 7:00 a.m.",
     "head": "I usually + verb + time/place"
    }
   ],
-  "finalSpeak": "I usually wake up at 7:00 a.m. I usually have lunch in the office. I usually sleep late."
+  "finalSpeak": "I usually wake up at 7:00 a.m. I usually have lunch in the office. I usually go to bed late."
  },
  {
   "day": 3,
@@ -394,14 +479,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about things you like",
-   "Talking about activities you enjoy doing",
-   "Understanding the basic difference between a noun and a verb",
-   "Using “I like + noun” for things",
-   "Using “I like to + verb” for actions",
-   "Comparing a thing with an action, such as “I like coffee” vs “I like to drink coffee”",
-   "Building simple and natural sentences about personal preferences",
-   "Encouraging learners to speak more and practise expressing what they like"
+   {
+    "en": "Talking about things you like",
+    "zh": "谈你喜欢的东西",
+    "ms": "Bercakap tentang perkara yang anda suka"
+   },
+   {
+    "en": "Talking about activities you enjoy doing",
+    "zh": "谈你喜欢做的活动",
+    "ms": "Bercakap tentang aktiviti yang anda gemar"
+   },
+   {
+    "en": "Understanding the basic difference between a noun and a verb",
+    "zh": "了解名词和动词的基本差别",
+    "ms": "Memahami perbezaan asas antara kata nama dan kata kerja"
+   },
+   {
+    "en": "Using “I like + noun” for things",
+    "zh": "东西用 “I like + noun”",
+    "ms": "Menggunakan “I like + noun” untuk benda"
+   },
+   {
+    "en": "Using “I like to + verb” for actions",
+    "zh": "动作用 “I like to + verb”",
+    "ms": "Menggunakan “I like to + verb” untuk perbuatan"
+   },
+   {
+    "en": "Comparing a thing with an action, such as “I like coffee” vs “I like to drink coffee”",
+    "zh": "比较东西和动作，例如 “I like coffee” 和 “I like to drink coffee”",
+    "ms": "Membandingkan benda dengan perbuatan, contohnya “I like coffee” dan “I like to drink coffee”"
+   },
+   {
+    "en": "Building simple and natural sentences about personal preferences",
+    "zh": "造简单自然的句子，说自己的喜好",
+    "ms": "Membina ayat mudah dan semula jadi tentang kesukaan anda"
+   },
+   {
+    "en": "Encouraging learners to speak more and practise expressing what they like",
+    "zh": "多开口，练习说出自己喜欢什么",
+    "ms": "Menggalakkan pelajar bercakap lebih banyak dan berlatih menyatakan kesukaan mereka"
+   }
   ],
   "outcome": "I like music. I like coffee. I like to travel. I like to watch movies.",
   "items": [
@@ -427,6 +544,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I like + noun",
     "desc": "",
     "examples": [
@@ -437,6 +555,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "like",
@@ -446,24 +565,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I like ___.",
-    "slot": "noun",
     "bank": [
      "coffee",
      "music",
-     "spicy food",
-     "noise",
-     "a new phone",
-     "more time"
+     "nasi lemak",
+     "football",
+     "rainy days",
+     "old movies"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I like coffee.",
     "head": "I like + noun"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I like to + verb",
     "desc": "",
     "examples": [
@@ -474,6 +595,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "like",
@@ -485,19 +607,20 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I like to ___.",
-    "slot": "verb",
     "bank": [
      "watch movies",
      "drive",
-     "wake up early",
-     "wait too long",
-     "improve my English",
-     "find a better job"
+     "travel",
+     "cook",
+     "read books",
+     "go jogging"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I like to watch movies.",
     "head": "I like to + verb"
    }
@@ -512,14 +635,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about things you don’t like",
-   "Talking about activities or actions you don’t enjoy",
-   "Understanding the difference between a noun and a verb",
-   "Using “I don’t like + noun” for things",
-   "Using “I don’t like to + verb” for actions",
-   "Expressing personal preferences in everyday situations",
-   "Combining two dislikes into a longer response",
-   "Practising speaking slowly and clearly"
+   {
+    "en": "Talking about things you don’t like",
+    "zh": "谈你不喜欢的东西",
+    "ms": "Bercakap tentang perkara yang anda tidak suka"
+   },
+   {
+    "en": "Talking about activities or actions you don’t enjoy",
+    "zh": "谈你不喜欢做的事",
+    "ms": "Bercakap tentang aktiviti yang anda tidak gemar"
+   },
+   {
+    "en": "Understanding the difference between a noun and a verb",
+    "zh": "了解名词和动词的差别",
+    "ms": "Memahami perbezaan antara kata nama dan kata kerja"
+   },
+   {
+    "en": "Using “I don’t like + noun” for things",
+    "zh": "东西用 “I don’t like + noun”",
+    "ms": "Menggunakan “I don’t like + noun” untuk benda"
+   },
+   {
+    "en": "Using “I don’t like to + verb” for actions",
+    "zh": "动作用 “I don’t like to + verb”",
+    "ms": "Menggunakan “I don’t like to + verb” untuk perbuatan"
+   },
+   {
+    "en": "Expressing personal preferences in everyday situations",
+    "zh": "在日常情境里表达自己的喜好",
+    "ms": "Menyatakan kesukaan dalam situasi harian"
+   },
+   {
+    "en": "Combining two dislikes into a longer response",
+    "zh": "把两个不喜欢的事合成较长的回答",
+    "ms": "Menggabungkan dua perkara yang tidak disukai menjadi jawapan lebih panjang"
+   },
+   {
+    "en": "Practising speaking slowly and clearly",
+    "zh": "练习说得慢而清楚",
+    "ms": "Berlatih bercakap perlahan dan jelas"
+   }
   ],
   "outcome": "I don’t like spicy food. I don’t like noise. I don’t like to wake up early. I don’t like to wait too long.",
   "items": [
@@ -545,6 +700,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I don’t like + noun",
     "desc": "",
     "examples": [
@@ -555,6 +711,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "don’t",
@@ -566,24 +723,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I don’t like ___.",
-    "slot": "noun",
     "bank": [
      "spicy food",
-     "coffee",
-     "music",
      "noise",
-     "a new phone",
-     "more time"
+     "traffic jams",
+     "bitter coffee",
+     "crowded places",
+     "horror movies"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I don’t like spicy food.",
     "head": "I don’t like + noun"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I don’t like to + verb",
     "desc": "",
     "examples": [
@@ -594,6 +753,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "don’t",
@@ -607,19 +767,20 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I don’t like to ___.",
-    "slot": "verb",
     "bank": [
      "wake up early",
-     "watch movies",
-     "drive",
      "wait too long",
-     "improve my English",
-     "find a better job"
+     "drive at night",
+     "work late",
+     "take the bus",
+     "speak in front of people"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I don’t like to wake up early.",
     "head": "I don’t like to + verb"
    }
@@ -634,15 +795,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about things you want",
-   "Talking about actions or goals you want to do",
-   "Understanding the meaning of “want”",
-   "Using “I want + noun” for things",
-   "Using “I want to + verb” for actions",
-   "Expressing personal goals and wishes",
-   "Turning simple words into complete sentences",
-   "Using speaking templates to communicate more clearly",
-   "Encouraging learners to practise the patterns repeatedly"
+   {
+    "en": "Talking about things you want",
+    "zh": "谈你想要的东西",
+    "ms": "Bercakap tentang perkara yang anda mahu"
+   },
+   {
+    "en": "Talking about actions or goals you want to do",
+    "zh": "谈你想做的事或目标",
+    "ms": "Bercakap tentang perkara atau matlamat yang anda mahu capai"
+   },
+   {
+    "en": "Understanding the meaning of “want”",
+    "zh": "了解 “want” 的意思",
+    "ms": "Memahami maksud “want”"
+   },
+   {
+    "en": "Using “I want + noun” for things",
+    "zh": "东西用 “I want + noun”",
+    "ms": "Menggunakan “I want + noun” untuk benda"
+   },
+   {
+    "en": "Using “I want to + verb” for actions",
+    "zh": "动作用 “I want to + verb”",
+    "ms": "Menggunakan “I want to + verb” untuk perbuatan"
+   },
+   {
+    "en": "Expressing personal goals and wishes",
+    "zh": "说出自己的目标和愿望",
+    "ms": "Menyatakan matlamat dan hasrat peribadi"
+   },
+   {
+    "en": "Turning simple words into complete sentences",
+    "zh": "把简单的字变成完整的句子",
+    "ms": "Mengubah perkataan mudah menjadi ayat yang lengkap"
+   },
+   {
+    "en": "Using speaking templates to communicate more clearly",
+    "zh": "用口说模板把话说得更清楚",
+    "ms": "Menggunakan templat untuk berkomunikasi dengan lebih jelas"
+   }
   ],
   "outcome": "I want a new phone. I want more time. I want to improve my English. I want to find a better job.",
   "items": [
@@ -668,6 +860,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I want + noun",
     "desc": "",
     "examples": [
@@ -678,6 +871,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "want",
@@ -689,24 +883,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I want ___.",
-    "slot": "noun",
     "bank": [
      "a new phone",
-     "coffee",
-     "music",
-     "spicy food",
-     "noise",
-     "more time"
+     "more time",
+     "a holiday",
+     "a new laptop",
+     "a bigger house",
+     "a better job"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I want a new phone.",
     "head": "I want + noun"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I want to + verb",
     "desc": "",
     "examples": [
@@ -717,6 +913,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "want",
@@ -729,19 +926,20 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I want to ___.",
-    "slot": "verb",
     "bank": [
      "improve my English",
-     "watch movies",
-     "drive",
-     "wake up early",
-     "wait too long",
-     "find a better job"
+     "find a better job",
+     "travel to Japan",
+     "learn to cook",
+     "buy a car",
+     "speak more confidently"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I want to improve my English.",
     "head": "I want to + verb"
    }
@@ -756,15 +954,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about things you need",
-   "Talking about actions you need to do",
-   "Understanding the meaning of “need”",
-   "Using “I need + noun” for things",
-   "Using “I need to + verb” for actions",
-   "Understanding the difference between “want” and “need”",
-   "Expressing something as more important or necessary",
-   "Turning simple ideas into complete sentences",
-   "Practising simple speaking templates with confidence"
+   {
+    "en": "Talking about things you need",
+    "zh": "谈你需要的东西",
+    "ms": "Bercakap tentang perkara yang anda perlukan"
+   },
+   {
+    "en": "Talking about actions you need to do",
+    "zh": "谈你需要做的事",
+    "ms": "Bercakap tentang perkara yang anda perlu buat"
+   },
+   {
+    "en": "Understanding the meaning of “need”",
+    "zh": "了解 “need” 的意思",
+    "ms": "Memahami maksud “need”"
+   },
+   {
+    "en": "Using “I need + noun” for things",
+    "zh": "东西用 “I need + noun”",
+    "ms": "Menggunakan “I need + noun” untuk benda"
+   },
+   {
+    "en": "Using “I need to + verb” for actions",
+    "zh": "动作用 “I need to + verb”",
+    "ms": "Menggunakan “I need to + verb” untuk perbuatan"
+   },
+   {
+    "en": "Understanding the difference between “want” and “need”",
+    "zh": "了解 “want” 和 “need” 的差别",
+    "ms": "Memahami perbezaan antara “want” dan “need”"
+   },
+   {
+    "en": "Expressing something as more important or necessary",
+    "zh": "表达某件事比较重要或必要",
+    "ms": "Menyatakan sesuatu yang lebih penting atau perlu"
+   },
+   {
+    "en": "Turning simple ideas into complete sentences",
+    "zh": "把简单的想法变成完整的句子",
+    "ms": "Mengubah idea mudah menjadi ayat yang lengkap"
+   }
   ],
   "outcome": "I need help. I need more practice. I need to study. I need to improve my speaking.",
   "items": [
@@ -790,6 +1019,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I need + noun",
     "desc": "",
     "examples": [
@@ -800,6 +1030,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "need",
@@ -809,24 +1040,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I need ___.",
-    "slot": "noun",
     "bank": [
      "help",
-     "coffee",
-     "music",
-     "spicy food",
-     "noise",
-     "a new phone"
+     "more practice",
+     "a break",
+     "more sleep",
+     "some advice",
+     "a new laptop"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I need help.",
     "head": "I need + noun"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I need to + verb",
     "desc": "",
     "examples": [
@@ -837,6 +1070,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "need",
@@ -847,19 +1081,20 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I need to ___.",
-    "slot": "verb",
     "bank": [
      "study",
-     "watch movies",
-     "drive",
-     "wake up early",
-     "wait too long",
-     "improve my English"
+     "improve my speaking",
+     "finish my work",
+     "go to bed early",
+     "save money",
+     "practise every day"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I need to study.",
     "head": "I need to + verb"
    }
@@ -874,17 +1109,46 @@ const DAYS = [
   "review": true,
   "formula": "",
   "covers": [
-   "Reviewing the speaking patterns from Videos 1 to 6",
-   "Introducing your name",
-   "Saying where you are from",
-   "Talking about your job",
-   "Talking about things you like",
-   "Talking about things you want",
-   "Talking about things you need",
-   "Connecting several simple sentences together",
-   "Moving from one-sentence answers to a longer self-introduction",
-   "Using simple English to express more information",
-   "Repeating the complete introduction several times to build speaking confidence and fluency"
+   {
+    "en": "Reviewing the speaking patterns from Videos 1 to 6",
+    "zh": "复习第 1 到第 6 支影片的句型",
+    "ms": "Mengulang kaji corak ayat dari Video 1 hingga 6"
+   },
+   {
+    "en": "Introducing your name",
+    "zh": "介绍自己的名字",
+    "ms": "Memperkenalkan nama anda"
+   },
+   {
+    "en": "Saying where you are from",
+    "zh": "说自己从哪里来",
+    "ms": "Menyatakan asal anda"
+   },
+   {
+    "en": "Talking about your job",
+    "zh": "谈自己的工作",
+    "ms": "Bercakap tentang pekerjaan anda"
+   },
+   {
+    "en": "Talking about things you like",
+    "zh": "谈你喜欢的东西",
+    "ms": "Bercakap tentang perkara yang anda suka"
+   },
+   {
+    "en": "Talking about things you want",
+    "zh": "谈你想要的东西",
+    "ms": "Bercakap tentang perkara yang anda mahu"
+   },
+   {
+    "en": "Talking about things you need",
+    "zh": "谈你需要的东西",
+    "ms": "Bercakap tentang perkara yang anda perlukan"
+   },
+   {
+    "en": "Connecting several simple sentences together",
+    "zh": "把几个简单句子连起来",
+    "ms": "Menyambung beberapa ayat mudah"
+   }
   ],
   "outcome": "Hi, I am Sarah. I am from Penang, Malaysia. I work as an admin assistant. I like music and coffee. I want to improve my English, and I need more speaking practice.",
   "items": [
@@ -940,6 +1204,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I am + name",
     "desc": "",
     "examples": [
@@ -949,6 +1214,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "am",
@@ -958,23 +1224,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I am ___.",
-    "slot": "name",
     "bank": [
      "Wesley",
      "Sarah",
      "Ahmad",
      "Mei Ling",
      "Kumar"
-    ]
+    ],
+    "field": "name"
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I am Wesley.",
     "head": "I am + name"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I am from + place",
     "desc": "",
     "examples": [
@@ -984,6 +1253,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "am",
@@ -994,8 +1264,8 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I am from ___.",
-    "slot": "place",
     "bank": [
      "Malaysia",
      "Penang",
@@ -1003,15 +1273,18 @@ const DAYS = [
      "Johor",
      "Ipoh",
      "Sabah"
-    ]
+    ],
+    "field": "place"
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I am from Malaysia.",
     "head": "I am from + place"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "I work as + job",
     "desc": "",
     "examples": [
@@ -1021,6 +1294,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "I",
      "work",
@@ -1032,8 +1306,8 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 2,
     "tpl": "I work as ___.",
-    "slot": "job",
     "bank": [
      "a doctor",
      "a teacher",
@@ -1041,15 +1315,18 @@ const DAYS = [
      "a nurse",
      "an admin executive",
      "a salesperson"
-    ]
+    ],
+    "field": "job"
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "I work as a doctor.",
     "head": "I work as + job"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "I like + noun / I like to + verb",
     "desc": "",
     "examples": [
@@ -1059,6 +1336,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 3,
     "words": [
      "I",
      "like",
@@ -1066,26 +1344,32 @@ const DAYS = [
      "and",
      "coffee"
     ],
-    "display": "I like music and coffee."
+    "display": "I like music and coffee.",
+    "alt": [
+     "I like coffee and music."
+    ]
    },
    {
     "k": "subst",
+    "item": 3,
     "tpl": "I like ___.",
-    "slot": "noun / I like to + verb",
     "bank": [
      "music and coffee",
-     "cooking at home",
-     "travelling",
-     "watching football"
+     "football",
+     "to cook at home",
+     "to travel",
+     "to read books"
     ]
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "I like music and coffee.",
     "head": "I like + noun / I like to + verb"
    },
    {
     "k": "patterns",
+    "item": 4,
     "head": "I want + noun / I want to + verb",
     "desc": "",
     "examples": [
@@ -1095,6 +1379,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 4,
     "words": [
      "I",
      "want",
@@ -1107,21 +1392,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 4,
     "tpl": "I want ___.",
-    "slot": "noun / I want to + verb",
     "bank": [
      "to improve my English",
+     "a better job",
      "to speak more confidently",
-     "to get a better job"
-    ]
+     "more free time",
+     "to travel more"
+    ],
+    "field": "goalTo"
    },
    {
     "k": "speak",
+    "item": 4,
     "model": "I want to improve my English.",
     "head": "I want + noun / I want to + verb"
    },
    {
     "k": "patterns",
+    "item": 5,
     "head": "I need + noun / I need to + verb",
     "desc": "",
     "examples": [
@@ -1131,6 +1421,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 5,
     "words": [
      "I",
      "need",
@@ -1142,21 +1433,25 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 5,
     "tpl": "I need ___.",
-    "slot": "noun / I need to + verb",
     "bank": [
      "more speaking practice",
-     "more practice",
-     "to speak English at work"
+     "more time",
+     "to speak English at work",
+     "a quiet place to study",
+     "to practise every day"
     ]
    },
    {
     "k": "speak",
+    "item": 5,
     "model": "I need more speaking practice.",
     "head": "I need + noun / I need to + verb"
    }
   ],
-  "finalSpeak": "Hi, I am Sarah. I am from Penang, Malaysia. I work as an admin assistant. I like music and coffee. I want to improve my English, and I need more speaking practice."
+  "finalSpeak": "Hi, I am Sarah. I am from Penang, Malaysia. I work as an admin assistant. I like music and coffee. I want to improve my English, and I need more speaking practice.",
+  "finalGoal": "improve my English"
  },
  {
   "day": 8,
@@ -1166,17 +1461,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Learning how to ask simple questions",
-   "Using the formula Question word + do you + base verb",
-   "Using “What” to ask for information",
-   "Using “Where” to ask about a place",
-   "Using “Why” to ask for a reason",
-   "Using “How” to ask about a way, method, or feeling",
-   "Using “When” to ask about time",
-   "Understanding and using base verbs",
-   "Building simple questions for everyday conversation",
-   "Practising questions slowly first, then saying them more naturally",
-   "Helping learners become more active in conversations instead of only answering"
+   {
+    "en": "Learning how to ask simple questions",
+    "zh": "学会问简单的问题",
+    "ms": "Belajar bertanya soalan mudah"
+   },
+   {
+    "en": "Using the formula Question word + do you + base verb",
+    "zh": "使用公式 Question word + do you + base verb",
+    "ms": "Menggunakan formula Question word + do you + base verb"
+   },
+   {
+    "en": "Using “What” to ask for information",
+    "zh": "用 “What” 问资讯",
+    "ms": "Menggunakan “What” untuk bertanya maklumat"
+   },
+   {
+    "en": "Using “Where” to ask about a place",
+    "zh": "用 “Where” 问地点",
+    "ms": "Menggunakan “Where” untuk bertanya tempat"
+   },
+   {
+    "en": "Using “Why” to ask for a reason",
+    "zh": "用 “Why” 问原因",
+    "ms": "Menggunakan “Why” untuk bertanya sebab"
+   },
+   {
+    "en": "Using “How” to ask about a way, method, or feeling",
+    "zh": "用 “How” 问方式、方法或感受",
+    "ms": "Menggunakan “How” untuk bertanya cara, kaedah atau perasaan"
+   },
+   {
+    "en": "Using “When” to ask about time",
+    "zh": "用 “When” 问时间",
+    "ms": "Menggunakan “When” untuk bertanya masa"
+   },
+   {
+    "en": "Understanding and using base verbs",
+    "zh": "认识并使用动词原形",
+    "ms": "Memahami dan menggunakan kata kerja asas"
+   }
   ],
   "outcome": "What do you do? Where do you live? Why do you study English? How do you go to work? When do you sleep?",
   "items": [
@@ -1194,6 +1518,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Question word + do you + base verb",
     "desc": "",
     "examples": [
@@ -1205,6 +1530,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "What",
      "do",
@@ -1215,6 +1541,7 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "What do you do?",
     "head": "Question word + do you + base verb"
    }
@@ -1229,16 +1556,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Asking simple Yes/No questions",
-   "Using “Do you + base verb?” for routines and habits",
-   "Using “Can you + base verb?” for ability",
-   "Using “Are you + ...?” for condition, feeling, status, or identity",
-   "Understanding when to use Do you, Can you, and Are you",
-   "Answering Do you...? with Yes, I do / No, I don’t",
-   "Answering Can you...? with Yes, I can / No, I can’t",
-   "Answering Are you...? with Yes, I am / No, I’m not",
-   "Practising both asking and answering questions",
-   "Using simple questions in everyday conversations"
+   {
+    "en": "Asking simple Yes/No questions",
+    "zh": "问简单的 Yes/No 问题",
+    "ms": "Bertanya soalan Yes/No yang mudah"
+   },
+   {
+    "en": "Using “Do you + base verb?” for routines and habits",
+    "zh": "习惯和作息用 “Do you + base verb?”",
+    "ms": "Menggunakan “Do you + base verb?” untuk rutin dan tabiat"
+   },
+   {
+    "en": "Using “Can you + base verb?” for ability",
+    "zh": "能力用 “Can you + base verb?”",
+    "ms": "Menggunakan “Can you + base verb?” untuk kebolehan"
+   },
+   {
+    "en": "Using “Are you + ...?” for condition, feeling, status, or identity",
+    "zh": "状态、感受、身份用 “Are you + ...?”",
+    "ms": "Menggunakan “Are you + ...?” untuk keadaan, perasaan, status atau identiti"
+   },
+   {
+    "en": "Understanding when to use Do you, Can you, and Are you",
+    "zh": "分清楚什么时候用 Do you、Can you、Are you",
+    "ms": "Memahami bila menggunakan Do you, Can you dan Are you"
+   },
+   {
+    "en": "Answering Do you...? with Yes, I do / No, I don’t",
+    "zh": "Do you...? 用 Yes, I do / No, I don’t 回答",
+    "ms": "Menjawab Do you...? dengan Yes, I do / No, I don’t"
+   },
+   {
+    "en": "Answering Can you...? with Yes, I can / No, I can’t",
+    "zh": "Can you...? 用 Yes, I can / No, I can’t 回答",
+    "ms": "Menjawab Can you...? dengan Yes, I can / No, I can’t"
+   },
+   {
+    "en": "Answering Are you...? with Yes, I am / No, I’m not",
+    "zh": "Are you...? 用 Yes, I am / No, I’m not 回答",
+    "ms": "Menjawab Are you...? dengan Yes, I am / No, I’m not"
+   }
   ],
   "outcome": "Do you drink coffee? Yes, I do.",
   "items": [
@@ -1273,6 +1630,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Do you + base verb?",
     "desc": "",
     "examples": [
@@ -1283,6 +1641,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "Do",
      "you",
@@ -1294,22 +1653,25 @@ const DAYS = [
    },
    {
     "k": "subst",
-    "tpl": "Do you ___.",
-    "slot": "base verb?",
+    "item": 0,
+    "tpl": "Do you ___?",
     "bank": [
-     "work on weekends?",
-     "drink coffee?",
-     "speak English?",
-     "drive?"
+     "work on weekends",
+     "drink coffee",
+     "cook at home",
+     "take the bus",
+     "like spicy food"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "Do you work on weekends?",
     "head": "Do you + base verb?"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Can you + base verb?",
     "desc": "",
     "examples": [
@@ -1320,6 +1682,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "Can",
      "you",
@@ -1330,22 +1693,26 @@ const DAYS = [
    },
    {
     "k": "subst",
-    "tpl": "Can you ___.",
-    "slot": "base verb?",
+    "item": 1,
+    "tpl": "Can you ___?",
     "bank": [
-     "speak English?",
-     "work on weekends?",
-     "drink coffee?",
-     "drive?"
+     "speak English",
+     "drive",
+     "swim",
+     "cook",
+     "speak Malay",
+     "help me"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Can you speak English?",
     "head": "Can you + base verb?"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "Are you + ...?",
     "desc": "",
     "examples": [
@@ -1356,6 +1723,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "Are",
      "you",
@@ -1365,18 +1733,20 @@ const DAYS = [
    },
    {
     "k": "subst",
-    "tpl": "Are you ___.",
-    "slot": "...?",
+    "item": 2,
+    "tpl": "Are you ___?",
     "bank": [
-     "busy?",
-     "a student?",
-     "free tomorrow?",
-     "from Penang?",
-     "new here?"
+     "busy",
+     "a student",
+     "free tomorrow",
+     "from Penang",
+     "new here",
+     "tired"
     ]
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "Are you busy?",
     "head": "Are you + ...?"
    },
@@ -1401,17 +1771,46 @@ const DAYS = [
   "review": false,
   "formula": "Main idea + because + reason",
   "covers": [
-   "Giving a reason in English",
-   "Understanding the purpose of “because”",
-   "Using Main idea + because + reason",
-   "Answering “Why?” with a complete sentence",
-   "Expanding short answers into clearer responses",
-   "Giving reasons for things you like",
-   "Giving reasons for things you want",
-   "Giving reasons for things you need",
-   "Giving reasons for things you do",
-   "Making speaking sound clearer and more complete",
-   "Practising how to extend an idea instead of stopping after one short sentence"
+   {
+    "en": "Giving a reason in English",
+    "zh": "用英文说原因",
+    "ms": "Memberi sebab dalam bahasa Inggeris"
+   },
+   {
+    "en": "Understanding the purpose of “because”",
+    "zh": "了解 “because” 的作用",
+    "ms": "Memahami fungsi “because”"
+   },
+   {
+    "en": "Using Main idea + because + reason",
+    "zh": "使用 Main idea + because + reason",
+    "ms": "Menggunakan Main idea + because + reason"
+   },
+   {
+    "en": "Answering “Why?” with a complete sentence",
+    "zh": "用完整的句子回答 “Why?”",
+    "ms": "Menjawab “Why?” dengan ayat lengkap"
+   },
+   {
+    "en": "Expanding short answers into clearer responses",
+    "zh": "把简短的回答扩充得更清楚",
+    "ms": "Memanjangkan jawapan pendek supaya lebih jelas"
+   },
+   {
+    "en": "Giving reasons for things you like",
+    "zh": "说你喜欢某件事的原因",
+    "ms": "Memberi sebab untuk perkara yang anda suka"
+   },
+   {
+    "en": "Giving reasons for things you want",
+    "zh": "说你想要某件事的原因",
+    "ms": "Memberi sebab untuk perkara yang anda mahu"
+   },
+   {
+    "en": "Giving reasons for things you need",
+    "zh": "说你需要某件事的原因",
+    "ms": "Memberi sebab untuk perkara yang anda perlukan"
+   }
   ],
   "outcome": "I study English because I want to speak more confidently.",
   "items": [
@@ -1428,6 +1827,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Main idea + because + reason",
     "desc": "",
     "examples": [
@@ -1437,12 +1837,20 @@ const DAYS = [
     "words": []
    },
    {
-    "k": "speak",
-    "model": "I want to improve my English because I need it for work.",
-    "head": "Main idea + because + reason"
+    "k": "subst",
+    "item": 0,
+    "tpl": "I want to improve my English because ___.",
+    "bank": [
+     "I need it for work",
+     "I want a better job",
+     "I want to travel",
+     "I want to speak more confidently",
+     "my children are learning it"
+    ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I want to improve my English because I need it for work.",
     "head": "Main idea + because + reason"
    },
@@ -1462,17 +1870,46 @@ const DAYS = [
   "review": false,
   "formula": "Main idea + for example + example",
   "covers": [
-   "Giving an example in English",
-   "Understanding the purpose of “for example”",
-   "Using Main idea + for example + example",
-   "Making general ideas more specific",
-   "Helping the listener picture and understand your meaning",
-   "Giving examples about work",
-   "Giving examples about English learning",
-   "Giving examples about daily life",
-   "Giving examples about feelings and speaking difficulties",
-   "Extending short answers into longer responses",
-   "Speaking more clearly and with more detail"
+   {
+    "en": "Giving an example in English",
+    "zh": "用英文举例",
+    "ms": "Memberi contoh dalam bahasa Inggeris"
+   },
+   {
+    "en": "Understanding the purpose of “for example”",
+    "zh": "了解 “for example” 的作用",
+    "ms": "Memahami fungsi “for example”"
+   },
+   {
+    "en": "Using Main idea + for example + example",
+    "zh": "使用 Main idea + for example + example",
+    "ms": "Menggunakan Main idea + for example + example"
+   },
+   {
+    "en": "Making general ideas more specific",
+    "zh": "把笼统的想法说得更具体",
+    "ms": "Menjadikan idea umum lebih khusus"
+   },
+   {
+    "en": "Helping the listener picture and understand your meaning",
+    "zh": "让听的人想象得到、听得懂你的意思",
+    "ms": "Membantu pendengar membayangkan dan memahami maksud anda"
+   },
+   {
+    "en": "Giving examples about work",
+    "zh": "举工作上的例子",
+    "ms": "Memberi contoh tentang kerja"
+   },
+   {
+    "en": "Giving examples about English learning",
+    "zh": "举学英文的例子",
+    "ms": "Memberi contoh tentang belajar bahasa Inggeris"
+   },
+   {
+    "en": "Giving examples about daily life",
+    "zh": "举日常生活的例子",
+    "ms": "Memberi contoh tentang kehidupan harian"
+   }
   ],
   "outcome": "I feel nervous when I speak English. For example, sometimes I know the idea but I don’t know how to say it.",
   "items": [
@@ -1489,6 +1926,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Main idea + for example + example",
     "desc": "",
     "examples": [
@@ -1499,12 +1937,8 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I use English at work. For example, I need to reply to my customers in English.",
-    "head": "Main idea + for example + example"
-   },
-   {
-    "k": "speak",
-    "model": "I use English at work. For example, I reply to customers in English.",
     "head": "Main idea + for example + example"
    },
    {
@@ -1523,16 +1957,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Connecting two simple ideas",
-   "Understanding what a connector does",
-   "Using “and” for similar or related information",
-   "Using “but” for contrasting or opposite information",
-   "Using “so” to show a result",
-   "Combining short sentences into longer ones",
-   "Reducing broken or disconnected speaking",
-   "Making spoken English sound smoother and more natural",
-   "Expressing addition, contrast, and result",
-   "Practising simple sentence patterns using connectors"
+   {
+    "en": "Connecting two simple ideas",
+    "zh": "把两个简单的想法连起来",
+    "ms": "Menyambung dua idea mudah"
+   },
+   {
+    "en": "Understanding what a connector does",
+    "zh": "了解连接词的作用",
+    "ms": "Memahami fungsi kata penghubung"
+   },
+   {
+    "en": "Using “and” for similar or related information",
+    "zh": "相似或相关的资讯用 “and”",
+    "ms": "Menggunakan “and” untuk maklumat yang serupa atau berkaitan"
+   },
+   {
+    "en": "Using “but” for contrasting or opposite information",
+    "zh": "相反或对比的资讯用 “but”",
+    "ms": "Menggunakan “but” untuk maklumat yang bertentangan"
+   },
+   {
+    "en": "Using “so” to show a result",
+    "zh": "用 “so” 表示结果",
+    "ms": "Menggunakan “so” untuk menunjukkan akibat"
+   },
+   {
+    "en": "Combining short sentences into longer ones",
+    "zh": "把短句合成长句",
+    "ms": "Menggabungkan ayat pendek menjadi ayat panjang"
+   },
+   {
+    "en": "Reducing broken or disconnected speaking",
+    "zh": "减少断断续续的说话",
+    "ms": "Mengurangkan cakap yang terputus-putus"
+   },
+   {
+    "en": "Making spoken English sound smoother and more natural",
+    "zh": "让说出来的英文更顺、更自然",
+    "ms": "Menjadikan pertuturan lebih lancar dan semula jadi"
+   }
   ],
   "outcome": "I can understand English, but I can’t speak fluently yet.",
   "items": [
@@ -1567,31 +2031,45 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "and",
     "desc": "Used to connect similar or related ideas.",
     "examples": [
      "I work in sales and I talk to customers every day.",
      "I want to improve my speaking and confidence."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to connect similar or related ideas.",
+     "zh": "连接相似或相关的想法。",
+     "ms": "Untuk menyambung idea yang serupa atau berkaitan."
+    }
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I work in sales and I talk to customers every day.",
     "head": "and"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "but",
     "desc": "Used to connect different or opposite ideas.",
     "examples": [
      "I can understand English, but I can’t speak fluently yet.",
      "I want to practise more, but I have no time."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to connect different or opposite ideas.",
+     "zh": "连接不同或相反的想法。",
+     "ms": "Untuk menyambung idea yang berbeza atau bertentangan."
+    }
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "can",
@@ -1604,37 +2082,38 @@ const DAYS = [
      "fluently",
      "yet"
     ],
-    "display": "I can understand English, but I can’t speak fluently yet."
+    "display": "I can understand English, but I can’t speak fluently yet.",
+    "alt": [
+     "I can’t speak fluently yet, but I can understand English."
+    ]
    },
    {
     "k": "speak",
-    "model": "I can understand English, but I can’t speak fluently yet.",
+    "item": 1,
+    "model": "I want to practise more, but I have no time.",
     "head": "but"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "so",
     "desc": "Used to show a result.",
     "examples": [
      "I need English for work, so I want to improve quickly.",
      "I feel shy, so I don’t speak much."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to show a result.",
+     "zh": "表示结果。",
+     "ms": "Untuk menunjukkan akibat."
+    }
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "I need English for work, so I want to improve quickly.",
     "head": "so"
-   },
-   {
-    "k": "speak",
-    "model": "I work in sales and I talk to customers every day.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "I need English for work, so I want to improve quickly.",
-    "head": ""
    }
   ],
   "finalSpeak": "I can understand English, but I can’t speak fluently yet."
@@ -1647,18 +2126,46 @@ const DAYS = [
   "review": true,
   "formula": "",
   "covers": [
-   "Reviewing the skills learned in the previous videos",
-   "Asking and answering simple questions",
-   "Reviewing Yes/No questions",
-   "Giving a reason using “because”",
-   "Giving an example using “for example”",
-   "Connecting ideas using and, but, and so",
-   "Combining several speaking patterns in one response",
-   "Extending short answers into longer answers",
-   "Making ideas clearer and easier to understand",
-   "Making spoken English sound more natural",
-   "Practising common questions about work and English learning",
-   "Encouraging learners to review and reuse previously learned speaking patterns"
+   {
+    "en": "Reviewing the skills learned in the previous videos",
+    "zh": "复习前几支影片学的技巧",
+    "ms": "Mengulang kaji kemahiran daripada video sebelum ini"
+   },
+   {
+    "en": "Asking and answering simple questions",
+    "zh": "问和答简单的问题",
+    "ms": "Bertanya dan menjawab soalan mudah"
+   },
+   {
+    "en": "Reviewing Yes/No questions",
+    "zh": "复习 Yes/No 问题",
+    "ms": "Mengulang kaji soalan Yes/No"
+   },
+   {
+    "en": "Giving a reason using “because”",
+    "zh": "用 “because” 说原因",
+    "ms": "Memberi sebab dengan “because”"
+   },
+   {
+    "en": "Giving an example using “for example”",
+    "zh": "用 “for example” 举例",
+    "ms": "Memberi contoh dengan “for example”"
+   },
+   {
+    "en": "Connecting ideas using and, but, and so",
+    "zh": "用 and、but、so 连接想法",
+    "ms": "Menyambung idea dengan and, but dan so"
+   },
+   {
+    "en": "Combining several speaking patterns in one response",
+    "zh": "在一个回答里用上几个句型",
+    "ms": "Menggabungkan beberapa corak ayat dalam satu jawapan"
+   },
+   {
+    "en": "Extending short answers into longer answers",
+    "zh": "把短回答变长",
+    "ms": "Memanjangkan jawapan pendek"
+   }
   ],
   "outcome": "I want to improve my English because I need it for work. For example, I need to talk to customers and join meetings. I can understand some English, but I still lack confidence, so I need more practice.",
   "items": [
@@ -1709,6 +2216,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Asking simple questions",
     "desc": "",
     "examples": [
@@ -1719,6 +2227,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "What",
      "do",
@@ -1729,11 +2238,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "What do you do?",
     "head": "Asking simple questions"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Asking Yes/No questions",
     "desc": "",
     "examples": [
@@ -1744,6 +2255,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "Do",
      "you",
@@ -1756,11 +2268,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Do you use English at work?",
     "head": "Asking Yes/No questions"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "Giving reasons using “because”",
     "desc": "",
     "examples": [
@@ -1770,11 +2284,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "I want to improve my English because I need it for work.",
     "head": "Giving reasons using “because”"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "Giving examples using “for example”",
     "desc": "",
     "examples": [
@@ -1784,11 +2300,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "For example, I need to talk to customers and join meetings.",
     "head": "Giving examples using “for example”"
    },
    {
     "k": "patterns",
+    "item": 4,
     "head": "Connecting ideas using “and,” “but,” and “so”",
     "desc": "",
     "examples": [
@@ -1799,6 +2317,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 4,
     "words": [
      "I",
      "can",
@@ -1811,10 +2330,14 @@ const DAYS = [
      "lack",
      "confidence"
     ],
-    "display": "I can understand a little, but I still lack confidence."
+    "display": "I can understand a little, but I still lack confidence.",
+    "alt": [
+     "I still lack confidence, but I can understand a little."
+    ]
    },
    {
     "k": "speak",
+    "item": 4,
     "model": "I can understand a little, but I still lack confidence.",
     "head": "Connecting ideas using “and,” “but,” and “so”"
    }
@@ -1829,16 +2352,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Sharing a personal opinion",
-   "Avoiding very short answers such as “good,” “nice,” or “not bad”",
-   "Using “I think” for a natural opinion",
-   "Using “In my opinion” for a more structured or formal opinion",
-   "Using “My opinion is that” to clearly state a viewpoint",
-   "Using “I believe” for a stronger personal view",
-   "Using “I feel that” for a more personal or emotional opinion",
-   "Making opinions sound clearer and more organised",
-   "Using opinion starters in daily life and workplace communication",
-   "Practising opinions about topics such as online learning, speaking practice, and learning English step by step"
+   {
+    "en": "Sharing a personal opinion",
+    "zh": "说出个人的意见",
+    "ms": "Berkongsi pendapat peribadi"
+   },
+   {
+    "en": "Avoiding very short answers such as “good,” “nice,” or “not bad”",
+    "zh": "避免只说 “good”、“nice”、“not bad” 这种太短的回答",
+    "ms": "Mengelakkan jawapan terlalu pendek seperti “good”, “nice” atau “not bad”"
+   },
+   {
+    "en": "Using “I think” for a natural opinion",
+    "zh": "一般的意见用 “I think”",
+    "ms": "Menggunakan “I think” untuk pendapat biasa"
+   },
+   {
+    "en": "Using “In my opinion” for a more structured or formal opinion",
+    "zh": "较正式的意见用 “In my opinion”",
+    "ms": "Menggunakan “In my opinion” untuk pendapat yang lebih formal"
+   },
+   {
+    "en": "Using “My opinion is that” to clearly state a viewpoint",
+    "zh": "用 “My opinion is that” 清楚说出立场",
+    "ms": "Menggunakan “My opinion is that” untuk menyatakan pandangan dengan jelas"
+   },
+   {
+    "en": "Using “I believe” for a stronger personal view",
+    "zh": "比较肯定的看法用 “I believe”",
+    "ms": "Menggunakan “I believe” untuk pandangan yang lebih kuat"
+   },
+   {
+    "en": "Using “I feel that” for a more personal or emotional opinion",
+    "zh": "比较个人或带感受的意见用 “I feel that”",
+    "ms": "Menggunakan “I feel that” untuk pendapat yang lebih peribadi"
+   },
+   {
+    "en": "Making opinions sound clearer and more organised",
+    "zh": "让意见听起来更清楚、更有条理",
+    "ms": "Menjadikan pendapat lebih jelas dan tersusun"
+   }
   ],
   "outcome": "In my opinion, practice is more important than memorising.",
   "items": [
@@ -1863,7 +2416,7 @@ const DAYS = [
     "head": "My opinion is that + idea",
     "desc": "",
     "examples": [
-     "My opinion is that confidence requires time."
+     "My opinion is that confidence takes time."
     ],
     "words": []
    },
@@ -1887,6 +2440,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I think + idea",
     "desc": "",
     "examples": [
@@ -1897,6 +2451,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "I",
      "think",
@@ -1909,24 +2464,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "I think ___.",
-    "slot": "idea",
     "bank": [
      "this project is good",
+     "online learning is convenient",
      "speaking practice is very important",
      "practice is more important than memorising",
-     "confidence requires time",
-     "practice helps people improve faster",
-     "speaking every day is very helpful"
+     "confidence takes time",
+     "practice helps people improve faster"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I think this project is good.",
     "head": "I think + idea"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "In my opinion + idea",
     "desc": "",
     "examples": [
@@ -1936,6 +2493,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "In",
      "my",
@@ -1947,55 +2505,55 @@ const DAYS = [
      "than",
      "memorising"
     ],
-    "display": "In my opinion, practice is more important than memorising."
+    "display": "In my opinion, practice is more important than memorising.",
+    "alt": [
+     "Practice is more important than memorising, in my opinion."
+    ]
    },
    {
     "k": "subst",
-    "tpl": "In my opinion ___.",
-    "slot": "idea",
+    "item": 1,
+    "tpl": "In my opinion, ___.",
     "bank": [
      "practice is more important than memorising",
-     "this project is good",
+     "online learning is convenient",
      "speaking practice is very important",
-     "confidence requires time",
+     "confidence takes time",
      "practice helps people improve faster",
      "speaking every day is very helpful"
     ]
    },
    {
-    "k": "speak",
-    "model": "In my opinion, practice is more important than memorising.",
-    "head": "In my opinion + idea"
-   },
-   {
     "k": "patterns",
+    "item": 2,
     "head": "My opinion is that + idea",
     "desc": "",
     "examples": [
-     "My opinion is that confidence requires time."
+     "My opinion is that confidence takes time."
     ],
     "words": []
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "My",
      "opinion",
      "is",
      "that",
      "confidence",
-     "requires",
+     "takes",
      "time"
     ],
-    "display": "My opinion is that confidence requires time."
+    "display": "My opinion is that confidence takes time."
    },
    {
     "k": "subst",
+    "item": 2,
     "tpl": "My opinion is that ___.",
-    "slot": "idea",
     "bank": [
-     "confidence requires time",
-     "this project is good",
+     "confidence takes time",
+     "online learning is convenient",
      "speaking practice is very important",
      "practice is more important than memorising",
      "practice helps people improve faster",
@@ -2004,11 +2562,13 @@ const DAYS = [
    },
    {
     "k": "speak",
-    "model": "My opinion is that confidence requires time.",
+    "item": 2,
+    "model": "My opinion is that confidence takes time.",
     "head": "My opinion is that + idea"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "I believe + idea",
     "desc": "",
     "examples": [
@@ -2018,6 +2578,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 3,
     "words": [
      "I",
      "believe",
@@ -2031,24 +2592,26 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 3,
     "tpl": "I believe ___.",
-    "slot": "idea",
     "bank": [
      "practice helps people improve faster",
-     "this project is good",
+     "online learning is convenient",
      "speaking practice is very important",
      "practice is more important than memorising",
-     "confidence requires time",
+     "confidence takes time",
      "speaking every day is very helpful"
     ]
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "I believe practice helps people improve faster.",
     "head": "I believe + idea"
    },
    {
     "k": "patterns",
+    "item": 4,
     "head": "I feel that + idea",
     "desc": "",
     "examples": [
@@ -2058,6 +2621,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 4,
     "words": [
      "I",
      "feel",
@@ -2073,19 +2637,20 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 4,
     "tpl": "I feel that ___.",
-    "slot": "idea",
     "bank": [
      "speaking every day is very helpful",
-     "this project is good",
+     "online learning is convenient",
      "speaking practice is very important",
      "practice is more important than memorising",
-     "confidence requires time",
+     "confidence takes time",
      "practice helps people improve faster"
     ]
    },
    {
     "k": "speak",
+    "item": 4,
     "model": "I feel that speaking every day is very helpful.",
     "head": "I feel that + idea"
    },
@@ -2097,11 +2662,6 @@ const DAYS = [
    {
     "k": "speak",
     "model": "I believe confidence can be built step by step.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "I feel that speaking every day is very helpful.",
     "head": ""
    }
   ],
@@ -2115,16 +2675,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Giving a simple explanation",
-   "Extending an opinion with a reason",
-   "Using “The reason is…”",
-   "Using “This is because…”",
-   "Using “because” to explain why",
-   "Using “Now let me explain” to introduce an explanation",
-   "Combining opinion + reason",
-   "Making short opinions longer and clearer",
-   "Helping listeners understand why you have a certain opinion",
-   "Building more complete answers for daily life and workplace communication"
+   {
+    "en": "Giving a simple explanation",
+    "zh": "做简单的解释",
+    "ms": "Memberi penjelasan mudah"
+   },
+   {
+    "en": "Extending an opinion with a reason",
+    "zh": "在意见后面加上原因",
+    "ms": "Menambah sebab selepas pendapat"
+   },
+   {
+    "en": "Using “The reason is…”",
+    "zh": "使用 “The reason is…”",
+    "ms": "Menggunakan “The reason is…”"
+   },
+   {
+    "en": "Using “This is because…”",
+    "zh": "使用 “This is because…”",
+    "ms": "Menggunakan “This is because…”"
+   },
+   {
+    "en": "Using “because” to explain why",
+    "zh": "用 “because” 解释为什么",
+    "ms": "Menggunakan “because” untuk menerangkan sebab"
+   },
+   {
+    "en": "Using “Now let me explain” to introduce an explanation",
+    "zh": "用 “Now let me explain” 带出解释",
+    "ms": "Menggunakan “Now let me explain” untuk memulakan penjelasan"
+   },
+   {
+    "en": "Combining opinion + reason",
+    "zh": "把意见和原因合起来",
+    "ms": "Menggabungkan pendapat + sebab"
+   },
+   {
+    "en": "Making short opinions longer and clearer",
+    "zh": "把短短的意见说得更长、更清楚",
+    "ms": "Menjadikan pendapat pendek lebih panjang dan jelas"
+   }
   ],
   "outcome": "In my opinion, speaking practice is important because it helps people become more confident.",
   "items": [
@@ -2132,15 +2722,15 @@ const DAYS = [
     "head": "Opinion + reason",
     "desc": "",
     "examples": [
-     "I think speaking practice is very important. The reason is it helps people build confidence."
+     "I think speaking practice is very important. The reason is that it helps people build confidence."
     ],
     "words": []
    },
    {
-    "head": "The reason is + reason",
+    "head": "The reason is that + reason",
     "desc": "",
     "examples": [
-     "I think this class is useful. The reason is it is easy to follow."
+     "I think this class is useful. The reason is that it is easy to follow."
     ],
     "words": []
    },
@@ -2164,34 +2754,50 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Opinion + reason",
     "desc": "",
     "examples": [
-     "I think speaking practice is very important. The reason is it helps people build confidence."
+     "I think speaking practice is very important. The reason is that it helps people build confidence."
     ],
     "words": []
    },
    {
     "k": "speak",
-    "model": "I think speaking practice is very important. The reason is it helps people build confidence.",
+    "item": 0,
+    "model": "I think speaking practice is very important. The reason is that it helps people build confidence.",
     "head": "Opinion + reason"
    },
    {
     "k": "patterns",
-    "head": "The reason is + reason",
+    "item": 1,
+    "head": "The reason is that + reason",
     "desc": "",
     "examples": [
-     "I think this class is useful. The reason is it is easy to follow."
+     "I think this class is useful. The reason is that it is easy to follow."
     ],
     "words": []
    },
    {
+    "k": "subst",
+    "item": 1,
+    "tpl": "I think this class is useful. The reason is that ___.",
+    "bank": [
+     "it is easy to follow",
+     "the lessons are practical",
+     "the teacher explains clearly",
+     "I can practise speaking every day"
+    ]
+   },
+   {
     "k": "speak",
-    "model": "I think this class is useful. The reason is it is easy to follow.",
-    "head": "The reason is + reason"
+    "item": 1,
+    "model": "I think this class is useful. The reason is that it is easy to follow.",
+    "head": "The reason is that + reason"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "This is because + reason",
     "desc": "",
     "examples": [
@@ -2201,11 +2807,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "I think online learning is convenient. This is because it is flexible and saves time.",
     "head": "This is because + reason"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "Because + reason",
     "desc": "",
     "examples": [
@@ -2215,17 +2823,7 @@ const DAYS = [
    },
    {
     "k": "speak",
-    "model": "In my opinion, speaking practice is important because it helps people become more confident.",
-    "head": "Because + reason"
-   },
-   {
-    "k": "speak",
-    "model": "I think online learning is convenient. This is because it is flexible and saves time.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "I believe daily practice is important. The reason is it helps people improve step by step.",
+    "model": "I believe daily practice is important. The reason is that it helps people improve step by step.",
     "head": ""
    }
   ],
@@ -2239,32 +2837,62 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Giving an example after a reason",
-   "Using “One example is…”",
-   "Using “For example…”",
-   "Making general ideas more specific",
-   "Helping the listener understand your reason better",
-   "Combining an opinion + reason + example",
-   "Making answers clearer and more complete",
-   "Extending short responses into longer answers",
-   "Using examples related to work, English learning, and online learning",
-   "Revising and practising previously learned speaking patterns"
+   {
+    "en": "Giving an example after a reason",
+    "zh": "说完原因再举例",
+    "ms": "Memberi contoh selepas sebab"
+   },
+   {
+    "en": "Using “One example is…”",
+    "zh": "使用 “One example is…”",
+    "ms": "Menggunakan “One example is…”"
+   },
+   {
+    "en": "Using “For example…”",
+    "zh": "使用 “For example…”",
+    "ms": "Menggunakan “For example…”"
+   },
+   {
+    "en": "Making general ideas more specific",
+    "zh": "把笼统的想法说得更具体",
+    "ms": "Menjadikan idea umum lebih khusus"
+   },
+   {
+    "en": "Helping the listener understand your reason better",
+    "zh": "让听的人更懂你的原因",
+    "ms": "Membantu pendengar memahami sebab anda"
+   },
+   {
+    "en": "Combining an opinion + reason + example",
+    "zh": "把意见＋原因＋例子合起来",
+    "ms": "Menggabungkan pendapat + sebab + contoh"
+   },
+   {
+    "en": "Making answers clearer and more complete",
+    "zh": "让回答更清楚、更完整",
+    "ms": "Menjadikan jawapan lebih jelas dan lengkap"
+   },
+   {
+    "en": "Extending short responses into longer answers",
+    "zh": "把短回答变成长回答",
+    "ms": "Memanjangkan jawapan pendek"
+   }
   ],
-  "outcome": "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English.",
+  "outcome": "I think English is important. The reason is that it helps me at work. One example is that I need to speak to customers in English.",
   "items": [
    {
     "head": "Opinion + reason + example",
     "desc": "",
     "examples": [
-     "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English."
+     "I think English is important. The reason is that it helps me at work. One example is that I need to speak to customers in English."
     ],
     "words": []
    },
    {
-    "head": "One example is + example",
+    "head": "One example is that + example",
     "desc": "",
     "examples": [
-     "One example is I need to speak to customers in English."
+     "One example is that I need to speak to customers in English."
     ],
     "words": []
    },
@@ -2280,44 +2908,44 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Opinion + reason + example",
     "desc": "",
     "examples": [
-     "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English."
+     "I think English is important. The reason is that it helps me at work. One example is that I need to speak to customers in English."
     ],
     "words": []
    },
    {
-    "k": "speak",
-    "model": "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English.",
-    "head": "Opinion + reason + example"
-   },
-   {
     "k": "patterns",
-    "head": "One example is + example",
+    "item": 1,
+    "head": "One example is that + example",
     "desc": "",
     "examples": [
-     "One example is I need to speak to customers in English."
+     "One example is that I need to speak to customers in English."
     ],
     "words": []
    },
    {
     "k": "subst",
-    "tpl": "One example is ___.",
-    "slot": "example",
+    "item": 1,
+    "tpl": "One example is that ___.",
     "bank": [
      "I need to speak to customers in English",
      "I can join classes at home after work",
-     "that I can answer questions better when I practise more"
+     "I can answer questions better when I practise more",
+     "I use English in meetings"
     ]
    },
    {
     "k": "speak",
-    "model": "One example is I need to speak to customers in English.",
-    "head": "One example is + example"
+    "item": 1,
+    "model": "One example is that I need to speak to customers in English.",
+    "head": "One example is that + example"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "For example + example",
     "desc": "",
     "examples": [
@@ -2327,6 +2955,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "For",
      "example",
@@ -2339,25 +2968,31 @@ const DAYS = [
      "after",
      "work"
     ],
-    "display": "For example, I can join classes at home after work."
+    "display": "For example, I can join classes at home after work.",
+    "alt": [
+     "For example, I can join classes after work at home.",
+     "I can join classes at home after work, for example."
+    ]
    },
    {
     "k": "subst",
-    "tpl": "For example ___.",
-    "slot": "example",
+    "item": 2,
+    "tpl": "For example, ___.",
     "bank": [
      "I can join classes at home after work",
      "I need to speak to customers in English",
-     "that I can answer questions better when I practise more"
+     "I can answer questions better when I practise more",
+     "I use English in meetings"
     ]
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "For example, I can join classes at home after work.",
     "head": "For example + example"
    }
   ],
-  "finalSpeak": "I think English is important. The reason is it helps me at work. One example is I need to speak to customers in English."
+  "finalSpeak": "I think English is important. The reason is that it helps me at work. One example is that I need to speak to customers in English."
  },
  {
   "day": 17,
@@ -2367,17 +3002,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about your past",
-   "Sharing a previous job",
-   "Talking about your studies",
-   "Describing your English ability before",
-   "Talking about your confidence before",
-   "Using “In the past…” for an old situation",
-   "Using “Before…” for an earlier situation",
-   "Answering simple questions about previous experiences",
-   "Comparing how things were before with how they are now",
-   "Building simple and clear sentences about the past",
-   "Practising 2 to 3 past-related topics at a time"
+   {
+    "en": "Talking about your past",
+    "zh": "谈自己的过去",
+    "ms": "Bercakap tentang masa lalu anda"
+   },
+   {
+    "en": "Sharing a previous job",
+    "zh": "说以前的工作",
+    "ms": "Bercerita tentang kerja lama"
+   },
+   {
+    "en": "Talking about your studies",
+    "zh": "谈自己的学业",
+    "ms": "Bercakap tentang pengajian anda"
+   },
+   {
+    "en": "Describing your English ability before",
+    "zh": "说你以前的英文程度",
+    "ms": "Menerangkan tahap bahasa Inggeris anda dahulu"
+   },
+   {
+    "en": "Talking about your confidence before",
+    "zh": "说你以前的信心",
+    "ms": "Bercakap tentang keyakinan anda dahulu"
+   },
+   {
+    "en": "Using “In the past…” for an old situation",
+    "zh": "以前的情况用 “In the past…”",
+    "ms": "Menggunakan “In the past…” untuk keadaan lama"
+   },
+   {
+    "en": "Using “Before…” for an earlier situation",
+    "zh": "更早的情况用 “Before…”",
+    "ms": "Menggunakan “Before…” untuk keadaan sebelum ini"
+   },
+   {
+    "en": "Answering simple questions about previous experiences",
+    "zh": "回答关于过去经验的简单问题",
+    "ms": "Menjawab soalan mudah tentang pengalaman lalu"
+   }
   ],
   "outcome": "In the past, I was not confident in English.",
   "items": [
@@ -2403,6 +3067,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "In the past + past situation",
     "desc": "",
     "examples": [
@@ -2413,6 +3078,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "In",
      "the",
@@ -2422,27 +3088,32 @@ const DAYS = [
      "very",
      "shy"
     ],
-    "display": "In the past, I was very shy."
+    "display": "In the past, I was very shy.",
+    "alt": [
+     "I was very shy in the past."
+    ]
    },
    {
     "k": "subst",
-    "tpl": "In the past ___.",
-    "slot": "past situation",
+    "item": 0,
+    "tpl": "In the past, I ___.",
     "bank": [
-     "I was very shy",
-     "I worked in customer service",
-     "I studied marketing",
-     "I didn’t speak much English in class",
+     "was very shy",
+     "worked in customer service",
+     "studied marketing",
+     "didn’t speak much English in class",
      "was very shy and I did not speak much English"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "In the past, I was very shy.",
     "head": "In the past + past situation"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Before + past situation",
     "desc": "",
     "examples": [
@@ -2453,39 +3124,39 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "Before",
      "I",
      "studied",
      "marketing"
     ],
-    "display": "Before, I studied marketing."
+    "display": "Before, I studied marketing.",
+    "alt": [
+     "I studied marketing before."
+    ]
    },
    {
     "k": "subst",
-    "tpl": "Before ___.",
-    "slot": "past situation",
+    "item": 1,
+    "tpl": "Before, I ___.",
     "bank": [
-     "I studied marketing",
-     "I was very shy",
-     "I worked in customer service",
-     "I didn’t speak much English in class",
+     "studied marketing",
+     "was very shy",
+     "worked in customer service",
+     "didn’t speak much English in class",
      "was very shy and I did not speak much English"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Before, I studied marketing.",
     "head": "Before + past situation"
    },
    {
     "k": "speak",
     "model": "In the past, I worked in customer service.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "Before, I studied marketing.",
     "head": ""
    },
    {
@@ -2498,24 +3169,52 @@ const DAYS = [
  },
  {
   "day": 18,
-  "title": "How to Talk about your Present Moment",
+  "title": "How to Talk About Your Present Moment",
   "tagline": "What You’re Doing Now",
   "video": "-LIaHyHxCkM",
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about your present situation",
-   "Describing how you are now",
-   "Talking about your current English ability",
-   "Talking about your current confidence",
-   "Describing your current habits",
-   "Talking about what you are improving recently",
-   "Using “Now…” for a current situation",
-   "Using “These days…” for something happening recently or during this period",
-   "Answering simple questions about your current life",
-   "Comparing your current situation with how you were before",
-   "Building clear and simple sentences about the present",
-   "Encouraging learners to combine previously learned speaking patterns"
+   {
+    "en": "Talking about your present situation",
+    "zh": "谈自己现在的情况",
+    "ms": "Bercakap tentang keadaan anda sekarang"
+   },
+   {
+    "en": "Describing how you are now",
+    "zh": "说你现在怎么样",
+    "ms": "Menerangkan keadaan anda sekarang"
+   },
+   {
+    "en": "Talking about your current English ability",
+    "zh": "说你现在的英文程度",
+    "ms": "Bercakap tentang tahap bahasa Inggeris anda sekarang"
+   },
+   {
+    "en": "Talking about your current confidence",
+    "zh": "说你现在的信心",
+    "ms": "Bercakap tentang keyakinan anda sekarang"
+   },
+   {
+    "en": "Describing your current habits",
+    "zh": "说你现在的习惯",
+    "ms": "Menerangkan tabiat anda sekarang"
+   },
+   {
+    "en": "Talking about what you are improving recently",
+    "zh": "说你最近在进步的地方",
+    "ms": "Bercakap tentang apa yang anda sedang perbaiki"
+   },
+   {
+    "en": "Using “Now…” for a current situation",
+    "zh": "现在的情况用 “Now…”",
+    "ms": "Menggunakan “Now…” untuk keadaan sekarang"
+   },
+   {
+    "en": "Using “These days…” for something happening recently or during this period",
+    "zh": "最近这段时间的事用 “These days…”",
+    "ms": "Menggunakan “These days…” untuk perkara yang berlaku sejak kebelakangan ini"
+   }
   ],
   "outcome": "These days, I’m trying to speak in full sentences.",
   "items": [
@@ -2541,6 +3240,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Now + present situation",
     "desc": "",
     "examples": [
@@ -2551,6 +3251,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "Now",
      "I",
@@ -2558,27 +3259,32 @@ const DAYS = [
      "more",
      "confident"
     ],
-    "display": "Now, I feel more confident."
+    "display": "Now, I feel more confident.",
+    "alt": [
+     "I feel more confident now."
+    ]
    },
    {
     "k": "subst",
-    "tpl": "Now ___.",
-    "slot": "present situation",
+    "item": 0,
+    "tpl": "Now, I ___.",
     "bank": [
-     "I feel more confident",
-     "I speak more English in class",
-     "I’m practising English every day",
-     "I use English more at work",
-     "try to use simple English every day"
+     "feel more confident",
+     "speak more English in class",
+     "use English more at work",
+     "try to use simple English every day",
+     "understand more English"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "Now, I feel more confident.",
     "head": "Now + present situation"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "These days + present situation",
     "desc": "",
     "examples": [
@@ -2589,6 +3295,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "These",
      "days",
@@ -2598,38 +3305,32 @@ const DAYS = [
      "every",
      "day"
     ],
-    "display": "These days, I’m practising English every day."
+    "display": "These days, I’m practising English every day.",
+    "alt": [
+     "I’m practising English every day these days."
+    ]
    },
    {
     "k": "subst",
-    "tpl": "These days ___.",
-    "slot": "present situation",
+    "item": 1,
+    "tpl": "These days, ___.",
     "bank": [
      "I’m practising English every day",
-     "I feel more confident",
-     "I speak more English in class",
      "I use English more at work",
-     "try to use simple English every day"
+     "I feel more confident",
+     "I watch English videos at night",
+     "I’m learning to speak in full sentences"
     ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "These days, I’m practising English every day.",
     "head": "These days + present situation"
    },
    {
     "k": "speak",
-    "model": "Now, I feel more confident.",
-    "head": ""
-   },
-   {
-    "k": "speak",
     "model": "Now, I understand more English.",
-    "head": ""
-   },
-   {
-    "k": "speak",
-    "model": "These days, I’m practising English every day.",
     "head": ""
    }
   ],
@@ -2643,18 +3344,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Talking about your future",
-   "Sharing your future goals",
-   "Talking about things you want to improve",
-   "Talking about things you want to achieve",
-   "Using “In the future…” for future goals",
-   "Using “I will…” for future actions or plans",
-   "Using “I want to…” for future desires or targets",
-   "Answering simple questions about future plans",
-   "Talking about future English-learning goals",
-   "Talking about future workplace goals",
-   "Building simple and clear sentences about the future",
-   "Connecting past, present, and future speaking skills from the previous lessons"
+   {
+    "en": "Talking about your future",
+    "zh": "谈自己的未来",
+    "ms": "Bercakap tentang masa depan anda"
+   },
+   {
+    "en": "Sharing your future goals",
+    "zh": "说你未来的目标",
+    "ms": "Berkongsi matlamat masa depan"
+   },
+   {
+    "en": "Talking about things you want to improve",
+    "zh": "说你想进步的地方",
+    "ms": "Bercakap tentang perkara yang anda mahu perbaiki"
+   },
+   {
+    "en": "Talking about things you want to achieve",
+    "zh": "说你想达成的事",
+    "ms": "Bercakap tentang perkara yang anda mahu capai"
+   },
+   {
+    "en": "Using “In the future…” for future goals",
+    "zh": "未来的目标用 “In the future…”",
+    "ms": "Menggunakan “In the future…” untuk matlamat masa depan"
+   },
+   {
+    "en": "Using “I will…” for future actions or plans",
+    "zh": "未来的行动或计划用 “I will…”",
+    "ms": "Menggunakan “I will…” untuk tindakan atau rancangan"
+   },
+   {
+    "en": "Using “I want to…” for future desires or targets",
+    "zh": "想做到的事用 “I want to…”",
+    "ms": "Menggunakan “I want to…” untuk hasrat atau sasaran"
+   },
+   {
+    "en": "Answering simple questions about future plans",
+    "zh": "回答关于未来计划的简单问题",
+    "ms": "Menjawab soalan mudah tentang rancangan masa depan"
+   }
   ],
   "outcome": "I want to become more confident when I give a presentation.",
   "items": [
@@ -2689,6 +3418,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "In the future + future goal",
     "desc": "",
     "examples": [
@@ -2699,6 +3429,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "In",
      "the",
@@ -2711,25 +3442,33 @@ const DAYS = [
      "more",
      "confidently"
     ],
-    "display": "In the future, I want to speak English more confidently."
-   },
-   {
-    "k": "subst",
-    "tpl": "In the future ___.",
-    "slot": "future goal",
-    "bank": [
-     "I want to speak English more confidently",
-     "I want to use English better at work",
-     "speak more confidently"
+    "display": "In the future, I want to speak English more confidently.",
+    "alt": [
+     "I want to speak English more confidently in the future."
     ]
    },
    {
+    "k": "subst",
+    "item": 0,
+    "tpl": "In the future, I want to ___.",
+    "bank": [
+     "speak English more confidently",
+     "use English better at work",
+     "speak more confidently",
+     "get a better job",
+     "travel overseas"
+    ],
+    "field": "goal"
+   },
+   {
     "k": "speak",
+    "item": 0,
     "model": "In the future, I want to speak English more confidently.",
     "head": "In the future + future goal"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "I will + action",
     "desc": "",
     "examples": [
@@ -2740,6 +3479,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "I",
      "will",
@@ -2747,12 +3487,15 @@ const DAYS = [
      "every",
      "day"
     ],
-    "display": "I will practise every day."
+    "display": "I will practise every day.",
+    "alt": [
+     "Every day, I will practise."
+    ]
    },
    {
     "k": "subst",
+    "item": 1,
     "tpl": "I will ___.",
-    "slot": "action",
     "bank": [
      "practise every day",
      "speak more in class",
@@ -2763,11 +3506,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "I will practise every day.",
     "head": "I will + action"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "I want to + goal",
     "desc": "",
     "examples": [
@@ -2778,6 +3523,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "I",
      "want",
@@ -2790,25 +3536,22 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 2,
     "tpl": "I want to ___.",
-    "slot": "goal",
     "bank": [
      "improve my speaking",
      "become more confident",
      "pass my interview",
      "speak with customers",
      "get a better job"
-    ]
+    ],
+    "field": "goal"
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "I want to improve my speaking.",
     "head": "I want to + goal"
-   },
-   {
-    "k": "speak",
-    "model": "In the future, I want to speak English more confidently.",
-    "head": ""
    },
    {
     "k": "speak",
@@ -2816,7 +3559,8 @@ const DAYS = [
     "head": ""
    }
   ],
-  "finalSpeak": "I want to become more confident when I give a presentation."
+  "finalSpeak": "I want to become more confident when I give a presentation.",
+  "finalGoal": "become more confident when I give a presentation"
  },
  {
   "day": 20,
@@ -2826,20 +3570,48 @@ const DAYS = [
   "review": true,
   "formula": "",
   "covers": [
-   "Reviewing the speaking skills from the previous lessons",
-   "Giving an opinion",
-   "Explaining a reason",
-   "Giving an example",
-   "Talking about your past",
-   "Talking about your present",
-   "Talking about your future",
-   "Talking about a future action or plan",
-   "Combining different speaking patterns into one complete response",
-   "Moving from one short sentence to a longer explanation",
-   "Making spoken English sound clearer and more complete",
-   "Using a structured framework for daily life, workplace communication, and interviews"
+   {
+    "en": "Reviewing the speaking skills from the previous lessons",
+    "zh": "复习前几课的口说技巧",
+    "ms": "Mengulang kaji kemahiran bertutur daripada pelajaran lepas"
+   },
+   {
+    "en": "Giving an opinion",
+    "zh": "说意见",
+    "ms": "Memberi pendapat"
+   },
+   {
+    "en": "Explaining a reason",
+    "zh": "解释原因",
+    "ms": "Menerangkan sebab"
+   },
+   {
+    "en": "Giving an example",
+    "zh": "举例",
+    "ms": "Memberi contoh"
+   },
+   {
+    "en": "Talking about your past",
+    "zh": "谈自己的过去",
+    "ms": "Bercakap tentang masa lalu anda"
+   },
+   {
+    "en": "Talking about your present",
+    "zh": "谈现在",
+    "ms": "Bercakap tentang masa kini"
+   },
+   {
+    "en": "Talking about your future",
+    "zh": "谈自己的未来",
+    "ms": "Bercakap tentang masa depan anda"
+   },
+   {
+    "en": "Talking about a future action or plan",
+    "zh": "谈未来的行动或计划",
+    "ms": "Bercakap tentang tindakan atau rancangan akan datang"
+   }
   ],
-  "outcome": "My opinion is that English practice is very important. The reason is it helps me improve slowly. One example is that I can answer better in class. In the past, I was not confident, but now I can speak more. In the future, I want to speak more fluently, so I will practise more every day.",
+  "outcome": "My opinion is that English practice is very important. The reason is that it helps me improve step by step. One example is that I can answer better in class. In the past, I was not confident, but now I can speak more. In the future, I want to speak more fluently, so I will practise more every day.",
   "items": [
    {
     "head": "My opinion is that + opinion",
@@ -2850,15 +3622,15 @@ const DAYS = [
     "words": []
    },
    {
-    "head": "The reason is + reason",
+    "head": "The reason is that + reason",
     "desc": "",
     "examples": [
-     "The reason is it helps me build confidence."
+     "The reason is that it helps me build confidence."
     ],
     "words": []
    },
    {
-    "head": "One example is + example",
+    "head": "One example is that + example",
     "desc": "",
     "examples": [
      "One example is that I can answer questions better when I practise more."
@@ -2901,6 +3673,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "My opinion is that + opinion",
     "desc": "",
     "examples": [
@@ -2910,6 +3683,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "My",
      "opinion",
@@ -2925,46 +3699,51 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 0,
     "tpl": "My opinion is that ___.",
-    "slot": "opinion",
     "bank": [
      "speaking practice is very important",
      "this class is useful",
-     "online learning is convenient"
+     "online learning is convenient",
+     "English practice is very important"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "My opinion is that speaking practice is very important.",
     "head": "My opinion is that + opinion"
    },
    {
     "k": "patterns",
-    "head": "The reason is + reason",
+    "item": 1,
+    "head": "The reason is that + reason",
     "desc": "",
     "examples": [
-     "The reason is it helps me build confidence."
+     "The reason is that it helps me build confidence."
     ],
     "words": []
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "The",
      "reason",
      "is",
+     "that",
      "it",
      "helps",
      "me",
      "build",
      "confidence"
     ],
-    "display": "The reason is it helps me build confidence."
+    "display": "The reason is that it helps me build confidence."
    },
    {
     "k": "subst",
-    "tpl": "The reason is ___.",
-    "slot": "reason",
+    "item": 1,
+    "tpl": "The reason is that ___.",
     "bank": [
      "it helps me build confidence",
      "I need it for work",
@@ -2974,12 +3753,14 @@ const DAYS = [
    },
    {
     "k": "speak",
-    "model": "The reason is it helps me build confidence.",
-    "head": "The reason is + reason"
+    "item": 1,
+    "model": "The reason is that it helps me build confidence.",
+    "head": "The reason is that + reason"
    },
    {
     "k": "patterns",
-    "head": "One example is + example",
+    "item": 2,
+    "head": "One example is that + example",
     "desc": "",
     "examples": [
      "One example is that I can answer questions better when I practise more."
@@ -2988,21 +3769,24 @@ const DAYS = [
    },
    {
     "k": "subst",
-    "tpl": "One example is ___.",
-    "slot": "example",
+    "item": 2,
+    "tpl": "One example is that ___.",
     "bank": [
-     "that I can answer questions better when I practise more",
+     "I can answer questions better when I practise more",
      "I need to speak to customers in English",
-     "I can join classes at home after work"
+     "I can join classes at home after work",
+     "I use English in meetings"
     ]
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "One example is that I can answer questions better when I practise more.",
-    "head": "One example is + example"
+    "head": "One example is that + example"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "In the past, I + past situation",
     "desc": "",
     "examples": [
@@ -3012,23 +3796,25 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 3,
     "tpl": "In the past, I ___.",
-    "slot": "past situation",
     "bank": [
      "was very shy and I did not speak much English",
-     "I was very shy",
-     "I worked in customer service",
-     "I studied marketing",
-     "I didn’t speak much English in class"
+     "was very shy",
+     "worked in customer service",
+     "studied marketing",
+     "didn’t speak much English in class"
     ]
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "In the past, I was very shy and I did not speak much English.",
     "head": "In the past, I + past situation"
    },
    {
     "k": "patterns",
+    "item": 4,
     "head": "But now, I + present situation",
     "desc": "",
     "examples": [
@@ -3038,6 +3824,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 4,
     "words": [
      "But",
      "now",
@@ -3050,27 +3837,32 @@ const DAYS = [
      "every",
      "day"
     ],
-    "display": "But now, I try to use simple English every day."
+    "display": "But now, I try to use simple English every day.",
+    "alt": [
+     "But now, every day I try to use simple English."
+    ]
    },
    {
     "k": "subst",
+    "item": 4,
     "tpl": "But now, I ___.",
-    "slot": "present situation",
     "bank": [
      "try to use simple English every day",
-     "I feel more confident",
-     "I speak more English in class",
-     "I’m practising English every day",
-     "I use English more at work"
+     "feel more confident",
+     "speak more English in class",
+     "use English more at work",
+     "understand more English"
     ]
    },
    {
     "k": "speak",
+    "item": 4,
     "model": "But now, I try to use simple English every day.",
     "head": "But now, I + present situation"
    },
    {
     "k": "patterns",
+    "item": 5,
     "head": "In the future, I want to + future goal",
     "desc": "",
     "examples": [
@@ -3080,6 +3872,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 5,
     "words": [
      "In",
      "the",
@@ -3091,25 +3884,33 @@ const DAYS = [
      "more",
      "confidently"
     ],
-    "display": "In the future, I want to speak more confidently."
-   },
-   {
-    "k": "subst",
-    "tpl": "In the future, I want to ___.",
-    "slot": "future goal",
-    "bank": [
-     "speak more confidently",
-     "I want to speak English more confidently",
-     "I want to use English better at work"
+    "display": "In the future, I want to speak more confidently.",
+    "alt": [
+     "I want to speak more confidently in the future."
     ]
    },
    {
+    "k": "subst",
+    "item": 5,
+    "tpl": "In the future, I want to ___.",
+    "bank": [
+     "speak more confidently",
+     "speak English more confidently",
+     "use English better at work",
+     "get a better job",
+     "travel overseas"
+    ],
+    "field": "goal"
+   },
+   {
     "k": "speak",
+    "item": 5,
     "model": "In the future, I want to speak more confidently.",
     "head": "In the future, I want to + future goal"
    },
    {
     "k": "patterns",
+    "item": 6,
     "head": "I will + future action",
     "desc": "",
     "examples": [
@@ -3119,6 +3920,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 6,
     "words": [
      "I",
      "will",
@@ -3129,21 +3931,24 @@ const DAYS = [
    },
    {
     "k": "subst",
+    "item": 6,
     "tpl": "I will ___.",
-    "slot": "future action",
     "bank": [
      "keep practising",
      "join more classes",
-     "speak English every day"
+     "speak English every day",
+     "practise more every day"
     ]
    },
    {
     "k": "speak",
+    "item": 6,
     "model": "I will keep practising.",
     "head": "I will + future action"
    }
   ],
-  "finalSpeak": "My opinion is that English practice is very important. The reason is it helps me improve slowly. One example is that I can answer better in class. In the past, I was not confident, but now I can speak more. In the future, I want to speak more fluently, so I will practise more every day."
+  "finalSpeak": "My opinion is that English practice is very important. The reason is that it helps me improve step by step. One example is that I can answer better in class. In the past, I was not confident, but now I can speak more. In the future, I want to speak more fluently, so I will practise more every day.",
+  "finalGoal": "speak more fluently"
  },
  {
   "day": 21,
@@ -3153,17 +3958,46 @@ const DAYS = [
   "review": false,
   "formula": "Greeting + Topic + Main Points",
   "covers": [
-   "How to start a presentation",
-   "Greeting the audience",
-   "Introducing the presentation topic",
-   "Telling the audience the main points",
-   "Using simple presentation sentence starters",
-   "Using First, Then, Lastly to organise ideas",
-   "Avoiding nervousness at the beginning of a presentation",
-   "Making the opening sound more organised and professional",
-   "Helping the audience understand what the presentation will cover",
-   "Building confidence without using difficult English",
-   "Practising presentation openings using simple topics such as online learning, English learning, healthy lifestyle, time management, and dream jobs"
+   {
+    "en": "How to start a presentation",
+    "zh": "怎么开始一场报告",
+    "ms": "Cara memulakan pembentangan"
+   },
+   {
+    "en": "Greeting the audience",
+    "zh": "跟听众打招呼",
+    "ms": "Menyapa hadirin"
+   },
+   {
+    "en": "Introducing the presentation topic",
+    "zh": "介绍报告的主题",
+    "ms": "Memperkenalkan tajuk pembentangan"
+   },
+   {
+    "en": "Telling the audience the main points",
+    "zh": "告诉听众有哪几个重点",
+    "ms": "Memberitahu hadirin isi-isi utama"
+   },
+   {
+    "en": "Using simple presentation sentence starters",
+    "zh": "使用简单的报告开头句",
+    "ms": "Menggunakan pembuka ayat pembentangan yang mudah"
+   },
+   {
+    "en": "Using First, Then, Lastly to organise ideas",
+    "zh": "用 First、Then、Lastly 整理想法",
+    "ms": "Menggunakan First, Then, Lastly untuk menyusun idea"
+   },
+   {
+    "en": "Avoiding nervousness at the beginning of a presentation",
+    "zh": "减少报告开头的紧张",
+    "ms": "Mengurangkan rasa gementar di awal pembentangan"
+   },
+   {
+    "en": "Making the opening sound more organised and professional",
+    "zh": "让开场更有条理、更专业",
+    "ms": "Menjadikan pembukaan lebih tersusun dan profesional"
+   }
   ],
   "outcome": "Good morning, everyone. Today, I’m going to talk about online learning. First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion.",
   "items": [
@@ -3197,6 +4031,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Greeting",
     "desc": "",
     "examples": [
@@ -3207,6 +4042,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "Good",
      "morning",
@@ -3216,11 +4052,13 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "Good morning, everyone.",
     "head": "Greeting"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Introduce your topic",
     "desc": "",
     "examples": [
@@ -3231,6 +4069,7 @@ const DAYS = [
    },
    {
     "k": "order",
+    "item": 1,
     "words": [
      "Today",
      "I’m",
@@ -3241,15 +4080,20 @@ const DAYS = [
      "online",
      "learning"
     ],
-    "display": "Today, I’m going to talk about online learning."
+    "display": "Today, I’m going to talk about online learning.",
+    "alt": [
+     "I’m going to talk about online learning today."
+    ]
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Today, I’m going to talk about online learning.",
     "head": "Introduce your topic"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "Introduce your main points",
     "desc": "",
     "examples": [
@@ -3259,6 +4103,7 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "First, I’ll talk about the advantages. Then, I’ll explain the challenges. Lastly, I’ll share my opinion.",
     "head": "Introduce your main points"
    }
@@ -3273,18 +4118,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Organising the main points of a presentation",
-   "Keeping a presentation to around 3 to 4 main points",
-   "Using linking words to create a clearer flow",
-   "Using “First of all” to introduce the first point",
-   "Using “First and foremost” for a stronger or slightly more formal first point",
-   "Using “Next” to move to another point",
-   "Using “Besides that” to add related information",
-   "Using “Another point is...” to introduce an additional point",
-   "Using “Lastly” and “Finally” for the final point",
-   "Moving beyond basic first, second, third",
-   "Making a presentation sound smoother and more organised",
-   "Helping the audience follow the presentation more easily"
+   {
+    "en": "Organising the main points of a presentation",
+    "zh": "整理报告的重点",
+    "ms": "Menyusun isi utama pembentangan"
+   },
+   {
+    "en": "Keeping a presentation to around 3 to 4 main points",
+    "zh": "一场报告大约 3 到 4 个重点",
+    "ms": "Mengehadkan pembentangan kepada 3 hingga 4 isi utama"
+   },
+   {
+    "en": "Using linking words to create a clearer flow",
+    "zh": "用连接词让内容更顺",
+    "ms": "Menggunakan kata penghubung supaya aliran lebih jelas"
+   },
+   {
+    "en": "Using “First of all” to introduce the first point",
+    "zh": "用 “First of all” 带出第一个重点",
+    "ms": "Menggunakan “First of all” untuk isi pertama"
+   },
+   {
+    "en": "Using “First and foremost” for a stronger or slightly more formal first point",
+    "zh": "用 “First and foremost” 带出更强调、较正式的第一点",
+    "ms": "Menggunakan “First and foremost” untuk isi pertama yang lebih formal"
+   },
+   {
+    "en": "Using “Next” to move to another point",
+    "zh": "用 “Next” 进入下一个重点",
+    "ms": "Menggunakan “Next” untuk beralih ke isi lain"
+   },
+   {
+    "en": "Using “Besides that” to add related information",
+    "zh": "用 “Besides that” 补充相关资讯",
+    "ms": "Menggunakan “Besides that” untuk menambah maklumat berkaitan"
+   },
+   {
+    "en": "Using “Another point is...” to introduce an additional point",
+    "zh": "用 “Another point is...” 带出另一个重点",
+    "ms": "Menggunakan “Another point is...” untuk isi tambahan"
+   }
   ],
   "outcome": "First of all, I would like to talk about the importance of English.",
   "items": [
@@ -3320,21 +4193,29 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "First of all / First and foremost",
     "desc": "Used to introduce the first main point.",
     "examples": [
      "First of all, I would like to explain why speaking practice is important.",
      "First and foremost, I would like to talk about the main problem."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to introduce the first main point.",
+     "zh": "带出第一个重点。",
+     "ms": "Untuk memperkenalkan isi utama yang pertama."
+    }
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "First of all, I would like to explain why speaking practice is important.",
     "head": "First of all / First and foremost"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Next / Besides that / Another point is...",
     "desc": "Used to introduce the next or additional point.",
     "examples": [
@@ -3342,25 +4223,38 @@ const DAYS = [
      "Besides that, I will share some simple ways to improve.",
      "Another point is the importance of regular practice."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to introduce the next or additional point.",
+     "zh": "带出下一个或另外的重点。",
+     "ms": "Untuk memperkenalkan isi seterusnya atau isi tambahan."
+    }
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Next, I will talk about the common speaking problems learners face.",
     "head": "Next / Besides that / Another point is..."
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "Lastly / Finally",
     "desc": "Used to introduce the final point.",
     "examples": [
      "Lastly, I will share my conclusion.",
      "Finally, I will talk about what we can do next."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to introduce the final point.",
+     "zh": "带出最后一个重点。",
+     "ms": "Untuk memperkenalkan isi yang terakhir."
+    }
    },
    {
     "k": "order",
+    "item": 2,
     "words": [
      "Lastly",
      "I",
@@ -3373,6 +4267,7 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "Lastly, I will share my conclusion.",
     "head": "Lastly / Finally"
    },
@@ -3402,18 +4297,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Explaining a main point more clearly",
-   "Avoiding short or incomplete explanations",
-   "Using “This means…” to simplify an idea",
-   "Using “In other words…” to rephrase an idea",
-   "Using “Let me explain…” to introduce more detail",
-   "Using “What I mean is…” to clarify a point directly",
-   "Elaborating after giving a presentation point",
-   "Helping the audience understand the speaker’s meaning",
-   "Rephrasing the same idea in different ways",
-   "Making presentations sound clearer, smoother, and longer",
-   "Reducing confusion and misunderstanding",
-   "Building on the previous presentation skills of starting a presentation and organising main points"
+   {
+    "en": "Explaining a main point more clearly",
+    "zh": "把重点解释得更清楚",
+    "ms": "Menerangkan isi utama dengan lebih jelas"
+   },
+   {
+    "en": "Avoiding short or incomplete explanations",
+    "zh": "避免太短或不完整的解释",
+    "ms": "Mengelakkan penjelasan yang terlalu pendek atau tidak lengkap"
+   },
+   {
+    "en": "Using “This means…” to simplify an idea",
+    "zh": "用 “This means…” 把想法说得更简单",
+    "ms": "Menggunakan “This means…” untuk memudahkan idea"
+   },
+   {
+    "en": "Using “In other words…” to rephrase an idea",
+    "zh": "用 “In other words…” 换个说法",
+    "ms": "Menggunakan “In other words…” untuk menyatakan semula idea"
+   },
+   {
+    "en": "Using “Let me explain…” to introduce more detail",
+    "zh": "用 “Let me explain…” 带出更多细节",
+    "ms": "Menggunakan “Let me explain…” untuk memberi butiran lanjut"
+   },
+   {
+    "en": "Using “What I mean is…” to clarify a point directly",
+    "zh": "用 “What I mean is…” 直接说清楚",
+    "ms": "Menggunakan “What I mean is…” untuk menjelaskan maksud secara terus"
+   },
+   {
+    "en": "Elaborating after giving a presentation point",
+    "zh": "说完一个重点后再补充说明",
+    "ms": "Menghuraikan selepas memberi isi pembentangan"
+   },
+   {
+    "en": "Helping the audience understand the speaker’s meaning",
+    "zh": "让听众明白你的意思",
+    "ms": "Membantu hadirin memahami maksud penceramah"
+   }
   ],
   "outcome": "Speaking practice is very important. In other words, learners should not only study English but also practise speaking it.",
   "items": [
@@ -3453,57 +4376,85 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "This means + explanation",
     "desc": "Used to explain the meaning of an idea in a simpler way.",
     "examples": [
      "Speaking practice is very important. This means learners need to use English more often and not only study it."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to explain the meaning of an idea in a simpler way.",
+     "zh": "用更简单的方式解释一个想法。",
+     "ms": "Untuk menerangkan maksud sesuatu idea dengan cara yang lebih mudah."
+    }
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "Speaking practice is very important. This means learners need to use English more often and not only study it.",
     "head": "This means + explanation"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "In other words + rephrased idea",
     "desc": "Used to say the same idea again in a different and easier way.",
     "examples": [
      "Online learning is convenient. In other words, learners can study from home and save more time."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to say the same idea again in a different and easier way.",
+     "zh": "用不同、更容易的说法把同一个想法再说一次。",
+     "ms": "Untuk menyatakan idea yang sama dengan cara lain yang lebih mudah."
+    }
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Online learning is convenient. In other words, learners can study from home and save more time.",
     "head": "In other words + rephrased idea"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "Let me explain + fuller explanation",
     "desc": "Used when you want to introduce a longer or more detailed explanation.",
     "examples": [
      "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used when you want to introduce a longer or more detailed explanation.",
+     "zh": "要带出较长、较详细的解释时用。",
+     "ms": "Digunakan apabila anda mahu memberi penjelasan yang lebih panjang atau terperinci."
+    }
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "Speaking practice is very important. Let me explain. If learners are too afraid of making mistakes, they may stay quiet and not improve.",
     "head": "Let me explain + fuller explanation"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "What I mean is + clarification",
     "desc": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
     "examples": [
      "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Used to make your meaning clearer and more direct, especially when people may misunderstand your point.",
+     "zh": "让意思更清楚、更直接，特别是别人可能误会的时候。",
+     "ms": "Untuk menjadikan maksud lebih jelas dan terus, terutamanya apabila orang mungkin salah faham."
+    }
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "Simple English is enough at the beginning. What I mean is beginners do not need difficult words to start speaking English.",
     "head": "What I mean is + clarification"
    },
@@ -3533,18 +4484,46 @@ const DAYS = [
   "review": false,
   "formula": "Yes / No + because + one example",
   "covers": [
-   "Avoiding one-word or very short answers",
-   "Extending Yes/No answers",
-   "Giving a clear reason using “because”",
-   "Adding a specific example",
-   "Using “One example is...”",
-   "Using “For example...”",
-   "Helping the listener understand your answer better",
-   "Making answers longer, clearer, and more natural",
-   "Using the structure in daily conversations",
-   "Using the structure in workplace communication",
-   "Using the structure for questions such as “Do you...?” and “Can you...?”",
-   "Moving from a direct answer to a more complete explanation"
+   {
+    "en": "Avoiding one-word or very short answers",
+    "zh": "避免只回一个字或太短的回答",
+    "ms": "Mengelakkan jawapan satu perkataan atau terlalu pendek"
+   },
+   {
+    "en": "Extending Yes/No answers",
+    "zh": "把 Yes/No 的回答说长一点",
+    "ms": "Memanjangkan jawapan Yes/No"
+   },
+   {
+    "en": "Giving a clear reason using “because”",
+    "zh": "用 “because” 说出清楚的原因",
+    "ms": "Memberi sebab yang jelas dengan “because”"
+   },
+   {
+    "en": "Adding a specific example",
+    "zh": "加上一个具体的例子",
+    "ms": "Menambah satu contoh khusus"
+   },
+   {
+    "en": "Using “One example is...”",
+    "zh": "使用 “One example is...”",
+    "ms": "Menggunakan “One example is...”"
+   },
+   {
+    "en": "Using “For example...”",
+    "zh": "使用 “For example...”",
+    "ms": "Menggunakan “For example...”"
+   },
+   {
+    "en": "Helping the listener understand your answer better",
+    "zh": "让听的人更懂你的回答",
+    "ms": "Membantu pendengar memahami jawapan anda"
+   },
+   {
+    "en": "Making answers longer, clearer, and more natural",
+    "zh": "让回答更长、更清楚、更自然",
+    "ms": "Menjadikan jawapan lebih panjang, jelas dan semula jadi"
+   }
   ],
   "outcome": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near.",
   "items": [
@@ -3552,7 +4531,7 @@ const DAYS = [
     "head": "Yes / No + because + one example",
     "desc": "",
     "examples": [
-     "Yes, I do because it is flexible. One example is I can join class from home after work."
+     "Yes, I do because it is flexible. One example is that I can join classes from home after work."
     ],
     "words": []
    }
@@ -3560,25 +4539,25 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Yes / No + because + one example",
     "desc": "",
     "examples": [
-     "Yes, I do because it is flexible. One example is I can join class from home after work."
+     "Yes, I do because it is flexible. One example is that I can join classes from home after work."
     ],
-    "words": []
+    "words": [],
+    "q": "Do you like online learning?"
    },
    {
     "k": "speak",
-    "model": "Yes, I do because it is flexible. One example is I can join class from home after work.",
-    "head": "Yes / No + because + one example"
-   },
-   {
-    "k": "speak",
-    "model": "Yes, I do because it is flexible. One example is I can join class from home after work.",
-    "head": "Yes / No + because + one example"
+    "item": 0,
+    "model": "Yes, I do because it is flexible. One example is that I can join classes from home after work.",
+    "head": "Yes / No + because + one example",
+    "q": "Do you like online learning?"
    }
   ],
-  "finalSpeak": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near."
+  "finalSpeak": "Yes, I can because I know how to stay calm under pressure. For example, I can still complete my tasks when the deadline is near.",
+  "finalQ": "Can you work under pressure?"
  },
  {
   "day": 25,
@@ -3588,18 +4567,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Building a simple speaking paragraph",
-   "Moving beyond one-sentence answers",
-   "Using the PREE formula",
-   "Giving a clear Point",
-   "Adding a Reason",
-   "Supporting the idea with an Example",
-   "Finishing with a simple Ending",
-   "Extending short answers into complete responses",
-   "Making ideas clearer and easier to understand",
-   "Speaking in a more organised way",
-   "Using the formula for questions, opinions, classroom speaking, and presentations",
-   "Building more confidence when speaking"
+   {
+    "en": "Building a simple speaking paragraph",
+    "zh": "说出一段简单的完整内容",
+    "ms": "Membina perenggan lisan yang mudah"
+   },
+   {
+    "en": "Moving beyond one-sentence answers",
+    "zh": "不再只回答一句话",
+    "ms": "Melangkaui jawapan satu ayat"
+   },
+   {
+    "en": "Using the PREE formula",
+    "zh": "使用 PREE 公式",
+    "ms": "Menggunakan formula PREE"
+   },
+   {
+    "en": "Giving a clear Point",
+    "zh": "说出清楚的重点（Point）",
+    "ms": "Memberi isi yang jelas (Point)"
+   },
+   {
+    "en": "Adding a Reason",
+    "zh": "加上原因（Reason）",
+    "ms": "Menambah sebab (Reason)"
+   },
+   {
+    "en": "Supporting the idea with an Example",
+    "zh": "用例子（Example）支持想法",
+    "ms": "Menyokong idea dengan contoh (Example)"
+   },
+   {
+    "en": "Finishing with a simple Ending",
+    "zh": "用简单的结尾（Ending）收尾",
+    "ms": "Menutup dengan penutup yang mudah (Ending)"
+   },
+   {
+    "en": "Extending short answers into complete responses",
+    "zh": "把短回答变成完整的回答",
+    "ms": "Memanjangkan jawapan pendek menjadi jawapan lengkap"
+   }
   ],
   "outcome": "Speaking practice is important because learners need to use English more often. For example, they can answer simple questions in class or speak in daily conversations. So speaking practice can help learners become more confident.",
   "items": [
@@ -3639,15 +4646,22 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "P = Point",
     "desc": "Say your main idea.",
     "examples": [
      "Speaking practice is important."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Say your main idea.",
+     "zh": "说出你的主要想法。",
+     "ms": "Nyatakan idea utama anda."
+    }
    },
    {
     "k": "order",
+    "item": 0,
     "words": [
      "Speaking",
      "practice",
@@ -3658,48 +4672,70 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "Speaking practice is important.",
     "head": "P = Point"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "R = Reason",
     "desc": "Explain why.",
     "examples": [
      "Speaking practice is important because learners need to use English more often."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Explain why.",
+     "zh": "解释为什么。",
+     "ms": "Terangkan sebabnya."
+    }
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "Speaking practice is important because learners need to use English more often.",
     "head": "R = Reason"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "E = Example",
     "desc": "Give one example to make the idea clearer.",
     "examples": [
      "For example, they can answer simple questions in class or speak in daily conversations."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Give one example to make the idea clearer.",
+     "zh": "举一个例子，让想法更清楚。",
+     "ms": "Beri satu contoh supaya idea lebih jelas."
+    }
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "For example, they can answer simple questions in class or speak in daily conversations.",
     "head": "E = Example"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "E = Ending",
     "desc": "Give a simple closing sentence.",
     "examples": [
      "So speaking practice can help learners become more confident."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Give a simple closing sentence.",
+     "zh": "用一句简单的话收尾。",
+     "ms": "Beri satu ayat penutup yang mudah."
+    }
    },
    {
     "k": "order",
+    "item": 3,
     "words": [
      "So",
      "speaking",
@@ -3715,6 +4751,7 @@ const DAYS = [
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "So speaking practice can help learners become more confident.",
     "head": "E = Ending"
    }
@@ -3729,18 +4766,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Structuring answers for job interviews",
-   "Using the STAR method",
-   "Explaining the Situation",
-   "Describing your Task or responsibility",
-   "Explaining the Action you took",
-   "Sharing the final Result",
-   "Answering questions about past work experiences",
-   "Organising ideas before speaking",
-   "Avoiding messy or rambling answers",
-   "Including important details in the correct order",
-   "Making interview answers sound clearer and more professional",
-   "Building confidence by knowing what to say and when to say it"
+   {
+    "en": "Structuring answers for job interviews",
+    "zh": "整理面试回答的结构",
+    "ms": "Menyusun jawapan temu duga kerja"
+   },
+   {
+    "en": "Using the STAR method",
+    "zh": "使用 STAR 方法",
+    "ms": "Menggunakan kaedah STAR"
+   },
+   {
+    "en": "Explaining the Situation",
+    "zh": "说明情况（Situation）",
+    "ms": "Menerangkan situasi (Situation)"
+   },
+   {
+    "en": "Describing your Task or responsibility",
+    "zh": "说你的任务或责任（Task）",
+    "ms": "Menerangkan tugas atau tanggungjawab anda (Task)"
+   },
+   {
+    "en": "Explaining the Action you took",
+    "zh": "说你采取的行动（Action）",
+    "ms": "Menerangkan tindakan yang anda ambil (Action)"
+   },
+   {
+    "en": "Sharing the final Result",
+    "zh": "说最后的结果（Result）",
+    "ms": "Berkongsi hasil akhir (Result)"
+   },
+   {
+    "en": "Answering questions about past work experiences",
+    "zh": "回答关于过去工作经验的问题",
+    "ms": "Menjawab soalan tentang pengalaman kerja lalu"
+   },
+   {
+    "en": "Organising ideas before speaking",
+    "zh": "开口前先整理想法",
+    "ms": "Menyusun idea sebelum bercakap"
+   }
   ],
   "outcome": "In my previous job, a customer was unhappy because an order was delayed. My task was to solve the issue quickly. First, I listened to the customer and checked the order status. Then, I contacted the delivery team and updated the customer. In the end, the customer accepted the solution and the problem was solved successfully.",
   "items": [
@@ -3780,57 +4845,85 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "S = Situation",
     "desc": "Explain what happened and give the background.",
     "examples": [
      "In my previous job, one customer was unhappy because the order was delayed."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Explain what happened and give the background.",
+     "zh": "说明发生了什么，交代背景。",
+     "ms": "Terangkan apa yang berlaku dan latar belakangnya."
+    }
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "In my previous job, one customer was unhappy because the order was delayed.",
     "head": "S = Situation"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "T = Task",
     "desc": "Explain what you needed to do or what your responsibility was.",
     "examples": [
      "My task was to handle the customer and solve the issue quickly."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Explain what you needed to do or what your responsibility was.",
+     "zh": "说明你需要做什么，或你的责任是什么。",
+     "ms": "Terangkan apa yang perlu anda buat atau tanggungjawab anda."
+    }
    },
    {
     "k": "speak",
+    "item": 1,
     "model": "My task was to handle the customer and solve the issue quickly.",
     "head": "T = Task"
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "A = Action",
     "desc": "Explain what you actually did to handle the situation.",
     "examples": [
      "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Explain what you actually did to handle the situation.",
+     "zh": "说明你实际上做了什么来处理。",
+     "ms": "Terangkan apa yang anda benar-benar buat untuk mengendalikan situasi itu."
+    }
    },
    {
     "k": "speak",
+    "item": 2,
     "model": "First, I listened to the customer carefully. Then, I checked the order status and contacted the delivery team.",
     "head": "A = Action"
    },
    {
     "k": "patterns",
+    "item": 3,
     "head": "R = Result",
     "desc": "Explain what happened in the end.",
     "examples": [
      "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly."
     ],
-    "words": []
+    "words": [],
+    "descT": {
+     "en": "Explain what happened in the end.",
+     "zh": "说明最后的结果。",
+     "ms": "Terangkan apa yang berlaku pada akhirnya."
+    }
    },
    {
     "k": "speak",
+    "item": 3,
     "model": "In the end, the customer understood the situation, accepted the solution, and the issue was solved smoothly.",
     "head": "R = Result"
    }
@@ -3845,17 +4938,46 @@ const DAYS = [
   "review": false,
   "formula": "Person / Thing / Idea + is + adjective",
   "covers": [
-   "Understanding what an adjective is",
-   "Describing people",
-   "Describing things and objects",
-   "Describing ideas",
-   "Learning common adjectives for everyday communication",
-   "Using Person / Thing / Idea + is + adjective",
-   "Using adjectives such as friendly, helpful, confident, useful, simple, interesting, important, and practical",
-   "Combining two adjectives using “and”",
-   "Making simple sentences more descriptive",
-   "Using adjectives in daily life, workplace communication, discussions, and presentations",
-   "Building vocabulary to express descriptions and opinions more clearly"
+   {
+    "en": "Understanding what an adjective is",
+    "zh": "认识形容词",
+    "ms": "Memahami kata sifat"
+   },
+   {
+    "en": "Describing people",
+    "zh": "形容人",
+    "ms": "Menerangkan orang"
+   },
+   {
+    "en": "Describing things and objects",
+    "zh": "形容东西和物品",
+    "ms": "Menerangkan benda dan objek"
+   },
+   {
+    "en": "Describing ideas",
+    "zh": "形容想法",
+    "ms": "Menerangkan idea"
+   },
+   {
+    "en": "Learning common adjectives for everyday communication",
+    "zh": "学日常沟通常用的形容词",
+    "ms": "Mempelajari kata sifat biasa untuk komunikasi harian"
+   },
+   {
+    "en": "Using Person / Thing / Idea + is + adjective",
+    "zh": "使用 Person / Thing / Idea + is + adjective",
+    "ms": "Menggunakan Person / Thing / Idea + is + adjective"
+   },
+   {
+    "en": "Using adjectives such as friendly, helpful, confident, useful, simple, interesting, important, and practical",
+    "zh": "使用 friendly、helpful、confident、useful、simple、interesting、important、practical 等形容词",
+    "ms": "Menggunakan kata sifat seperti friendly, helpful, confident, useful, simple, interesting, important dan practical"
+   },
+   {
+    "en": "Combining two adjectives using “and”",
+    "zh": "用 “and” 连接两个形容词",
+    "ms": "Menggabungkan dua kata sifat dengan “and”"
+   }
   ],
   "outcome": "Speaking practice is very important for beginners.",
   "items": [
@@ -3903,6 +5025,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Adjectives to describe people",
     "desc": "",
     "examples": [],
@@ -3917,6 +5040,7 @@ const DAYS = [
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Adjectives to describe things",
     "desc": "",
     "examples": [],
@@ -3932,6 +5056,7 @@ const DAYS = [
    },
    {
     "k": "patterns",
+    "item": 2,
     "head": "Adjectives to describe ideas",
     "desc": "",
     "examples": [],
@@ -3970,18 +5095,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Asking for directions",
-   "Giving simple directions",
-   "Starting politely with “Excuse me”",
-   "Using “Can you tell me the way to...?”",
-   "Using “Do you know how to get to...?”",
-   "Using turn left / go left",
-   "Using turn right / go right",
-   "Using go straight ahead / go straight on",
-   "Using It’s on your left / right",
-   "Giving simple step-by-step directions",
-   "Asking for places such as toilets, bus stops, clinics, train stations, and shopping centres",
-   "Practising a short real-life direction conversation"
+   {
+    "en": "Asking for directions",
+    "zh": "问路",
+    "ms": "Bertanya arah"
+   },
+   {
+    "en": "Giving simple directions",
+    "zh": "简单地指路",
+    "ms": "Memberi arah yang mudah"
+   },
+   {
+    "en": "Starting politely with “Excuse me”",
+    "zh": "用 “Excuse me” 礼貌地开头",
+    "ms": "Bermula dengan sopan: “Excuse me”"
+   },
+   {
+    "en": "Using “Can you tell me the way to...?”",
+    "zh": "使用 “Can you tell me the way to...?”",
+    "ms": "Menggunakan “Can you tell me the way to...?”"
+   },
+   {
+    "en": "Using “Do you know how to get to...?”",
+    "zh": "使用 “Do you know how to get to...?”",
+    "ms": "Menggunakan “Do you know how to get to...?”"
+   },
+   {
+    "en": "Using turn left / go left",
+    "zh": "使用 turn left / go left",
+    "ms": "Menggunakan turn left / go left"
+   },
+   {
+    "en": "Using turn right / go right",
+    "zh": "使用 turn right / go right",
+    "ms": "Menggunakan turn right / go right"
+   },
+   {
+    "en": "Using go straight ahead / go straight on",
+    "zh": "使用 go straight ahead / go straight on",
+    "ms": "Menggunakan go straight ahead / go straight on"
+   }
   ],
   "outcome": "Go straight ahead, then turn right. The bus stop is on your left.",
   "items": [
@@ -4002,11 +5155,22 @@ const DAYS = [
      "Excuse me, do you know how to get to the nearest MRT station?"
     ],
     "words": []
+   },
+   {
+    "head": "Giving directions: Go straight ahead / Turn left / Turn right",
+    "desc": "",
+    "examples": [
+     "Turn left at the traffic lights.",
+     "Go straight ahead, then turn right.",
+     "The bus stop is on your left."
+    ],
+    "words": []
    }
   ],
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "Can you tell me the way to + place?",
     "desc": "",
     "examples": [
@@ -4016,12 +5180,26 @@ const DAYS = [
     "words": []
    },
    {
+    "k": "subst",
+    "item": 0,
+    "tpl": "Excuse me, can you tell me the way to ___?",
+    "bank": [
+     "the nearest toilet",
+     "the train station",
+     "the bus stop",
+     "the clinic",
+     "the shopping centre"
+    ]
+   },
+   {
     "k": "speak",
+    "item": 0,
     "model": "Excuse me, can you tell me the way to the nearest toilet?",
     "head": "Can you tell me the way to + place?"
    },
    {
     "k": "patterns",
+    "item": 1,
     "head": "Do you know how to get to + place?",
     "desc": "",
     "examples": [
@@ -4031,9 +5209,53 @@ const DAYS = [
     "words": []
    },
    {
+    "k": "subst",
+    "item": 1,
+    "tpl": "Excuse me, do you know how to get to ___?",
+    "bank": [
+     "the shopping centre",
+     "the nearest MRT station",
+     "the post office",
+     "the hospital",
+     "the car park"
+    ]
+   },
+   {
     "k": "speak",
+    "item": 1,
     "model": "Excuse me, do you know how to get to the shopping centre?",
     "head": "Do you know how to get to + place?"
+   },
+   {
+    "k": "patterns",
+    "item": 2,
+    "head": "Giving directions: Go straight ahead / Turn left / Turn right",
+    "desc": "",
+    "examples": [
+     "Turn left at the traffic lights.",
+     "Go straight ahead, then turn right.",
+     "The bus stop is on your left."
+    ],
+    "words": []
+   },
+   {
+    "k": "order",
+    "item": 2,
+    "words": [
+     "Turn",
+     "left",
+     "at",
+     "the",
+     "traffic",
+     "lights"
+    ],
+    "display": "Turn left at the traffic lights."
+   },
+   {
+    "k": "speak",
+    "item": 2,
+    "model": "Turn left at the traffic lights.",
+    "head": "Giving directions: Go straight ahead / Turn left / Turn right"
    },
    {
     "k": "speak",
@@ -4051,18 +5273,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Making an appointment in English",
-   "Using “I would like to book an appointment...”",
-   "Using “to see” when talking about a person",
-   "Using “at” when talking about a place",
-   "Understanding the difference between person and place",
-   "Booking appointments with doctors, dentists, lawyers, teachers, and office staff",
-   "Using polite questions such as “Can I...?”",
-   "Using “May I...?” for a polite request",
-   "Using “Is it possible...?” to ask more politely",
-   "Asking about an available day",
-   "Asking about an available time",
-   "Confirming the appointment details"
+   {
+    "en": "Making an appointment in English",
+    "zh": "用英文预约",
+    "ms": "Membuat temu janji dalam bahasa Inggeris"
+   },
+   {
+    "en": "Using “I would like to book an appointment...”",
+    "zh": "使用 “I would like to book an appointment...”",
+    "ms": "Menggunakan “I would like to book an appointment...”"
+   },
+   {
+    "en": "Using “to see” when talking about a person",
+    "zh": "约的是人，用 “to see”",
+    "ms": "Menggunakan “to see” apabila bercakap tentang orang"
+   },
+   {
+    "en": "Using “at” when talking about a place",
+    "zh": "说的是地点，用 “at”",
+    "ms": "Menggunakan “at” apabila bercakap tentang tempat"
+   },
+   {
+    "en": "Understanding the difference between person and place",
+    "zh": "分清楚「人」和「地点」的差别",
+    "ms": "Memahami perbezaan antara orang dan tempat"
+   },
+   {
+    "en": "Booking appointments with doctors, dentists, lawyers, teachers, and office staff",
+    "zh": "跟医生、牙医、律师、老师、办公室职员预约",
+    "ms": "Membuat temu janji dengan doktor, doktor gigi, peguam, guru dan kakitangan pejabat"
+   },
+   {
+    "en": "Using polite questions such as “Can I...?”",
+    "zh": "使用 “Can I...?” 这类礼貌的问句",
+    "ms": "Menggunakan soalan sopan seperti “Can I...?”"
+   },
+   {
+    "en": "Using “May I...?” for a polite request",
+    "zh": "礼貌地请求用 “May I...?”",
+    "ms": "Menggunakan “May I...?” untuk permintaan yang sopan"
+   }
   ],
   "outcome": "I would like to book an appointment to see the doctor, please.",
   "items": [
@@ -4079,6 +5329,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I would like to book an appointment to see + person, please.",
     "desc": "",
     "examples": [
@@ -4089,19 +5340,21 @@ const DAYS = [
    },
    {
     "k": "subst",
-    "tpl": "I would like to book an appointment to see ___.",
-    "slot": "person, please.",
+    "item": 0,
+    "tpl": "I would like to book an appointment to see ___, please.",
     "bank": [
-     "the doctor, please",
-     "Mr. Lim, please",
-     "the manager, please",
-     "Ms. Tan, please",
-     "my teacher, please"
+     "the doctor",
+     "Mr. Lim",
+     "the dentist",
+     "the manager",
+     "Ms. Tan",
+     "my teacher"
     ]
    },
    {
     "k": "speak",
-    "model": "I would like to book an appointment to see the doctor, please.",
+    "item": 0,
+    "model": "I would like to book an appointment to see Mr. Lim, please.",
     "head": "I would like to book an appointment to see + person, please."
    },
    {
@@ -4116,7 +5369,7 @@ const DAYS = [
    },
    {
     "k": "speak",
-    "model": "Thank you. I will arrange for Tuesday at 2:00 p.m.",
+    "model": "Thank you. I will come on Tuesday at 2:00 p.m.",
     "head": ""
    }
   ],
@@ -4130,18 +5383,46 @@ const DAYS = [
   "review": false,
   "formula": "",
   "covers": [
-   "Understanding the difference between appointment and reservation",
-   "Using appointment when meeting a person",
-   "Using reservation when booking a table, room, seat, or place",
-   "Using “I would like to make a reservation, please.”",
-   "Making a restaurant reservation",
-   "Adding the number of people",
-   "Adding the day and time",
-   "Making a hotel or resort booking",
-   "Using “I would like to book a room...”",
-   "Adding the number of nights and date",
-   "Making booking requests sound polite",
-   "Starting with simple English and gradually adding more details"
+   {
+    "en": "Understanding the difference between appointment and reservation",
+    "zh": "分清楚 appointment 和 reservation",
+    "ms": "Memahami perbezaan antara appointment dan reservation"
+   },
+   {
+    "en": "Using appointment when meeting a person",
+    "zh": "要见人用 appointment",
+    "ms": "Menggunakan appointment untuk berjumpa seseorang"
+   },
+   {
+    "en": "Using reservation when booking a table, room, seat, or place",
+    "zh": "订桌子、房间、座位、场地用 reservation",
+    "ms": "Menggunakan reservation untuk menempah meja, bilik, tempat duduk atau tempat"
+   },
+   {
+    "en": "Using “I would like to make a reservation, please.”",
+    "zh": "使用 “I would like to make a reservation, please.”",
+    "ms": "Menggunakan “I would like to make a reservation, please.”"
+   },
+   {
+    "en": "Making a restaurant reservation",
+    "zh": "订餐厅",
+    "ms": "Menempah meja di restoran"
+   },
+   {
+    "en": "Adding the number of people",
+    "zh": "加上人数",
+    "ms": "Menambah bilangan orang"
+   },
+   {
+    "en": "Adding the day and time",
+    "zh": "加上日期和时间",
+    "ms": "Menambah hari dan masa"
+   },
+   {
+    "en": "Making a hotel or resort booking",
+    "zh": "订酒店或度假村",
+    "ms": "Menempah hotel atau resort"
+   }
   ],
   "outcome": "I would like to make a reservation for four people this Sunday at 7:00 p.m., please.",
   "items": [
@@ -4158,6 +5439,7 @@ const DAYS = [
   "steps": [
    {
     "k": "patterns",
+    "item": 0,
     "head": "I would like to make a reservation for + people / group, please.",
     "desc": "",
     "examples": [
@@ -4168,24 +5450,25 @@ const DAYS = [
    },
    {
     "k": "subst",
-    "tpl": "I would like to make a reservation for ___.",
-    "slot": "people / group, please.",
+    "item": 0,
+    "tpl": "I would like to make a reservation for ___, please.",
     "bank": [
-     "two people, please",
-     "my family, please",
-     "four people, please",
-     "our team, please",
-     "just me, please"
+     "two people",
+     "my family",
+     "four people",
+     "our team",
+     "one person"
     ]
    },
    {
     "k": "speak",
+    "item": 0,
     "model": "I would like to make a reservation for two people, please.",
     "head": "I would like to make a reservation for + people / group, please."
    },
    {
     "k": "speak",
-    "model": "I would like to book a room for two nights on Saturday, 23rd May, please.",
+    "model": "I would like to book a room for two nights from Saturday, 23rd May, please.",
     "head": ""
    }
   ],
@@ -4195,11 +5478,152 @@ const DAYS = [
 /* DAYS:END */
 </script>
 <script>
+/* PERSONAL:START */
+/* =============================================================================
+   把学生的资料接进句子 —— 纯函式，不碰画面、不碰存档
+   -----------------------------------------------------------------------------
+   独立成一段，是为了让 tools/check-content.mjs 能把它和 DAYS 一起拿去跑：
+   每个模板 × 每个选项、加上各种学生会打的答案，都实际组一次句子检查。
+============================================================================= */
+
+/* 只接受拉丁字母的答案。学生打「老师」「槟城」时，换进英文句子会变成
+   「I work as a 老师.」—— 这种就不换，保留原句，表单上请他用英文填。 */
+const isLatin = (s) => /^[A-Za-zÀ-ɏ0-9\s.,'’&()\/-]+$/.test(String(s || "").trim());
+
+/* 名字、地名：每个字第一个字母大写（「marco」→「Marco」、「kuala lumpur」→「Kuala Lumpur」）。
+   只动第一个字母，其余照他打的（McDonald、KL 不会被改坏）；马来名字的 bin／binti 维持小写。 */
+const NAME_PARTICLE = /^(bin|binti|bte|bt|a\/l|a\/p|s\/o|d\/o|of|and|al|van|von|de)$/i;
+function capWords(s) {
+  return String(s || "").trim().replace(/\s+/g, " ").split(" ").map((w, i) =>
+    i > 0 && NAME_PARTICLE.test(w) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+/* a／an 看「音」不看字母：an hour、an MBA student、a university student、a European company。 */
+function article(phrase) {
+  const w = String(phrase).split(/[\s-]/)[0];
+  if (/^[A-Z][A-Z&]+$/.test(w)) return /^[AEFHILMNORSX]/.test(w) ? "an" : "a";   // 缩写照字母念：an HR…、a UX…、an F&B…
+  if (/^(hour|honest|honou?r|heir)/i.test(w)) return "an";
+  if (/^(uni|use|usu|uti|uro|eu|one\b|once)/i.test(w)) return "a";
+  return /^[aeiou]/i.test(w) ? "an" : "a";
+}
+
+/* 「不是一份工作」的答案：I work as a retired 不通，要说 I am retired／I am a student。 */
+const PROPER_ADJ = /^(English|Chinese|Malay|Mandarin|Tamil|Indian|European|Asian|Japanese|Korean|Islamic|Muslim|Christian|Hindu)\b/;
+const JOB_ADJ  = /^(retired|unemployed|self[- ]employed|jobless|between jobs|not working|currently not working)$/i;
+/* 结尾允许「at／in …」：student at USM、housewife in Ipoh */
+const JOB_BEING = /(student|retiree|housewife|homemaker|househusband|stay[- ]at[- ]home \w+|full[- ]time (mum|mom|mother|dad|father|parent)|freelancer|business owner|entrepreneur)(\s+\b(at|in)\b.*)?$/i;
+/* 填的是「行业／部门」不是职称：I work as a sales 不通，要说 I work in sales */
+const JOB_FIELD = /^(sales|marketing|IT|HR|admin|accounts?|accounting|finance|banking|education|customer service|logistics|F&B)$/i;
+
+/* 学生填的工作 → { phrase: 放进选项的那一段, sentence: 完整的一句（不含句点） }。
+   去掉他自己打的开头（I am／I'm／I work as／my job is／a／an），再依种类组句。
+   不是拉丁字母就回传 null（不换）。 */
+function jobInfo(raw) {
+  let j = String(raw || "").trim().replace(/\s+/g, " ").replace(/[.!]+$/, "");
+  if (!j || !isLatin(j)) return null;
+  j = j.replace(/^my (job|work) is\s+/i, "")
+       .replace(/^i\s*(am|['’]?m)\s+/i, "")
+       .replace(/^(i\s+)?(work|working)\s+as\s+/i, "");
+  const at = j.match(/^(?:i\s+)?(?:work|working)\s+(in|at|for)\s+(.+)$/i);
+  if (at) return { phrase: `${at[1].toLowerCase()} ${at[2]}`, sentence: `I work ${at[1].toLowerCase()} ${at[2]}`, kind: "at" };
+  j = j.replace(/^(an?|the)\s+/i, "");
+  if (!j) return null;
+  /* Teacher → teacher；MBA、IT 不动；English teacher、European… 这种专有形容词也不动 */
+  if (/^[A-Z][a-z]/.test(j) && !PROPER_ADJ.test(j)) j = j.charAt(0).toLowerCase() + j.slice(1);
+  if (JOB_ADJ.test(j)) return { phrase: j, sentence: `I am ${j}`, kind: "am" };
+  if (JOB_FIELD.test(j)) return { phrase: `in ${j}`, sentence: `I work in ${j}`, kind: "at" };
+  const np = `${article(j)} ${j}`;
+  if (JOB_BEING.test(j)) return { phrase: np, sentence: `I am ${np}`, kind: "am" };
+  return { phrase: np, sentence: `I work as ${np}`, kind: "work" };
+}
+
+/* 目标：去掉「I want to／to」这些他可能自己打的开头，留下动词片语。 */
+/* 句子是「I want to ___」，所以目标一定要是动词开头。认不出来的（名词、-ing、
+   「I want a better job」这种没有 to 的）就回传 ""，保留原本的示范句 ——
+   宁可不换，也不要组出「I want to IELTS band 7」。 */
+const GOAL_NOUN = /^(a|an|the|my|more|better|good|English|IELTS|MUET|SPM|fluency|confidence|promotion|grammar|vocabulary|pronunciation)\b/i;
+function goalPhrase(raw) {
+  let g = String(raw || "").trim().replace(/\s+/g, " ").replace(/[.!]+$/, "");
+  if (!g || !isLatin(g)) return "";
+  g = g.replace(/^(i\s+)?(want|would like|wish|hope|plan|need)\s+to\s+/i, "").replace(/^to\s+/i, "");
+  if (/^i\s+(want|wish|would like|hope|need)\b/i.test(g)) return "";        // I want a better job：没有 to
+  g = g.replace(/^(can|could|be able to)\s+/i, "");
+  const w = g.split(" ")[0];
+  if (!w || (/ing$/i.test(w) && !/^(bring|sing|ring|swing|sting)$/i.test(w)) || /^[A-Z][A-Z0-9&]+$/.test(w) || GOAL_NOUN.test(g) || PROPER_ADJ.test(g)) return "";
+  if (/^[A-Z][a-z]/.test(g) && !/^I\b/.test(g)) g = g.charAt(0).toLowerCase() + g.slice(1);
+  return g;
+}
+
+/* 学生资料里「可以用」的部分（非拉丁字母的栏位视为没填） */
+function ownValues(p) {
+  p = p || {};
+  const job = jobInfo(p.job);
+  const goal = goalPhrase(p.goal);
+  return {
+    /* 去掉他自己打的开头：「I am Ali」「My name is Ali」「from Ipoh」，不然会变成「I am I Am Ali.」 */
+    name:  p.name && isLatin(p.name) ? capWords(String(p.name).trim().replace(/^(hi,?\s*)?(my name is|i am|i['’]?m)\s+/i, "")) : "",
+    place: p.place && isLatin(p.place) ? capWords(String(p.place).trim().replace(/^(i\s*(am|['’]?m)\s+)?from\s+/i, "")) : "",
+    job, goal,
+    goalTo: goal ? "to " + goal : ""
+  };
+}
+
+/* 把示范句换成学生的资料 —— 一次替换，不是一条接一条。
+   ⚠️ 2026-09-24 以前是逐条 replace：学生叫「Sarah Lee」，先把 Wesley 换成 Sarah Lee，
+      下一条又把里面的 Sarah 换一次 →「I am Sarah Lee Lee.」；「Penang, Malaysia」也会
+      被後面的 Penang 规则再吃一次。现在所有规则合成一个正规式、由长到短排，每个位置
+      只被换一次，学生自己的字不会再被重新比对。
+   规则都带着句型开头（I am／I am from／I work as），课程里其他地方出现的
+   Penang（「Are you from Penang?」）不会被换掉。
+   goalFrom：这一天目标句里「想做到的事」那一段（DAYS 的 finalGoal），只在那一句换。 */
+function personalise(text, p, goalFrom) {
+  if (!text || !p) return text;
+  const v = ownValues(p);
+  const map = {};
+  if (v.name) ["Wesley", "Sarah"].forEach((n) => { map[`I am ${n}`] = `I am ${v.name}`; });
+  if (v.place) ["Penang, Malaysia", "Yong Peng, Malaysia", "Penang", "Malaysia"]
+    .forEach((pl) => { map[`I am from ${pl}`] = `I am from ${v.place}`; });
+  if (v.job) ["an admin executive", "an admin assistant", "a teacher", "a doctor"]
+    .forEach((j) => { map[`I work as ${j}`] = v.job.sentence; });
+  if (v.goal && goalFrom) map[`I want to ${goalFrom}`] = `I want to ${v.goal}`;
+  const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+  if (!keys.length) return text;
+  const lower = {}; keys.forEach((k) => { lower[k.toLowerCase()] = map[k]; });
+  const re = new RegExp(`\\b(?:${keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\w])`, "gi");
+  return String(text).replace(re, (m) => lower[m.toLowerCase()]);
+}
+
+/* 模板填空。选项本身以「a.m.」结尾时不要再多一个句点。 */
+const fillTpl = (tpl, v) => String(tpl).replace("___", v).replace(/\.\.$/, ".");
+
+/* 「换」的一个选项组成的句子。学生自己的工作如果不是「work as」那种
+   （退休、学生、家庭主妇、work in a bank），整句换成他的说法。 */
+function substSentence(st, value, isOwn, p) {
+  if (isOwn && st.field === "job") {
+    const j = ownValues(p).job;
+    if (j && j.kind !== "work") return j.sentence + ".";
+  }
+  return fillTpl(st.tpl, value);
+}
+
+/* 「拼」的字块 —— 跟 tools/build-content.mjs 的 wordsOf() 同一个规则：
+   只拿掉头尾标点，a.m.／Mr. 这类缩写的点留着（「7:00」「a.m.」才拼得回原句）。 */
+function chipsOf(s) {
+  const ABBR = /^(?:[a-z]\.){2,}$|^(?:Mr|Mrs|Ms|Dr)\.$/i;
+  return String(s).replace(/\s+/g, " ").trim().split(" ").map((w) => {
+    w = w.replace(/^[“"(]+/, "").replace(/[”")]+$/, "");
+    return ABBR.test(w) ? w : w.replace(/[.,!?;:]+$/, "");
+  }).filter(Boolean);
+}
+/* PERSONAL:END */
+</script>
+<script>
 "use strict";
 /* =============================================================================
    Speaking Bonus — 30 天口说训练
    每个句型跑「看 → 拼 → 换 → 说」四步，最後录一次完整目标句。
    DAYS 资料由 tools/build-content.mjs 从 Google Sheet 产生，不要手改。
+   组句用的纯函式（学生资料、模板填空、拼句字块）在上面的 PERSONAL 段。
 ============================================================================= */
 
 const store = TouchStore.open("speaking-bonus");
@@ -4219,13 +5643,13 @@ const SP = globalThis.TouchProfile || null;
 const L = {
   askTitleNew: { zh: "开始前先认识你一下", ms: "Sebelum kita mula", en: "Before we start" },
   askTitleEdit:{ zh: "我的资料", ms: "Maklumat saya", en: "My info" },
-  askSubNew:   { zh: "回答这四题，之後的练习句就会变成关于<b>你自己</b>的。",
-                 ms: "Jawab empat soalan ini — ayat latihan nanti akan tentang <b>diri anda</b>.",
+  askSubNew:   { zh: "回答这四题，之后的练习句就会变成关于<b>你自己</b>的。",
+                 ms: "Jawab empat soalan ini — ayat latihan nanti akan berkisar tentang <b>diri anda</b>.",
                  en: "Answer these and your practice sentences will be about <b>you</b>." },
-  askSubEdit:  { zh: "改了之後，练习句会跟着换。",
+  askSubEdit:  { zh: "改了之后，练习句会跟着换。",
                  ms: "Ubah bila-bila masa — ayat latihan akan ikut.",
                  en: "Change these any time — your practice sentences follow." },
-  skipLater:   { zh: "Skip — 之後再填", ms: "Skip — isi kemudian", en: "Skip — fill this in later" },
+  skipLater:   { zh: "Skip — 之后再填", ms: "Skip — isi kemudian", en: "Skip — fill this in later" },
 
   qName:  { zh: "我们怎么称呼你？", ms: "Apa nama anda?", en: "What should we call you?" },
   qPlace: { zh: "你来自哪里？", ms: "Anda dari mana?", en: "Where are you from?" },
@@ -4260,13 +5684,15 @@ const L = {
   ordOK:   { zh: "✓ 对了！", ms: "✓ Betul!", en: "✓ Correct!" },
   ordNo:   { zh: "再看一次正确的顺序：", ms: "Lihat semula urutan yang betul:",
              en: "Here is the correct order:" },
+  ordRetry:{ zh: "还不太对 —— 再试一次。", ms: "Belum tepat — cuba sekali lagi.",
+             en: "Not quite — try once more." },
 
   subHint: { zh: "同一个句型，换掉后面的资料就好。点一个看看 —— 没有标准答案。",
              ms: "Corak yang sama — tukar maklumat di belakang sahaja. Ketik satu; tiada jawapan salah.",
              en: "Same pattern — just change the information at the end. Tap one; there is no wrong answer." },
 
-  micNote: { zh: "录音只留在你自己的电脑，不会上传。",
-             ms: "Rakaman kekal dalam komputer anda sahaja. Tiada muat naik.",
+  micNote: { zh: "录音只留在你自己的装置，不会上传。",
+             ms: "Rakaman kekal dalam peranti anda sahaja. Tiada muat naik.",
              en: "Recordings stay on your own device. Nothing is uploaded." },
   noRec:   { zh: "这台浏览器不支援录音 —— 请改用 Chrome 或 Safari。你还是可以对着句子念出来。",
              ms: "Pelayar ini tidak menyokong rakaman — sila guna Chrome atau Safari. Anda masih boleh sebut ayat itu.",
@@ -4284,8 +5710,36 @@ const L = {
   finalHint: { zh: "把今天学的串起来，一次说完",
                ms: "Gabungkan semua yang dipelajari hari ini — sebut sekali gus",
                en: "Put today's patterns together and say it all at once" },
-  doneMsg:   { zh: "做得好，明天继续。", ms: "Syabas — sambung esok.", en: "Well done — see you tomorrow." }
+  doneMsg:   { zh: "做得好，明天继续。", ms: "Syabas — sambung esok.", en: "Well done — see you tomorrow." },
+
+  inVideo:   { zh: "影片内容", ms: "Dalam video ini", en: "In this video" },
+  question:  { zh: "问题", ms: "Soalan", en: "Question" },
+  latinNote: { zh: "请用英文填写（例如 teacher、Penang），练习句才能换成你的资料。",
+               ms: "Sila isi dalam bahasa Inggeris (contoh: teacher, Penang) supaya ayat latihan boleh guna maklumat anda.",
+               en: "Please type this in English (e.g. teacher, Penang) so your practice sentences can use it." },
+
+  /* 及格线：拼句要对 70% 以上，这一天才算完成（Marco 2026-09-24 选 A） */
+  pracTitle: { zh: "练习过了", ms: "Sudah berlatih", en: "Practised" },
+  pracMsg:   { zh: "拼句答对 {n}/{t}。要答对 70% 以上这一天才算完成 —— 再做一次吧。",
+               ms: "Susun ayat betul {n}/{t}. Perlu 70% ke atas untuk selesaikan hari ini — cuba sekali lagi.",
+               en: "You got {n} of {t} sentences right. You need 70% to complete this day — try it again." },
+  passMsg:   { zh: "拼句答对 {n}/{t}。", ms: "Susun ayat betul {n}/{t}.", en: "You got {n} of {t} sentences right." },
+  pracTag:   { zh: "练习过", ms: "sudah berlatih", en: "practised" },
+  courseDoneT:{ zh: "课程完成", ms: "Kursus selesai", en: "Course complete" },
+  redo:      { zh: "再做一次", ms: "Buat semula", en: "Do this day again" },
+  courseDone:{ zh: "30 天全部完成了！之后想复习，随时回来重做任何一天。",
+               ms: "Tahniah — semua 30 hari selesai! Ulang mana-mana hari bila-bila masa untuk berlatih.",
+               en: "All 30 days complete! Come back and replay any day whenever you want more practice." },
+  lastDayLeft:{ zh: "还有 {n} 天没完成 —— 回到课程首页就看得到。",
+                ms: "Masih ada {n} hari belum selesai — lihat di halaman utama kursus.",
+                en: "{n} days are still unfinished — you can find them on the course page." },
+  lastDayLeft1:{ zh: "还有 1 天没完成 —— 回到课程首页就看得到。",
+                 ms: "Masih ada 1 hari belum selesai — lihat di halaman utama kursus.",
+                 en: "1 day is still unfinished — you can find it on the course page." }
 };
+const fmt = (str, o) => String(str).replace(/\{(\w+)\}/g, (_, k) => (k in o ? o[k] : ""));
+/* 从 DAYS 来的三语物件（{en,zh,ms}）或纯字串都吃 */
+const tx = (v) => (v && typeof v === "object" ? (SP ? SP.t(v) : v.en) : v);
 const L_ = (k) => (SP ? SP.t(L[k]) : L[k].en);
 
 /* 学生资料：共用层优先，没有共用层就用这个课程自己存的 */
@@ -4297,14 +5751,22 @@ function readProfile() {
   return store.get("profile", null);
 }
 
+/* 及格线：一天里「拼」的题目要答对 70% 以上才算完成（第一次就拼对才算对）。
+   录音、看、换都没有对错，不计分；一天里没有「拼」的就照旧，做完就算完成。
+   Marco 2026-09-24 选 A：「一个单元要答对 70% 以上才算完成」。 */
+const PASS = 0.7;
+
 let S = {
-  done:     store.get("done", {}),      // { "1": true }  哪几天完成了
+  done:     store.get("done", {}),      // { "1": true }  哪几天完成了（及格）
+  practised:store.get("practised", {}), // { "1": 0.5 }   做完但没到及格线的天 → 最近一次的答对率
   recorded: store.get("recorded", {}),  // { "1:3": true } 哪几个录音做过
+  earned:   store.get("earned", {}),    // { "1:3": true } 哪几步已经拿过 XP —— 重做同一天不再重复给
   xp:       store.get("xp", 0),
   profile:  readProfile(),              // { name, place, job, goal } — 启动页问过的
   asked:    SP ? SP.asked() : store.get("asked", false)
 };
-const save = () => store.patch({ done: S.done, recorded: S.recorded, xp: S.xp,
+const save = () => store.patch({ done: S.done, practised: S.practised, recorded: S.recorded,
+                                 earned: S.earned, xp: S.xp,
                                  profile: SP ? null : S.profile, asked: S.asked });
 
 /* =============================================================================
@@ -4313,45 +5775,10 @@ const save = () => store.patch({ done: S.done, recorded: S.recorded, xp: S.xp,
    影片教的就是「用固定模板，换掉後面的资料」，所以练习本身也应该是关于他自己的。
    开始前问四个问题（名字／地方／工作／目标），之後 DAY 1、2、7、19、20 的示范句
    会自动换成他的答案 —— 那几天正好是自我介绍与目标，印象最深的地方。
-
-   ⚠️ 一定要「长的先换」：DAY 7 有「I am from Penang, Malaysia.」，
-      如果先换掉 Penang 再换 Malaysia，会变成「Johor, Johor」。
+   怎么换（一次替换、a/an、学生／退休、非英文不换）在上面的 PERSONAL 段。
 ============================================================================= */
-function jobPhrase(raw) {
-  const j = String(raw || "").trim().replace(/^(an?)\s+/i, "");
-  if (!j) return "";
-  return (/^[aeiou]/i.test(j) ? "an " : "a ") + j;
-}
-
-function replacements() {
-  const p = S.profile;
-  if (!p) return [];
-  const r = [];
-  if (p.place) {                                   // 长的先，短的後
-    r.push([/\bPenang,\s*Malaysia\b/gi, p.place], [/\bYong Peng,\s*Malaysia\b/gi, p.place],
-           [/\bPenang\b/gi, p.place], [/\bMalaysia\b/gi, p.place]);
-  }
-  if (p.job) {
-    const j = jobPhrase(p.job);
-    r.push([/\ban admin executive\b/gi, j], [/\ban admin assistant\b/gi, j],
-           [/\ba teacher\b/gi, j], [/\ba doctor\b/gi, j]);
-  }
-  if (p.name) r.push([/\bWesley\b/g, p.name], [/\bSarah\b/g, p.name]);
-  return r;
-}
-
-/* 把一段文字换成学生的资料。没填资料就原样回传。 */
-function me(text) {
-  if (!text) return text;
-  let out = String(text);
-  for (const [re, val] of replacements()) out = out.replace(re, val);
-  return out;
-}
-const isMine = (text) => S.profile && me(text) !== text;
-
-/* slot 名称 → 学生资料的哪个栏位 */
-const SLOT_FIELD = { "name": "name", "place": "place", "place?": "place",
-                     "job": "job", "goal": "goal", "future goal": "goal" };
+const me = (text, goalFrom) => personalise(text, S.profile, goalFrom);
+const isMine = (text, goalFrom) => !!S.profile && me(text, goalFrom) !== text;
 
 const $  = (id) => document.getElementById(id);
 const app = () => $("app");
@@ -4360,6 +5787,12 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
 const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const norm = (s) => String(s).toLowerCase().replace(/[.,!?;:'"]/g, "").replace(/\s+/g, " ").trim();
 const addXP = (n) => { S.xp += n; save(); const c = $("xp"); if (c) c.textContent = S.xp; };
+/* 每一步的 XP 只给一次。已经完成过的天（包括这个规则上线前完成的）重做不再给 ——
+   以前每重做一次就把整天的 XP 再领一遍。 */
+const earnOnce = (key, n) => {
+  if (freshRun === false || S.earned[key]) return;
+  S.earned[key] = true; addXP(n);
+};
 
 /* ---------- 顶栏 ---------- */
 function topBar() {
@@ -4396,17 +5829,29 @@ function renderAsk(isEdit) {
       ${ASK.filter((a) => !(SP && SP.platform && a.k === "name")).map((a) => `<div class="ask">
         <label for="f_${a.k}">${esc(L_(a.t))}</label>
         <input id="f_${a.k}" type="text" autocomplete="off" placeholder="${esc(a.ph)}" value="${esc(p[a.k] || "")}">
+        <p class="enote hidden" id="n_${a.k}">${esc(L_("latinNote"))}</p>
       </div>`).join("")}
       <button class="btn btn-p" id="okb">${isEdit ? "Save" : "Start"}</button>
       <button class="btn btn-g" id="skipb">${isEdit ? "Cancel" : esc(L_("skipLater"))}</button>
     </div>`;
 
+  /* 打中文（或其他非拉丁字母）时当场提醒 —— 照存，但句子不会换（PERSONAL 段的 isLatin） */
+  ASK.forEach((a) => {
+    const f = $("f_" + a.k), n = $("n_" + a.k);
+    if (!f || !n) return;
+    const check = () => n.classList.toggle("hidden", !f.value.trim() || isLatin(f.value));
+    f.addEventListener("input", check); check();
+  });
+
   $("okb").onclick = () => {
+    /* 画面上有的栏位全部存，空的也存成 "" —— 只存有填的，清空一栏等於没改，
+       旧的答案会一直留着（SP.set 是合并）。平台上名字栏不显示，所以不会碰到名字。 */
     const p2 = {};
-    ASK.forEach((a) => { const f = $("f_" + a.k); const v = f ? f.value.trim() : ""; if (v) p2[a.k] = v; });
+    ASK.forEach((a) => { const f = $("f_" + a.k); if (f) p2[a.k] = f.value.trim(); });
     if (SP) { SP.set(p2); SP.markAsked(); }
     /* 在平台里名字栏不显示（名字是帐号的），所以从共用 profile 取回完整一份 */
-    S.profile = SP ? SP.get() : (Object.keys(p2).length ? p2 : null);
+    const all = SP ? SP.get() : p2;
+    S.profile = (all.name || all.place || all.job || all.goal) ? all : null;
     S.asked = true; save(); renderHome();
   };
   $("skipb").onclick = () => { if (SP) SP.markAsked(); S.asked = true; save(); renderHome(); };
@@ -4422,7 +5867,7 @@ function renderHome() {
   const pct = DAYS.length ? Math.round((n / DAYS.length) * 100) : 0;
   app().innerHTML = `${topBar()}
     ${window.TouchNav ? TouchNav.html() : ""}
-    <h1>Speaking Bonus${S.profile && S.profile.name ? `<span class="hi">, ${esc(S.profile.name)}</span>` : ""}</h1>
+    <h1>Speaking Bonus${S.profile && S.profile.name ? `<span class="hi">, ${esc(ownValues(S.profile).name || S.profile.name)}</span>` : ""}</h1>
     <p class="sub">${esc(L_("homeSub"))}</p>
     <div class="bar"><i style="width:${pct}%"></i></div>
     <div class="barnote">${n} of ${DAYS.length} days complete · ${pct}%
@@ -4430,9 +5875,10 @@ function renderHome() {
     <div class="days" id="days"></div>`;
 
   $("days").innerHTML = DAYS.map((d) => {
-    const cls = ["day", S.done[d.day] ? "done" : "", d.review ? "rev" : ""].filter(Boolean).join(" ");
+    const cls = ["day", S.done[d.day] ? "done" : (d.day in S.practised ? "prac" : ""), d.review ? "rev" : ""]
+      .filter(Boolean).join(" ");
     return `<button class="${cls}" data-d="${d.day}">
-      <span class="n">${d.review ? "Review · " : ""}Day ${d.day}</span>
+      <span class="n"${S.practised && d.day in S.practised ? ` data-prac="${esc(L_("pracTag"))}"` : ""}>${d.review ? "Review · " : ""}Day ${d.day}</span>
       <span class="t">${esc(d.title)}</span>
     </button>`;
   }).join("");
@@ -4449,11 +5895,14 @@ let redraw = () => renderHome();
 
 /* ---------- 单日 ---------- */
 let D = null, idx = 0;
+let freshRun = true;   // 打开时这一天还没完成 → 这一趟的步骤可以拿 XP（earnOnce）
+let builds = {};       // 这一趟「拼」的结果 { 步骤序号: 第一次就对? }，用来算及格线
+let picks = {};        // 这一趟「换」选的句子 { 项目序号: 句子 }，接下来的「说」就说这一句
 
 function openDay(dayNo) {
   D = DAYS.find((x) => x.day === dayNo);
   if (!D) return renderHome();
-  idx = 0;
+  idx = 0; freshRun = !S.done[D.day]; builds = {}; picks = {};
   renderDay();
 }
 
@@ -4467,6 +5916,8 @@ function dayShell(inner) {
 
 function renderDay() {
   rec.stopAll();
+  /* 影片那一屏也要登记 —— 以前只有练习步骤登记，在影片页换语言会跳回首页 */
+  redraw = renderDay;
   /* 第一屏：影片 */
   if (idx === 0) {
     const v = D.video;
@@ -4477,8 +5928,8 @@ function renderDay() {
              <p class="note">Video not loading? <a href="https://www.youtube.com/watch?v=${esc(v)}" target="_blank" rel="noopener noreferrer">Open on YouTube</a></p>`
             : `<div class="card"><p class="hint">${esc(L_("noVideo"))}</p></div>`}
       ${D.covers && D.covers.length ? `<div class="card">
-        <span class="lbl">In this video</span>
-        <div class="wl">${D.covers.slice(0, 8).map((c) => `<span>${esc(c)}</span>`).join("")}</div></div>` : ""}
+        <span class="lbl">${esc(L_("inVideo"))}</span>
+        <div class="wl">${D.covers.slice(0, 8).map((c) => `<span>${esc(tx(c))}</span>`).join("")}</div></div>` : ""}
       <button class="btn btn-p" id="go">Start practising →</button>`);
     $("back").onclick = renderHome;
     $("go").onclick = () => { idx = 1; renderDay(); };
@@ -4486,7 +5937,6 @@ function renderDay() {
     return;
   }
 
-  redraw = renderDay;
   const steps = D.steps || [];
   const si = idx - 1;
 
@@ -4500,7 +5950,11 @@ function renderDay() {
   if (st.k === "patterns")  renderPatterns(box, st, pos);
   else if (st.k === "order") renderOrder(box, st, pos);
   else if (st.k === "subst") renderSubst(box, st, pos);
-  else if (st.k === "speak") renderSpeak(box, st.model, pos, `${D.day}:${si}`, st.head);
+  else if (st.k === "speak") {
+    /* 刚才「换」选了自己的句子，就说、录他自己那一句 */
+    const own = st.item != null && picks[st.item];
+    renderSpeak(box, own || st.model, pos, `${D.day}:${si}`, st.head, { q: st.q, raw: !!own });
+  }
   else { idx++; return renderDay(); }
 
   app().innerHTML = dayShell("");
@@ -4519,12 +5973,13 @@ function renderPatterns(box, st, pos) {
     <p class="hint">${esc(L_("patHint"))}${isMine(st.examples ? st.examples.join(" ") : "") ? `<span class="mine">${esc(L_("tagMine"))}</span>` : ""}</p>
     <div class="pat">
       <div class="tp">${esc(st.head).replace(/\+/g, "<b>+</b>")}</div>
-      ${st.desc ? `<div class="nt">${esc(st.desc)}</div>` : ""}
+      ${st.desc ? `<div class="nt">${esc(tx(st.descT || st.desc))}</div>` : ""}
+      ${st.q ? `<p class="qline">${esc(L_("question"))}: <b>${esc(st.q)}</b></p>` : ""}
       ${st.examples && st.examples.length ? `<div class="ex">${st.examples.map((e) => `<span>${esc(me(e))}</span>`).join("")}</div>` : ""}
       ${st.words && st.words.length ? `<div class="wl">${st.words.map((w) => `<span>${esc(w)}</span>`).join("")}</div>` : ""}
     </div>
     <button class="btn btn-p" id="go">Continue</button></div>`;
-  setTimeout(() => { $("go").onclick = () => { addXP(2); next(); }; }, 0);
+  setTimeout(() => { if (!box.isConnected) return; $("go").onclick = () => { earnOnce(`${D.day}:${idx - 1}`, 2); next(); }; }, 0);
 }
 
 /* 拼：拆句重组 —— 记忆点在这里 */
@@ -4532,11 +5987,15 @@ function renderOrder(box, st, pos) {
   /* 换成他自己的句子；但换完太长的话（例如工作名称很长）就退回原句，
      不然字块会多到不好玩。 */
   let answer = st.words, display = st.display || st.words.join(" ");
+  let alts = st.alt || [];
   const mineTxt = me(display);
   if (mineTxt !== display) {
-    const w = mineTxt.replace(/[.,!?;:]/g, "").split(" ").filter(Boolean);
-    if (w.length <= 10) { answer = w; display = mineTxt; }
+    const w = chipsOf(mineTxt);
+    if (w.length <= 10) { answer = w; display = mineTxt; alts = alts.map((a) => me(a)); }
   }
+  /* 有些句子不只一种正确语序（「I was very shy in the past.」），都算对 */
+  const accepted = [display, ...alts].map(norm);
+  const si = idx - 1;
   box.innerHTML = `<div class="card">
     <span class="lbl">${pos} · ${esc(L_("stBuild"))}</span>
     <div class="h2">Build the sentence</div>
@@ -4548,6 +6007,7 @@ function renderOrder(box, st, pos) {
     <button class="btn btn-p" id="go" disabled>Check</button></div>`;
 
   setTimeout(() => {
+    if (!box.isConnected) return;
     const placed = [];
     const zone = $("zone"), bank = $("bank"), go = $("go");
     let locked = false;          // 按过 Check 之後就锁住，不然学生再动字块会把 Continue 变回 disabled 卡死
@@ -4572,29 +6032,43 @@ function renderOrder(box, st, pos) {
       };
     });
 
-    go.onclick = () => {
+    /* 拼错可以再试一次（先不给答案，他才会自己再想一次）；第二次还错才给正确顺序。
+       及格线只看第一次 —— 第二次是练习，不是分数。 */
+    let tries = 0;
+    const check = () => {
       const got = placed.map((p) => p.v).join(" ");
-      const ok = norm(got) === norm(answer.join(" "));
+      const ok = accepted.includes(norm(got));
+      tries++;
+      if (!(si in builds)) builds[si] = ok;
+      if (!ok && tries === 1) {
+        $("fb").innerHTML = `<div class="fb no">${esc(L_("ordRetry"))}</div>`;
+        placed.length = 0;
+        bank.querySelectorAll(".chipw").forEach((b) => b.classList.remove("used"));
+        sync();
+        return;
+      }
       locked = true;
       sync();                      // 重画一次，把区块里字块的 onclick 拿掉
       $("fb").innerHTML = ok
         ? `<div class="fb ok">${esc(L_("ordOK"))}</div>`
         : `<div class="fb no">${esc(L_("ordNo"))}<span class="ans">${esc(display)}</span></div>`;
-      if (ok) addXP(5);
+      if (ok && tries === 1) earnOnce(`${D.day}:${si}`, 5);
       go.disabled = false; go.textContent = "Continue"; go.onclick = next;
     };
+    go.onclick = check;
     sync();
   }, 0);
 }
 
 /* 换：替换练习 —— 同一个模板，换成自己的资料 */
 function renderSubst(box, st, pos) {
-  /* 如果这个 slot 正好是开始前问过的（名字／地方／工作／目标），
+  /* 如果这个空格正好是开始前问过的（名字／地方／工作／目标），
      就把他自己的答案放在第一个 —— 练的是关于自己的句子。 */
-  const field = SLOT_FIELD[String(st.slot || "").toLowerCase()];
-  const own = field && S.profile && S.profile[field]
-              ? (field === "job" ? jobPhrase(S.profile[field]) : S.profile[field]) : "";
+  const vals = ownValues(S.profile);
+  const f = st.field;
+  const own = !f ? "" : f === "job" ? (vals.job ? vals.job.phrase : "") : (vals[f] || "");
   const bank = own ? [own, ...st.bank.filter((b) => b.toLowerCase() !== own.toLowerCase())] : null;
+  const si = idx - 1;
   box.innerHTML = `<div class="card">
     <span class="lbl">${pos} · ${esc(L_("stSwap"))}</span>
     <div class="h2">Make it yours</div>
@@ -4605,11 +6079,19 @@ function renderSubst(box, st, pos) {
     <button class="btn btn-p" id="go" disabled>Continue</button></div>`;
 
   setTimeout(() => {
+    if (!box.isConnected) return;
     let picked = false;
     $("bank").querySelectorAll(".chipw").forEach((b) => {
       b.onclick = () => {
-        $("tpl").innerHTML = esc(st.tpl).replace(/___/g, `<b>${esc(b.dataset.v)}</b>`);
-        if (!picked) { picked = true; addXP(3); $("go").disabled = false; }
+        const v = b.dataset.v, isOwn = !!own && v === own;
+        const sentence = substSentence(st, v, isOwn, S.profile);
+        /* 显示整句、把换进去的那段标出来；整句换掉的（I am retired.）就整句标 */
+        const at = sentence.indexOf(v);
+        $("tpl").innerHTML = at >= 0
+          ? esc(sentence.slice(0, at)) + `<b>${esc(v)}</b>` + esc(sentence.slice(at + v.length))
+          : `<b>${esc(sentence)}</b>`;
+        if (st.item != null) picks[st.item] = sentence;
+        if (!picked) { picked = true; earnOnce(`${D.day}:${si}`, 3); $("go").disabled = false; }
       };
     });
     $("go").onclick = next;
@@ -4619,12 +6101,15 @@ function renderSubst(box, st, pos) {
 /* 说：录音 */
 function renderSpeak(box, model, pos, key, head, opts) {
   const can = rec.available;
-  const mine = isMine(model);
-  model = me(model);
+  opts = opts || {};
+  /* raw：句子已经是学生自己组的（「换」选的），不再套 personalise */
+  const mine = opts.raw || isMine(model, opts.goalFrom);
+  model = opts.raw ? model : me(model, opts.goalFrom);
   box.innerHTML = `<div class="card">
     <span class="lbl">${pos} · ${esc(L_("stSay"))}</span>
     <div class="h2">Now say it</div>
     ${head ? `<p class="hint">${esc(head)}</p>` : ""}
+    ${opts.q ? `<p class="qline">${esc(L_("question"))}: <b>${esc(opts.q)}</b></p>` : ""}
     <div class="model">${esc(model)}${mine ? `<span class="mine">${esc(L_("tagYours"))}</span>` : ""}</div>
     ${can ? `
       <div class="stat" id="stat"></div>
@@ -4638,6 +6123,8 @@ function renderSpeak(box, model, pos, key, head, opts) {
     <button class="btn ${opts && opts.goClass ? opts.goClass : "btn-g"}" id="go">${esc((opts && opts.goText) || "Continue")}</button></div>`;
 
   setTimeout(() => {
+    /* 这一屏在接线之前就被换掉了（例如快速换语言）→ 不要把按钮接到下一屏去 */
+    if (!box.isConnected) return;
     $("go").onclick = (opts && opts.onGo) || next;
     if (!can) return;
 
@@ -4661,7 +6148,7 @@ function renderSpeak(box, model, pos, key, head, opts) {
         onSaving:   () => { stat.classList.remove("go"); stat.textContent = "Saving…"; stopb.disabled = true; },
         onDone: (b) => {
           blob = b;
-          if (!S.recorded[key]) { S.recorded[key] = true; addXP(5); }
+          if (!S.recorded[key]) { S.recorded[key] = true; if (freshRun) addXP(5); }
           save();
           $("mini").textContent = L_("gotRec");
           idle();
@@ -4676,8 +6163,29 @@ function renderSpeak(box, model, pos, key, head, opts) {
 }
 
 /* ---------- 最後：完整目标句 + 完成 ---------- */
+/* 这一趟「拼」的成绩：{ n: 第一次就对的题数, t: 题数 }。没有「拼」的天 t = 0，直接算过。 */
+function dayScore() {
+  const t = (D.steps || []).filter((x) => x.k === "order").length;
+  const n = Object.values(builds).filter(Boolean).length;
+  return { n, t, pass: t === 0 || n / t >= PASS };
+}
+
+function finishDay() {
+  const sc = dayScore();
+  if (sc.pass) {
+    if (!S.done[D.day]) earnOnce(`${D.day}:done`, 10);
+    S.done[D.day] = true; delete S.practised[D.day];
+  } else if (!S.done[D.day]) {
+    /* 没到及格线：记成「练习过」，不算完成；已经完成过的天不会因为重做没及格被取消 */
+    S.practised[D.day] = Math.round((sc.n / sc.t) * 100) / 100;
+  }
+  save();
+  renderDone(sc);
+}
+
 function renderFinal() {
-  if (D.finalSpeak && !S.done[D.day]) {
+  /* 重做已完成的天也要能录最後这一句 —— 以前完成过就直接跳到完成页 */
+  if (D.finalSpeak) {
     const box = document.createElement("div");
     /* 「Finish this day」一定要透过 opts 交给 renderSpeak 自己接。
        renderSpeak 是在 setTimeout(…, 0) 里接 #go 的 —— 从外面先设
@@ -4686,7 +6194,9 @@ function renderFinal() {
     renderSpeak(box, D.finalSpeak, "Final", `${D.day}:final`, L_("finalHint"), {
       goText : "Finish this day ✓",
       goClass: "btn-p",
-      onGo   : () => { S.done[D.day] = true; addXP(10); save(); renderDone(); }
+      q      : D.finalQ,
+      goalFrom: D.finalGoal,          // DAY 7／19／20：目标句换成学生自己的目标
+      onGo   : finishDay
     });
     app().innerHTML = dayShell("");
     app().appendChild(box);
@@ -4694,22 +6204,32 @@ function renderFinal() {
     window.scrollTo(0, 0);
     return;
   }
-  S.done[D.day] = true; save();
-  renderDone();
+  finishDay();
 }
 
-function renderDone() {
+function renderDone(sc) {
+  sc = sc || dayScore();
+  const passed = !!S.done[D.day] && sc.pass;
   const nextDay = DAYS.find((x) => x.day > D.day);
+  const left = DAYS.length - Object.keys(S.done).length;
+  let msg;
+  if (!passed) msg = fmt(L_("pracMsg"), sc);
+  else if (!nextDay) msg = left === 0 ? L_("courseDone") : left === 1 ? L_("lastDayLeft1") : fmt(L_("lastDayLeft"), { n: left });
+  else msg = me(D.outcome, D.finalGoal) || L_("doneMsg");
   app().innerHTML = dayShell(`<div class="card done-box">
-      <div class="big">🎉</div>
-      <h2>Day ${D.day} complete</h2>
-      <p class="hint">${esc(me(D.outcome) || L_("doneMsg"))}</p>
-      ${nextDay ? `<button class="btn btn-p" id="nx">Next: Day ${nextDay.day} →</button>` : ""}
+      <div class="big">${passed ? (nextDay || left ? "🎉" : "🏆") : "💪"}</div>
+      <h2>${passed ? (!nextDay && left === 0 ? esc(L_("courseDoneT")) : `Day ${D.day} complete`) : esc(L_("pracTitle"))}</h2>
+      ${passed && sc.t ? `<p class="hint">${esc(fmt(L_("passMsg"), sc))}</p>` : ""}
+      <p class="hint">${esc(msg)}</p>
+      ${!passed ? `<button class="btn btn-p" id="redo">${esc(L_("redo"))}</button>` : ""}
+      ${passed && nextDay ? `<button class="btn btn-p" id="nx">Next: Day ${nextDay.day} →</button>` : ""}
       <button class="btn btn-g" id="home">All days</button>
     </div>`);
+  redraw = () => renderDone(sc);
   $("back").onclick = renderHome;
   $("home").onclick = renderHome;
-  if (nextDay) $("nx").onclick = () => openDay(nextDay.day);
+  if ($("nx")) $("nx").onclick = () => openDay(nextDay.day);
+  if ($("redo")) $("redo").onclick = () => openDay(D.day);
   window.scrollTo(0, 0);
 }
 

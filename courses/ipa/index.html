@@ -583,8 +583,60 @@ function videoUrl(key){
 
 // helper builders ----------------------------------------------------
 const opt = (label, correct=false) => ({label, correct});
+/* 说明文字三语（hint、答对的话、题目说明）。课程资料在脚本载入时就建好，那时 LANG
+   还没决定（L() 会碰到 TDZ），而且答错的题会整题 JSON 存进「今天的复习」——
+   所以这里存成 {en,zh,ms} 物件，显示时才用 tx() 挑语言。旧存档里的纯英文字串 tx() 照样显示。 */
+const T = (en, zh, ms) => ({en, zh, ms});
+function tx(v){
+  if(v == null) return "";
+  if(typeof v === "string") return v;
+  return L(v.en, v.zh, v.ms);
+}
 // choose-IPA-for-word  | ipa-to-word | identify | fill-blank
-function ex(o){ return Object.assign({hint:"Listen for the vowel length and mouth shape."}, o); }
+function ex(o){ return Object.assign({hint:T("Listen for the vowel length, and watch the mouth shape.","注意听元音的长短，也看看嘴型。","Dengar panjang pendek vokal dan perhatikan bentuk mulut.")}, o); }
+
+// IPA units that must be treated as ONE symbol so a target like /ɪ/ is not
+// matched inside a diphthong like /eɪ/. Declared up here (not next to the
+// sound card) because the question generators below run while the script
+// loads and need it.
+const IPA_UNITS = ["eɪ","aɪ","ɔɪ","aʊ","əʊ","ɪə","eə","ʊə","iː","ɑː","ɔː","uː","ɜː","tʃ","dʒ"];
+// "/kəˈlekt/" → ["k","ə","l","e","k","t"]  (stress marks dropped, ascii g → ɡ)
+function ipaTokens(tr){
+  const body = String(tr||"").replace(/[\/ˈˌ\s]/g,"").replace(/g/g,"ɡ");
+  const out=[];
+  for(let i=0;i<body.length;){
+    const two=body.substr(i,2);
+    if(IPA_UNITS.includes(two)){ out.push(two); i+=2; } else { out.push(body[i]); i+=1; }
+  }
+  return out;
+}
+// Where do two minimal-pair transcriptions differ? → {pos:"first|middle|last", a, b}
+// The old hint said "the sound in the middle" for every pair, which is wrong
+// for light/right, they/day (first sound) and leaf/leave, bag/back (last sound).
+function pairDiff(ia, ib){
+  const A=ipaTokens(ia), B=ipaTokens(ib);
+  if(A.length!==B.length) return null;
+  const idx=[]; A.forEach((t,i)=>{ if(t!==B[i]) idx.push(i); });
+  if(idx.length!==1) return null;
+  const i=idx[0];
+  return { pos: i===0 ? "first" : (i===A.length-1 ? "last" : "middle"), a:A[i], b:B[i] };
+}
+const POS_TEXT = {
+  first:  T("first","第一个","pertama"),
+  middle: T("middle","中间的","di tengah"),
+  last:   T("last","最后一个","terakhir")
+};
+function pairHint(p){
+  const d = pairDiff(p.ia, p.ib);
+  const base = [`“${p.a}” = ${p.ia}`, `“${p.b}” = ${p.ib}`];
+  if(!d) return T(`${base[0]} and ${base[1]}. Compare them sound by sound.`,
+                  `${base[0]}，${base[1]}。一个音一个音比一比。`,
+                  `${base[0]} dan ${base[1]}. Bandingkan bunyi demi bunyi.`);
+  const P = POS_TEXT[d.pos];
+  return T(`${base[0]} and ${base[1]}. Only the ${P.en} sound changes: /${d.a}/ in “${p.a}”, /${d.b}/ in “${p.b}”.`,
+           `${base[0]}，${base[1]}。只差在${P.zh}音：“${p.a}” 是 /${d.a}/，“${p.b}” 是 /${d.b}/。`,
+           `${base[0]} dan ${base[1]}. Hanya bunyi ${P.ms} yang berbeza: /${d.a}/ dalam “${p.a}”, /${d.b}/ dalam “${p.b}”.`);
+}
 
 /* =====================================================================
    CONTENT BANK  (PRIORITY 1 & 2)
@@ -593,11 +645,14 @@ function ex(o){ return Object.assign({hint:"Listen for the vowel length and mout
    the architecture is unchanged. Each stage spreads a generated pool in,
    reaching ~80–120 questions per stage. Vocabulary is grouped into
    everyday / workplace / daily-communication sets for real-life value.
-   Question order and answer options are randomized at runtime by the
-   engine's shuffle(), so every run feels fresh.
+   Every generated item carries gen:true so buildQueue() can tell it apart
+   from the hand-written items and guarantee those a share of every run.
    ===================================================================== */
 
 // --- minimal pairs (PRIORITY 2): the backbone of listening + IPA drills ---
+// rp:true = the contrast only exists in British RP. An American voice says
+// cot and caught the same, so the LISTENING version is skipped unless the
+// browser gives us an en-GB voice (see Audio$.isBritish / buildQueue).
 const PAIRS = [
   // /ɪ/ vs /iː/
   {a:"ship",  b:"sheep", ia:"/ʃɪp/",   ib:"/ʃiːp/",  f:"/ɪ/ vs /iː/"},
@@ -624,7 +679,7 @@ const PAIRS = [
   {a:"said",  b:"sad",   ia:"/sed/",   ib:"/sæd/",   f:"/e/ vs /æ/"},
   {a:"men",   b:"man",   ia:"/men/",   ib:"/mæn/",   f:"/e/ vs /æ/"},
   // /ɒ/ vs /ɔː/  &  /ɑː/
-  {a:"cot",   b:"caught",ia:"/kɒt/",   ib:"/kɔːt/",  f:"/ɒ/ vs /ɔː/"},
+  {a:"cot",   b:"caught",ia:"/kɒt/",   ib:"/kɔːt/",  f:"/ɒ/ vs /ɔː/", rp:true},
   {a:"hat",   b:"heart", ia:"/hæt/",   ib:"/hɑːt/",  f:"/æ/ vs /ɑː/"},
   {a:"cap",   b:"carp",  ia:"/kæp/",   ib:"/kɑːp/",  f:"/æ/ vs /ɑː/"},
   // consonants: /f/ vs /v/
@@ -661,7 +716,6 @@ const PAIRS = [
   {a:"goat",  b:"coat",  ia:"/ɡəʊt/",  ib:"/kəʊt/",  f:"/ɡ/ vs /k/"},
   {a:"bag",   b:"back",  ia:"/bæɡ/",   ib:"/bæk/",   f:"/ɡ/ vs /k/"}
 ];
-const pairFocusVowel = p => /[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f.replace(/[\/\s]/g,'').slice(0,3)) && !/[fvθðlrwŋʃtʃsdzbpɡk]/.test(p.f[1]||'');
 
 // --- vocabulary banks (PRIORITY 1): real-life value ---
 // each: [word, ipa] — used for read-the-IPA & listening items
@@ -684,73 +738,10 @@ const VOCAB = {
 };
 
 const cap = w => w.charAt(0).toUpperCase()+w.slice(1);
-// build a near-miss IPA distractor by nudging one symbol (kept simple & safe)
-function nearMiss(ipa){
-  const swaps=[["iː","ɪ"],["ɪ","iː"],["uː","ʊ"],["ʊ","uː"],["æ","ʌ"],["ʌ","æ"],["ɔː","ɒ"],["ɒ","ɔː"],
-               ["ɑː","æ"],["θ","s"],["ð","d"],["v","f"],["ŋ","n"],["ʃ","s"],["dʒ","tʃ"],["ɜː","ɔː"]];
-  for(const [from,to] of swaps){ if(ipa.includes(from)) return ipa.replace(from,to); }
-  return ipa.replace(/.$/, ""); // fallback: drop last symbol
-}
-
-// generators: each returns an array of exercise objects -------------------
-function genListen(pairs){                       // listening: hear word → choose it
-  return pairs.map(p=>{
-    const target = Math.random()<0.5 ? {w:p.a,o:p.b} : {w:p.b,o:p.a};
-    return ex({kind:"Listen & choose", variant:"listen", word:target.w, sub:"Which word did you hear?",
-      options:[opt(target.w,true),opt(target.o)], fam:p.f,
-      hint:`These two sound close: “${p.a}” and “${p.b}”. Tap 🔊 and listen for the difference.`});
-  });
-}
-function genPairIPA(pairs){                       // choose correct IPA for one word of the pair
-  return pairs.map(p=>{
-    const pickA = Math.random()<0.5;
-    const w = pickA?p.a:p.b, right = pickA?p.ia:p.ib, wrong = pickA?p.ib:p.ia;
-    return ex({kind:"Choose the IPA", prompt:w, options:[opt(right,true),opt(wrong)], fam:p.f,
-      hint:`“${p.a}” = ${p.ia} and “${p.b}” = ${p.ib}. The little difference is the sound in the middle.`});
-  });
-}
-function genReadPair(pairs){                       // IPA → word (minimal-pair confusion)
-  return pairs.map(p=>{
-    const pickA = Math.random()<0.5;
-    const ipa = pickA?p.ia:p.ib, right = pickA?p.a:p.b, wrong = pickA?p.b:p.a;
-    return ex({kind:"Read the IPA", variant:"word", prompt:ipa, options:[opt(right,true),opt(wrong)], fam:p.f,
-      hint:`${ipa} is the word “${pickA?p.a:p.b}”. Compare it with “${pickA?p.b:p.a}”.`});
-  });
-}
-function genVocabRead(list, sub){                  // IPA → word for real vocabulary
-  return list.map(([w,ipa])=>ex({kind:"Read the IPA", variant:"word", prompt:ipa,
-    options:[opt(w,true),opt(cap(w).replace(/.$/,m=>m)+"")], // placeholder replaced below
-    hint:`${ipa} → “${w}”.`, _vocab:w }));
-}
-function genVocabListen(list){                     // listening for real vocabulary
-  return list.map(([w,ipa])=>ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Type-free: which word did you hear?",
-    options:[opt(w,true),opt("")], hint:`“${w}” — ${ipa}. Tap 🔊 to replay.`, _vocabAlt:true }));
-}
-
-// Build a clean wrong-word for vocab read/listen using a similar-looking word bank
-const CONFUSERS = ["water","matter","letter","later","metal","model","manner","minor","major","mirror",
-  "message","massage","margin","manager","manner","measure","picture","feature","future","figure",
-  "person","prison","reason","season","listen","lesson","collar","colour","career","carry","worry",
-  "weather","whether","wander","wonder","walk","work","world","word","ward","wood","would","could"];
-function pickConfuser(w){
-  const c = CONFUSERS.filter(x=>x!==w && Math.abs(x.length-w.length)<=2 && x[0]!==undefined);
-  return (c.length? c[Math.floor(Math.random()*c.length)] : (w+"s"));
-}
-// finalize vocab generators with real distractors
-function vocabRead(list){
-  return list.map(([w,ipa])=>ex({kind:"Read the IPA", variant:"word", prompt:ipa,
-    options:[opt(w,true),opt(pickConfuser(w))], hint:`${ipa} → “${w}”.`}));
-}
-function vocabListen(list){
-  return list.map(([w,ipa])=>ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
-    options:[opt(w,true),opt(pickConfuser(w))], hint:`“${w}” — ${ipa}. Tap 🔊 to replay.`}));
-}
-
-// split PAIRS into vowel-focused vs consonant-focused for natural distribution
-const VOWEL_PAIRS = PAIRS.filter(p=>/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
-const CONS_PAIRS  = PAIRS.filter(p=>!/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
 
 // --- diphthongs: [word, glide, ipa] ---
+// /ʊə/: modern RP says sure, poor (and often tour) with /ɔː/, so the /ʊə/ items
+// use words that keep the glide after /j/ (pure, secure) plus tour.
 const DIPHS = ["/eɪ/","/aɪ/","/ɔɪ/","/aʊ/","/əʊ/","/ɪə/","/eə/","/ʊə/"];
 const DIPH_WORDS = [
   ["face","/eɪ/","/feɪs/"],["wait","/eɪ/","/weɪt/"],["train","/eɪ/","/treɪn/"],["email","/eɪ/","/ˈiːmeɪl/"],
@@ -760,27 +751,141 @@ const DIPH_WORDS = [
   ["phone","/əʊ/","/fəʊn/"],["both","/əʊ/","/bəʊθ/"],["focus","/əʊ/","/ˈfəʊkəs/"],["control","/əʊ/","/kənˈtrəʊl/"],
   ["near","/ɪə/","/nɪə/"],["career","/ɪə/","/kəˈrɪə/"],["idea","/ɪə/","/aɪˈdɪə/"],["serious","/ɪə/","/ˈsɪəriəs/"],
   ["care","/eə/","/keə/"],["share","/eə/","/ʃeə/"],["prepare","/eə/","/prɪˈpeə/"],["aware","/eə/","/əˈweə/"],
-  ["sure","/ʊə/","/ʃʊə/"],["tour","/ʊə/","/tʊə/"],["secure","/ʊə/","/sɪˈkjʊə/"]
+  ["pure","/ʊə/","/pjʊə/"],["tour","/ʊə/","/tʊə/"],["secure","/ʊə/","/sɪˈkjʊə/"]
 ];
+
+// --- wrong-word options for vocabulary & diphthong words: word → [confuser, its RP IPA] ---
+// Hand-picked real words one or two sounds away from the target — ideally the
+// very slip a Malaysian learner makes (wait→wet, thirty→dirty, weather→wetter,
+// colleague→college, career→carrier). The old version drew a random word of
+// similar LENGTH ("employ" vs "figure") and could draw a homophone ("weather"
+// vs "whether", which made two answers correct). Rules for adding one:
+// a real, common word · never a homophone or near-homophone of the target
+// (no sure/shore, tour/tore, clothes/close, career/Korea, around/"a round").
+const CONFUSE = {
+  // everyday
+  water:["waiter","/ˈweɪtə/"], people:["pupil","/ˈpjuːpl/"], because:["become","/bɪˈkʌm/"],
+  family:["female","/ˈfiːmeɪl/"], money:["many","/ˈmeni/"], friend:["front","/frʌnt/"],
+  enough:["annoy","/əˈnɔɪ/"], beautiful:["useful","/ˈjuːsfl/"], comfortable:["vegetable","/ˈvedʒtəbl/"],
+  favourite:["flavoured","/ˈfleɪvəd/"], interesting:["entering","/ˈentərɪŋ/"], weather:["wetter","/ˈwetə/"],
+  // workplace
+  schedule:["shuttle","/ˈʃʌtl/"], colleague:["college","/ˈkɒlɪdʒ/"], meeting:["melting","/ˈmeltɪŋ/"],
+  deadline:["headline","/ˈhedlaɪn/"], manager:["messenger","/ˈmesɪndʒə/"], project:["product","/ˈprɒdʌkt/"],
+  client:["silent","/ˈsaɪlənt/"], agenda:["agent","/ˈeɪdʒənt/"], progress:["process","/ˈprəʊses/"],
+  budget:["bucket","/ˈbʌkɪt/"], report:["repeat","/rɪˈpiːt/"], available:["valuable","/ˈvæljuəbl/"],
+  // daily
+  "thank you":["thanking","/ˈθæŋkɪŋ/"], welcome:["welfare","/ˈwelfeə/"], sorry:["story","/ˈstɔːri/"],
+  excuse:["accuse","/əˈkjuːz/"], question:["suggestion","/səˈdʒestʃən/"], answer:["dancer","/ˈdɑːnsə/"],
+  minute:["minus","/ˈmaɪnəs/"], thirty:["dirty","/ˈdɜːti/"], clothes:["cloths","/klɒθs/"],
+  months:["mouths","/maʊðz/"], world:["word","/wɜːd/"], usually:["usefully","/ˈjuːsfəli/"],
+  // diphthong words — mostly the flattened or swapped glide
+  face:["fence","/fens/"], wait:["wet","/wet/"], train:["trend","/trend/"], email:["female","/ˈfiːmeɪl/"],
+  time:["team","/tiːm/"], price:["press","/pres/"], climb:["claim","/kleɪm/"],
+  voice:["vice","/vaɪs/"], enjoy:["engine","/ˈendʒɪn/"], choice:["chase","/tʃeɪs/"], employ:["imply","/ɪmˈplaɪ/"],
+  mouth:["moth","/mɒθ/"], around:["errand","/ˈerənd/"], account:["accent","/ˈæksənt/"], download:["unload","/ʌnˈləʊd/"],
+  phone:["fun","/fʌn/"], both:["bath","/bɑːθ/"], focus:["forces","/ˈfɔːsɪz/"], control:["patrol","/pəˈtrəʊl/"],
+  near:["knee","/niː/"], career:["carrier","/ˈkæriə/"], idea:["idle","/ˈaɪdl/"], serious:["series","/ˈsɪəriːz/"],
+  care:["core","/kɔː/"], share:["sheer","/ʃɪə/"], prepare:["prefer","/prɪˈfɜː/"], aware:["away","/əˈweɪ/"],
+  pure:["pier","/pɪə/"], tour:["tower","/ˈtaʊə/"], secure:["sincere","/sɪnˈsɪə/"]
+};
+function confuserOf(w){ return CONFUSE[w] || null; }
+
+// generators: each returns an array of exercise objects -------------------
+function genListen(pairs){                       // listening: hear word → choose it
+  return pairs.map(p=>{
+    const target = Math.random()<0.5 ? {w:p.a,o:p.b} : {w:p.b,o:p.a};
+    const d = pairDiff(p.ia, p.ib);
+    const where = d ? T(` — only the ${POS_TEXT[d.pos].en} sound changes (/${d.a}/ vs /${d.b}/)`,
+                        ` —— 只差在${POS_TEXT[d.pos].zh}音（/${d.a}/ 和 /${d.b}/）`,
+                        ` — hanya bunyi ${POS_TEXT[d.pos].ms} berbeza (/${d.a}/ dan /${d.b}/)`) : T("","","");
+    return ex({kind:"Listen & choose", variant:"listen", word:target.w, sub:"Which word did you hear?",
+      options:[opt(target.w,true),opt(target.o)], fam:p.f, gen:true, pair:[p.a,p.b], rpOnly:!!p.rp,
+      hint:T(`These two sound close: “${p.a}” and “${p.b}”${where.en}. Tap 🔊 and listen for it.`,
+             `“${p.a}” 和 “${p.b}” 听起来很像${where.zh}。点 🔊 再听一次。`,
+             `“${p.a}” dan “${p.b}” bunyinya hampir sama${where.ms}. Ketik 🔊 dan dengar sekali lagi.`)});
+  });
+}
+function genPairIPA(pairs){                       // choose correct IPA for one word of the pair
+  return pairs.map(p=>{
+    const pickA = Math.random()<0.5;
+    const w = pickA?p.a:p.b, right = pickA?p.ia:p.ib, wrong = pickA?p.ib:p.ia;
+    return ex({kind:"Choose the IPA", prompt:w, options:[opt(right,true),opt(wrong)], fam:p.f, gen:true,
+      pair:[p.a,p.b], hint:pairHint(p)});
+  });
+}
+function genReadPair(pairs){                       // IPA → word (minimal-pair confusion)
+  return pairs.map(p=>{
+    const pickA = Math.random()<0.5;
+    const ipa = pickA?p.ia:p.ib, right = pickA?p.a:p.b, wrong = pickA?p.b:p.a, wIpa = pickA?p.ib:p.ia;
+    return ex({kind:"Read the IPA", variant:"word", prompt:ipa, options:[opt(right,true),opt(wrong)], fam:p.f, gen:true,
+      pair:[p.a,p.b],
+      hint:T(`${ipa} is the word “${right}”. Compare it with “${wrong}” = ${wIpa}.`,
+             `${ipa} 是 “${right}” 这个字。跟 “${wrong}”（${wIpa}）比一比。`,
+             `${ipa} ialah perkataan “${right}”. Bandingkan dengan “${wrong}” (${wIpa}).`)});
+  });
+}
+// vocab read/listen: the wrong option is the word's hand-picked confuser (CONFUSE).
+// A word with no confuser is skipped rather than given a made-up one.
+function vocabRead(list){
+  return list.filter(([w])=>confuserOf(w)).map(([w,ipa])=>{
+    const [c,cIpa] = confuserOf(w);
+    return ex({kind:"Read the IPA", variant:"word", prompt:ipa, options:[opt(w,true),opt(c)], gen:true, vocab:true,
+      hint:`${ipa} → “${w}” · ${cIpa} → “${c}”`});
+  });
+}
+function vocabListen(list){
+  return list.filter(([w])=>confuserOf(w)).map(([w,ipa])=>{
+    const [c,cIpa] = confuserOf(w);
+    return ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
+      options:[opt(w,true),opt(c)], gen:true, vocab:true,
+      hint:T(`“${w}” — ${ipa}. “${c}” sounds different: ${cIpa}. Tap 🔊 to replay.`,
+             `“${w}” —— ${ipa}。“${c}” 念成 ${cIpa}，不一样。点 🔊 再听一次。`,
+             `“${w}” — ${ipa}. “${c}” berbunyi ${cIpa}, lain sedikit. Ketik 🔊 untuk dengar semula.`)});
+  });
+}
+
 function distractors(correct, pool, n){
   const others = pool.filter(x=>x!==correct);
   const out=[]; while(out.length<n && others.length){ out.push(others.splice(Math.floor(Math.random()*others.length),1)[0]); }
   return out;
 }
 function genDiphIdentify(){
-  return DIPH_WORDS.map(([w,g])=>ex({kind:"Listen & choose", variant:"identify", prompt:w, sub:"Which sound do you hear?",
-    options:[opt(g,true),...distractors(g,DIPHS,3).map(d=>opt(d))], fam:"glide "+g,
-    hint:`Say “${w}” slowly and notice how the sound moves. Tap 🔊 to hear it again.`}));
+  return DIPH_WORDS.map(([w,g,ipa])=>{
+    // a glide that ALSO occurs in the word (download = /aʊ/ + /əʊ/, idea = /aɪ/ + /ɪə/)
+    // would be a second correct answer, so it can never be a distractor
+    const inWord = ipaTokens(ipa);
+    const pool = DIPHS.filter(d=>d===g || !inWord.includes(d.replace(/\//g,"")));
+    return ex({kind:"Listen & choose", variant:"identify", prompt:w, sub:"Which sound do you hear?",
+      options:[opt(g,true),...distractors(g,pool,3).map(d=>opt(d))], fam:"glide "+g, gen:true,
+      hint:T(`Say “${w}” (${ipa}) slowly and notice how the sound moves: ${g}. Tap 🔊 to hear it again.`,
+             `慢慢念 “${w}”（${ipa}），感觉声音怎么滑动：${g}。点 🔊 再听一次。`,
+             `Sebut “${w}” (${ipa}) perlahan-lahan dan rasakan bunyinya bergerak: ${g}. Ketik 🔊 untuk dengar lagi.`)});
+  });
 }
 function genDiphRead(){
-  return DIPH_WORDS.map(([w,g,ipa])=>ex({kind:"Read the IPA", variant:"word", prompt:ipa,
-    options:[opt(w,true),opt(pickConfuser(w))], fam:"glide "+g, hint:`${ipa} is the word “${w}”.`}));
+  return DIPH_WORDS.filter(([w])=>confuserOf(w)).map(([w,g,ipa])=>{
+    const [c,cIpa] = confuserOf(w);
+    return ex({kind:"Read the IPA", variant:"word", prompt:ipa,
+      options:[opt(w,true),opt(c)], fam:"glide "+g, gen:true,
+      hint:T(`${ipa} is the word “${w}”. Compare it with “${c}” = ${cIpa}.`,
+             `${ipa} 是 “${w}” 这个字。跟 “${c}”（${cIpa}）比一比。`,
+             `${ipa} ialah perkataan “${w}”. Bandingkan dengan “${c}” (${cIpa}).`)});
+  });
 }
 function genDiphListen(){
-  return DIPH_WORDS.map(([w,g,ipa])=>ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
-    options:[opt(w,true),opt(pickConfuser(w))], fam:"glide "+g, hint:`That was “${w}”. Tap 🔊 to hear it again.`}));
+  return DIPH_WORDS.filter(([w])=>confuserOf(w)).map(([w,g,ipa])=>{
+    const [c,cIpa] = confuserOf(w);
+    return ex({kind:"Listen & choose", variant:"listen", word:w, sub:"Which word did you hear?",
+      options:[opt(w,true),opt(c)], fam:"glide "+g, gen:true,
+      hint:T(`That was “${w}” (${ipa}), not “${c}” (${cIpa}). Tap 🔊 to hear it again.`,
+             `刚才是 “${w}”（${ipa}），不是 “${c}”（${cIpa}）。点 🔊 再听一次。`,
+             `Tadi ialah “${w}” (${ipa}), bukan “${c}” (${cIpa}). Ketik 🔊 untuk dengar lagi.`)});
+  });
 }
 
+// split PAIRS into vowel-focused vs consonant-focused for natural distribution
+const VOWEL_PAIRS = PAIRS.filter(p=>/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
+const CONS_PAIRS  = PAIRS.filter(p=>!/^\/[ɪiːʊuːæʌeɒɔːɑːɜːə]/.test(p.f));
 
 const COURSE = [
 {
@@ -799,13 +904,17 @@ const COURSE = [
     quote:{cn:"发音一小步，沟通一大步", en:"A small step in pronunciation, a giant leap in communication."}
   },
   exercises:[
-    ex({kind:"Quick check", prompt:"Why are you learning pronunciation?", promptBig:false,
+    // a mindset question, not English content: prompt + options carry a translation,
+    // no speaker buttons, and a miss is not sent to Today's Review
+    ex({kind:"Quick check", prompt:"Why are you learning pronunciation?", noSpeak:true,
+      promptText:T("Why are you learning pronunciation?","你为什么要学发音？","Kenapa anda belajar sebutan?"),
       sub:"Pick the TOUCH way 👇",
-      options:[opt("To communicate clearly",true), opt("To memorize grammar rules")],
-      okMsg:"Excellent! TOUCH focuses on communication first! 🎉",
-      hint:"Think about the goal: being understood, not memorizing rules."})
+      options:[Object.assign(opt("To communicate clearly",true),{gloss:T("","为了把话讲清楚","Untuk berkomunikasi dengan jelas")}),
+               Object.assign(opt("To memorize grammar rules"),{gloss:T("","为了背文法规则","Untuk menghafal peraturan tatabahasa")})],
+      okMsg:T("Excellent! TOUCH focuses on communication first! 🎉","很好！TOUCH 先求沟通！🎉","Cemerlang! TOUCH mengutamakan komunikasi! 🎉"),
+      hint:T("Think about the goal: being understood, not memorizing rules.","想想目标：是让人听懂，不是背规则。","Fikirkan matlamatnya: difahami, bukan menghafal peraturan.")})
   ],
-  reward:{ xp:50, badge:"starter", title:"You're all set!", line:"Stage 1 Unlocked — Short & Long Vowels" }
+  reward:{ xp:50, badge:"starter", title:"You're all set!" }
 },
 {
   id:"s1", title:"Short & Long Vowels", short:"Vowels", icon:"🅰️", color:"teal",
@@ -819,47 +928,66 @@ const COURSE = [
     ],
     note:"Tip: tap each word, then say it back. Hearing it a few times is all it takes."
   },
+  // the contrasts Malaysian learners most often merge — every run must drill
+  // these (n = at least that many questions from any of the listed families)
+  must:[{any:["/ɪ/ vs /iː/"],n:2},{any:["/e/ vs /æ/"],n:1},{any:["/ʊ/ vs /uː/"],n:1},{any:["/æ/ vs /ʌ/"],n:1}],
   exercises:[
     // TYPE A — choose correct IPA
-    ex({kind:"Choose the IPA", prompt:"live", options:[opt("/lɪv/",true),opt("/liːv/")], hint:"“live” (verb) uses the short, relaxed /ɪ/. /liːv/ = “leave”."}),
-    ex({kind:"Choose the IPA", prompt:"sunny", options:[opt("/ˈsʌni/",true),opt("/ˈsuːni/")], hint:"The “u” in sunny is the short /ʌ/ as in “cup”."}),
-    ex({kind:"Choose the IPA", prompt:"said", options:[opt("/sed/",true),opt("/seɪd/")], hint:"“said” sounds like “sed” — short /e/, not the /eɪ/ glide."}),
-    ex({kind:"Choose the IPA", prompt:"pack", options:[opt("/pæk/",true),opt("/pɑːk/")], hint:"/æ/ is the short open “a” in cat. /pɑːk/ = “park”."}),
-    ex({kind:"Choose the IPA", prompt:"mark", options:[opt("/mɑːk/",true),opt("/mæk/")], hint:"“mark” has the long /ɑː/ as in car."}),
-    ex({kind:"Choose the IPA", prompt:"teach", options:[opt("/tiːtʃ/",true),opt("/tɪtʃ/")], hint:"“teach” uses the long, smiley /iː/."}),
-    ex({kind:"Choose the IPA", prompt:"barn", options:[opt("/bɑːn/",true),opt("/bæn/")], hint:"“barn” stretches into /ɑː/. /bæn/ = “ban”."}),
-    ex({kind:"Choose the IPA", prompt:"bed", options:[opt("/bed/",true),opt("/biːd/")], hint:"Short /e/ as in “red”. /biːd/ = “bead”."}),
-    ex({kind:"Choose the IPA", prompt:"curry", options:[opt("/ˈkʌri/",true),opt("/ˈkuːri/")], hint:"The “u” here is the short /ʌ/."}),
-    ex({kind:"Choose the IPA", prompt:"cheap", options:[opt("/tʃiːp/",true),opt("/tʃɪp/")], hint:"“cheap” = long /iː/. /tʃɪp/ = “chip”."}),
+    ex({kind:"Choose the IPA", prompt:"live", options:[opt("/lɪv/",true),opt("/liːv/")], fam:"/ɪ/ vs /iː/",
+      hint:T("“live” (verb) uses the short, relaxed /ɪ/. /liːv/ = “leave”.","“live”（动词）用短而放松的 /ɪ/。/liːv/ 是 “leave”。","“live” (kata kerja) guna /ɪ/ yang pendek dan santai. /liːv/ = “leave”.")}),
+    ex({kind:"Choose the IPA", prompt:"sunny", options:[opt("/ˈsʌni/",true),opt("/ˈsuːni/")],
+      hint:T("The “u” in sunny is the short /ʌ/ as in “cup”.","sunny 里的 u 是短的 /ʌ/，跟 “cup” 一样。","Huruf “u” dalam sunny ialah /ʌ/ pendek seperti “cup”.")}),
+    ex({kind:"Choose the IPA", prompt:"said", options:[opt("/sed/",true),opt("/seɪd/")],
+      hint:T("“said” sounds like “sed” — short /e/, not the /eɪ/ glide.","“said” 念起来像 “sed” —— 短的 /e/，不是 /eɪ/ 滑音。","“said” berbunyi seperti “sed” — /e/ pendek, bukan luncuran /eɪ/.")}),
+    ex({kind:"Choose the IPA", prompt:"pack", options:[opt("/pæk/",true),opt("/pɑːk/")], fam:"/æ/ vs /ɑː/",
+      hint:T("/æ/ is the short open “a” in cat. /pɑːk/ = “park”.","/æ/ 是 cat 里那个短而张开的 a。/pɑːk/ 是 “park”。","/æ/ ialah “a” pendek terbuka dalam cat. /pɑːk/ = “park”.")}),
+    ex({kind:"Choose the IPA", prompt:"mark", options:[opt("/mɑːk/",true),opt("/mæk/")], fam:"/æ/ vs /ɑː/",
+      hint:T("“mark” has the long /ɑː/ as in car.","“mark” 是长的 /ɑː/，跟 car 一样。","“mark” ada /ɑː/ panjang seperti car.")}),
+    ex({kind:"Choose the IPA", prompt:"teach", options:[opt("/tiːtʃ/",true),opt("/tɪtʃ/")], fam:"/ɪ/ vs /iː/",
+      hint:T("“teach” uses the long, smiley /iː/.","“teach” 用长的、嘴角往两边拉的 /iː/。","“teach” guna /iː/ yang panjang, seperti senyum.")}),
+    ex({kind:"Choose the IPA", prompt:"barn", options:[opt("/bɑːn/",true),opt("/bæn/")], fam:"/æ/ vs /ɑː/",
+      hint:T("“barn” stretches into /ɑː/. /bæn/ = “ban”.","“barn” 拉长成 /ɑː/。/bæn/ 是 “ban”。","“barn” dipanjangkan menjadi /ɑː/. /bæn/ = “ban”.")}),
+    ex({kind:"Choose the IPA", prompt:"bed", options:[opt("/bed/",true),opt("/biːd/")],
+      hint:T("Short /e/ as in “red”. /biːd/ = “bead”.","短的 /e/，跟 “red” 一样。/biːd/ 是 “bead”。","/e/ pendek seperti “red”. /biːd/ = “bead”.")}),
+    ex({kind:"Choose the IPA", prompt:"curry", options:[opt("/ˈkʌri/",true),opt("/ˈkuːri/")],
+      hint:T("The “u” here is the short /ʌ/.","这里的 u 是短的 /ʌ/。","Huruf “u” di sini ialah /ʌ/ pendek.")}),
+    ex({kind:"Choose the IPA", prompt:"cheap", options:[opt("/tʃiːp/",true),opt("/tʃɪp/")], fam:"/ɪ/ vs /iː/",
+      hint:T("“cheap” = long /iː/. /tʃɪp/ = “chip”.","“cheap” 是长的 /iː/。/tʃɪp/ 是 “chip”。","“cheap” = /iː/ panjang. /tʃɪp/ = “chip”.")}),
     // TYPE B — fill the missing IPA
-    ex({kind:"Fill the sound", variant:"fill", word:"bat", prompt:"/b__t/", answer:"æ",
+    ex({kind:"Fill the sound", variant:"fill", word:"bat", prompt:"/b__t/", answer:"æ", fam:"/e/ vs /æ/",
       options:[opt("/iː/"),opt("/ɪ/"),opt("/e/"),opt("/æ/",true),opt("/ʌ/"),opt("/ɑː/")],
-      hint:"“bat” has the short open /æ/ as in cat."}),
-    ex({kind:"Fill the sound", variant:"fill", word:"beat", prompt:"/b__t/", answer:"iː",
+      hint:T("“bat” has the short open /æ/ as in cat.","“bat” 是短而张开的 /æ/，跟 cat 一样。","“bat” ada /æ/ pendek terbuka seperti cat.")}),
+    ex({kind:"Fill the sound", variant:"fill", word:"beat", prompt:"/b__t/", answer:"iː", fam:"/ɪ/ vs /iː/",
       options:[opt("/iː/",true),opt("/ɪ/"),opt("/e/"),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/")],
-      hint:"“beat” is long & smiley /iː/."}),
-    ex({kind:"Fill the sound", variant:"fill", word:"bit", prompt:"/b__t/", answer:"ɪ",
+      hint:T("“beat” is long & smiley /iː/.","“beat” 是长的、像微笑的 /iː/。","“beat” ialah /iː/ panjang, seperti senyum.")}),
+    ex({kind:"Fill the sound", variant:"fill", word:"bit", prompt:"/b__t/", answer:"ɪ", fam:"/ɪ/ vs /iː/",
       options:[opt("/iː/"),opt("/ɪ/",true),opt("/e/"),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/")],
-      hint:"“bit” is short & relaxed /ɪ/."}),
-    ex({kind:"Fill the sound", variant:"fill", word:"but", prompt:"/b__t/", answer:"ʌ",
+      hint:T("“bit” is short & relaxed /ɪ/.","“bit” 是短而放松的 /ɪ/。","“bit” ialah /ɪ/ pendek dan santai.")}),
+    ex({kind:"Fill the sound", variant:"fill", word:"but", prompt:"/b__t/", answer:"ʌ", fam:"/æ/ vs /ʌ/",
       options:[opt("/iː/"),opt("/ɪ/"),opt("/e/"),opt("/æ/"),opt("/ʌ/",true),opt("/ɑː/")],
-      hint:"“but” uses the short /ʌ/ as in cup."}),
-    ex({kind:"Fill the sound", variant:"fill", word:"bet", prompt:"/b__t/", answer:"e",
+      hint:T("“but” uses the short /ʌ/ as in cup.","“but” 用短的 /ʌ/，跟 cup 一样。","“but” guna /ʌ/ pendek seperti cup.")}),
+    ex({kind:"Fill the sound", variant:"fill", word:"bet", prompt:"/b__t/", answer:"e", fam:"/e/ vs /æ/",
       options:[opt("/iː/"),opt("/ɪ/"),opt("/e/",true),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/")],
-      hint:"“bet” = short /e/ as in red."}),
-    ex({kind:"Fill the sound", variant:"fill", word:"barn", prompt:"/b__n/", answer:"ɑː",
+      hint:T("“bet” = short /e/ as in red.","“bet” 是短的 /e/，跟 red 一样。","“bet” = /e/ pendek seperti red.")}),
+    ex({kind:"Fill the sound", variant:"fill", word:"barn", prompt:"/b__n/", answer:"ɑː", fam:"/æ/ vs /ɑː/",
       options:[opt("/iː/"),opt("/ɪ/"),opt("/e/"),opt("/æ/"),opt("/ʌ/"),opt("/ɑː/",true)],
-      hint:"“barn” stretches into the long /ɑː/."}),
+      hint:T("“barn” stretches into the long /ɑː/.","“barn” 拉长成长的 /ɑː/。","“barn” dipanjangkan menjadi /ɑː/ panjang.")}),
     // TYPE C — IPA to word
-    ex({kind:"Read the IPA", variant:"word", prompt:"/griːn/", options:[opt("green",true),opt("grin")], hint:"Long /iː/ → green. Short /ɪ/ → grin."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/blæk/", options:[opt("black",true),opt("bleak")], hint:"/æ/ → black. /iː/ → bleak."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/sɪks/", options:[opt("six",true),opt("seeks")], hint:"Short /ɪ/ → six. Long /iː/ → seeks."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/ɑːm/", options:[opt("arm",true),opt("aim")], hint:"/ɑː/ → arm. /eɪ/ → aim."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ɡriːn/", options:[opt("green",true),opt("grin")], fam:"/ɪ/ vs /iː/",
+      hint:T("Long /iː/ → green. Short /ɪ/ → grin.","长的 /iː/ → green。短的 /ɪ/ → grin。","/iː/ panjang → green. /ɪ/ pendek → grin.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/blæk/", options:[opt("black",true),opt("bleak")],
+      hint:T("/æ/ → black. /iː/ → bleak.","/æ/ → black。/iː/ → bleak。","/æ/ → black. /iː/ → bleak.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/sɪks/", options:[opt("six",true),opt("seeks")], fam:"/ɪ/ vs /iː/",
+      hint:T("Short /ɪ/ → six. Long /iː/ → seeks.","短的 /ɪ/ → six。长的 /iː/ → seeks。","/ɪ/ pendek → six. /iː/ panjang → seeks.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ɑːm/", options:[opt("arm",true),opt("aim")],
+      hint:T("/ɑː/ → arm. /eɪ/ → aim.","/ɑː/ → arm。/eɪ/ → aim。","/ɑː/ → arm. /eɪ/ → aim.")}),
     // LISTENING practice (integrated into the lesson)
-    ex({kind:"Listen & choose", variant:"listen", word:"sheep", sub:"Which word did you hear?",
-      options:[opt("sheep",true),opt("ship")], hint:"Long /iː/ → sheep. Short /ɪ/ → ship. Tap 🔊 to compare."}),
-    ex({kind:"Listen & choose", variant:"listen", word:"full", sub:"Which word did you hear?",
-      options:[opt("full",true),opt("fool")], hint:"Short /ʊ/ → full. Long /uː/ → fool."}),
+    ex({kind:"Listen & choose", variant:"listen", word:"sheep", sub:"Which word did you hear?", fam:"/ɪ/ vs /iː/",
+      options:[opt("sheep",true),opt("ship")],
+      hint:T("Long /iː/ → sheep. Short /ɪ/ → ship. Tap 🔊 to compare.","长的 /iː/ → sheep。短的 /ɪ/ → ship。点 🔊 比一比。","/iː/ panjang → sheep. /ɪ/ pendek → ship. Ketik 🔊 untuk bandingkan.")}),
+    ex({kind:"Listen & choose", variant:"listen", word:"full", sub:"Which word did you hear?", fam:"/ʊ/ vs /uː/",
+      options:[opt("full",true),opt("fool")],
+      hint:T("Short /ʊ/ → full. Long /uː/ → fool.","短的 /ʊ/ → full。长的 /uː/ → fool。","/ʊ/ pendek → full. /uː/ panjang → fool.")}),
     // ——— expanded pools (PRIORITY 1 & 2): minimal pairs, listening & real vocab ———
     ...genPairIPA(VOWEL_PAIRS),
     ...genReadPair(VOWEL_PAIRS),
@@ -868,7 +996,7 @@ const COURSE = [
     ...vocabListen(VOCAB.everyday),
     ...vocabRead(VOCAB.daily)
   ],
-  reward:{ xp:200, badge:"vowel_master", title:"You're mastering English vowel sounds!", line:"Stage 2 Unlocked — Diphthongs" }
+  reward:{ xp:200, badge:"vowel_master", title:"You're mastering English vowel sounds!" }
 },
 {
   id:"s2", title:"Diphthongs", short:"Diphthongs", icon:"🌀", color:"sky",
@@ -880,91 +1008,124 @@ const COURSE = [
       {title:"Closing glides", cls:"", items:[["eɪ","day"],["aɪ","my"],["ɔɪ","boy"],["aʊ","now"],["əʊ","go"]]},
       {title:"Centring glides", cls:"", items:[["ɪə","here"],["eə","hair"],["ʊə","tour"]]}
     ],
-    note:"Say “go” slowly: /əʊ/ starts open, then rounds. One smooth move."
+    note:"Say “go” slowly: /əʊ/ starts in the middle of the mouth (the relaxed ‘uh’ of about), then the lips round. One smooth move."
   },
+  // /eɪ/ and /əʊ/ are the glides Malaysian speech flattens to a plain /e/ and /o/
+  must:[{any:["glide /eɪ/"],n:1},{any:["glide /əʊ/"],n:1},{any:["glide /ɪə/","glide /eə/","glide /ʊə/"],n:1}],
   exercises:[
     // TYPE A
-    ex({kind:"Choose the IPA", prompt:"flight", options:[opt("/flaɪt/",true),opt("/fleɪt/")], hint:"“flight” glides /aɪ/ as in buy."}),
-    ex({kind:"Choose the IPA", prompt:"coil", options:[opt("/kɔɪl/",true),opt("/kəʊl/")], hint:"“coil” uses /ɔɪ/ as in toy. /kəʊl/ = “coal”."}),
-    ex({kind:"Choose the IPA", prompt:"brave", options:[opt("/breɪv/",true),opt("/braɪv/")], hint:"“brave” glides /eɪ/ as in bay."}),
-    ex({kind:"Choose the IPA", prompt:"loaf", options:[opt("/ləʊf/",true),opt("/laʊf/")], hint:"“loaf” uses /əʊ/ as in low. /aʊ/ = “loud”."}),
-    ex({kind:"Choose the IPA", prompt:"browse", options:[opt("/braʊz/",true),opt("/brəʊz/")], hint:"“browse” opens into /aʊ/ as in town."}),
+    ex({kind:"Choose the IPA", prompt:"flight", options:[opt("/flaɪt/",true),opt("/fleɪt/")], fam:"glide /aɪ/",
+      hint:T("“flight” glides /aɪ/ as in buy.","“flight” 滑的是 /aɪ/，跟 buy 一样。","“flight” meluncur /aɪ/ seperti buy.")}),
+    ex({kind:"Choose the IPA", prompt:"coil", options:[opt("/kɔɪl/",true),opt("/kəʊl/")], fam:"glide /ɔɪ/",
+      hint:T("“coil” uses /ɔɪ/ as in toy. /kəʊl/ = “coal”.","“coil” 用 /ɔɪ/，跟 toy 一样。/kəʊl/ 是 “coal”。","“coil” guna /ɔɪ/ seperti toy. /kəʊl/ = “coal”.")}),
+    ex({kind:"Choose the IPA", prompt:"brave", options:[opt("/breɪv/",true),opt("/braɪv/")], fam:"glide /eɪ/",
+      hint:T("“brave” glides /eɪ/ as in bay.","“brave” 滑的是 /eɪ/，跟 bay 一样。","“brave” meluncur /eɪ/ seperti bay.")}),
+    ex({kind:"Choose the IPA", prompt:"loaf", options:[opt("/ləʊf/",true),opt("/laʊf/")], fam:"glide /əʊ/",
+      hint:T("“loaf” uses /əʊ/ as in low. /aʊ/ is the glide in “loud”.","“loaf” 用 /əʊ/，跟 low 一样。/aʊ/ 是 “loud” 里的滑音。","“loaf” guna /əʊ/ seperti low. /aʊ/ ialah luncuran dalam “loud”.")}),
+    ex({kind:"Choose the IPA", prompt:"browse", options:[opt("/braʊz/",true),opt("/brəʊz/")], fam:"glide /aʊ/",
+      hint:T("“browse” opens into /aʊ/ as in town.","“browse” 张开成 /aʊ/，跟 town 一样。","“browse” terbuka menjadi /aʊ/ seperti town.")}),
     // TYPE B — fill diphthong
-    ex({kind:"Fill the glide", variant:"fill", word:"float", prompt:"/fl____t/", answer:"əʊ",
+    ex({kind:"Fill the glide", variant:"fill", word:"float", prompt:"/fl____t/", answer:"əʊ", fam:"glide /əʊ/",
       options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/"),opt("/aʊ/"),opt("/əʊ/",true),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
-      hint:"“float” glides /əʊ/ as in low."}),
-    ex({kind:"Fill the glide", variant:"fill", word:"loud", prompt:"/l____d/", answer:"aʊ",
+      hint:T("“float” glides /əʊ/ as in low.","“float” 滑的是 /əʊ/，跟 low 一样。","“float” meluncur /əʊ/ seperti low.")}),
+    ex({kind:"Fill the glide", variant:"fill", word:"loud", prompt:"/l____d/", answer:"aʊ", fam:"glide /aʊ/",
       options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/"),opt("/aʊ/",true),opt("/əʊ/"),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
-      hint:"“loud” opens into /aʊ/ as in town."}),
-    ex({kind:"Fill the glide", variant:"fill", word:"foil", prompt:"/f____l/", answer:"ɔɪ",
+      hint:T("“loud” opens into /aʊ/ as in town.","“loud” 张开成 /aʊ/，跟 town 一样。","“loud” terbuka menjadi /aʊ/ seperti town.")}),
+    ex({kind:"Fill the glide", variant:"fill", word:"foil", prompt:"/f____l/", answer:"ɔɪ", fam:"glide /ɔɪ/",
       options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/",true),opt("/aʊ/"),opt("/əʊ/"),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
-      hint:"“foil” glides /ɔɪ/ as in toy."}),
-    ex({kind:"Fill the glide", variant:"fill", word:"clear", prompt:"/kl____/", answer:"ɪə",
+      hint:T("“foil” glides /ɔɪ/ as in toy.","“foil” 滑的是 /ɔɪ/，跟 toy 一样。","“foil” meluncur /ɔɪ/ seperti toy.")}),
+    ex({kind:"Fill the glide", variant:"fill", word:"clear", prompt:"/kl____/", answer:"ɪə", fam:"glide /ɪə/",
       options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/"),opt("/aʊ/"),opt("/əʊ/"),opt("/ɪə/",true),opt("/eə/"),opt("/ʊə/")],
-      hint:"“clear” glides /ɪə/ as in beer."}),
-    ex({kind:"Fill the glide", variant:"fill", word:"soil", prompt:"/s____l/", answer:"ɔɪ",
+      hint:T("“clear” glides /ɪə/ as in beer.","“clear” 滑的是 /ɪə/，跟 beer 一样。","“clear” meluncur /ɪə/ seperti beer.")}),
+    ex({kind:"Fill the glide", variant:"fill", word:"soil", prompt:"/s____l/", answer:"ɔɪ", fam:"glide /ɔɪ/",
       options:[opt("/eɪ/"),opt("/aɪ/"),opt("/ɔɪ/",true),opt("/aʊ/"),opt("/əʊ/"),opt("/ɪə/"),opt("/eə/"),opt("/ʊə/")],
-      hint:"“soil” uses /ɔɪ/ as in toy."}),
+      hint:T("“soil” uses /ɔɪ/ as in toy.","“soil” 用 /ɔɪ/，跟 toy 一样。","“soil” guna /ɔɪ/ seperti toy.")}),
     // TYPE C — identify diphthong
-    ex({kind:"Listen & choose", variant:"identify", prompt:"proud", sub:"Which sound do you hear?",
-      options:[opt("/aʊ/",true),opt("/əʊ/"),opt("/aɪ/"),opt("/ɔɪ/")], hint:"“proud” opens into /aʊ/ as in town."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"rain", sub:"Which sound do you hear?",
-      options:[opt("/eɪ/",true),opt("/aɪ/"),opt("/ɪə/"),opt("/eə/")], hint:"“rain” glides /eɪ/ as in bay."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"sigh", sub:"Which sound do you hear?",
-      options:[opt("/aɪ/",true),opt("/eɪ/"),opt("/ɔɪ/"),opt("/əʊ/")], hint:"“sigh” glides /aɪ/ as in buy."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"choice", sub:"Which sound do you hear?",
-      options:[opt("/ɔɪ/",true),opt("/aʊ/"),opt("/aɪ/"),opt("/əʊ/")], hint:"“choice” uses /ɔɪ/ as in toy."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"coat", sub:"Which sound do you hear?",
-      options:[opt("/əʊ/",true),opt("/aʊ/"),opt("/ɔɪ/"),opt("/eɪ/")], hint:"“coat” glides /əʊ/ as in low."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"hear", sub:"Which sound do you hear?",
-      options:[opt("/ɪə/",true),opt("/eə/"),opt("/ʊə/"),opt("/eɪ/")], hint:"“hear” glides /ɪə/ as in beer."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"bear", sub:"Which sound do you hear?",
-      options:[opt("/eə/",true),opt("/ɪə/"),opt("/ɜː/"),opt("/aɪ/")], hint:"“bear” glides /eə/ as in fair."}),
-    ex({kind:"Listen & choose", variant:"identify", prompt:"buy", sub:"Which sound do you hear?",
-      options:[opt("/aɪ/",true),opt("/eɪ/"),opt("/ɔɪ/"),opt("/aʊ/")], hint:"“buy” glides /aɪ/."}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"proud", sub:"Which sound do you hear?", fam:"glide /aʊ/",
+      options:[opt("/aʊ/",true),opt("/əʊ/"),opt("/aɪ/"),opt("/ɔɪ/")],
+      hint:T("“proud” opens into /aʊ/ as in town.","“proud” 张开成 /aʊ/，跟 town 一样。","“proud” terbuka menjadi /aʊ/ seperti town.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"rain", sub:"Which sound do you hear?", fam:"glide /eɪ/",
+      options:[opt("/eɪ/",true),opt("/aɪ/"),opt("/ɪə/"),opt("/eə/")],
+      hint:T("“rain” glides /eɪ/ as in bay.","“rain” 滑的是 /eɪ/，跟 bay 一样。","“rain” meluncur /eɪ/ seperti bay.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"sigh", sub:"Which sound do you hear?", fam:"glide /aɪ/",
+      options:[opt("/aɪ/",true),opt("/eɪ/"),opt("/ɔɪ/"),opt("/əʊ/")],
+      hint:T("“sigh” glides /aɪ/ as in buy.","“sigh” 滑的是 /aɪ/，跟 buy 一样。","“sigh” meluncur /aɪ/ seperti buy.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"choice", sub:"Which sound do you hear?", fam:"glide /ɔɪ/",
+      options:[opt("/ɔɪ/",true),opt("/aʊ/"),opt("/aɪ/"),opt("/əʊ/")],
+      hint:T("“choice” uses /ɔɪ/ as in toy.","“choice” 用 /ɔɪ/，跟 toy 一样。","“choice” guna /ɔɪ/ seperti toy.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"coat", sub:"Which sound do you hear?", fam:"glide /əʊ/",
+      options:[opt("/əʊ/",true),opt("/aʊ/"),opt("/ɔɪ/"),opt("/eɪ/")],
+      hint:T("“coat” glides /əʊ/ as in low.","“coat” 滑的是 /əʊ/，跟 low 一样。","“coat” meluncur /əʊ/ seperti low.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"hear", sub:"Which sound do you hear?", fam:"glide /ɪə/",
+      options:[opt("/ɪə/",true),opt("/eə/"),opt("/ʊə/"),opt("/eɪ/")],
+      hint:T("“hear” glides /ɪə/ as in beer.","“hear” 滑的是 /ɪə/，跟 beer 一样。","“hear” meluncur /ɪə/ seperti beer.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"bear", sub:"Which sound do you hear?", fam:"glide /eə/",
+      options:[opt("/eə/",true),opt("/ɪə/"),opt("/ɜː/"),opt("/aɪ/")],
+      hint:T("“bear” glides /eə/ as in fair.","“bear” 滑的是 /eə/，跟 fair 一样。","“bear” meluncur /eə/ seperti fair.")}),
+    ex({kind:"Listen & choose", variant:"identify", prompt:"buy", sub:"Which sound do you hear?", fam:"glide /aɪ/",
+      options:[opt("/aɪ/",true),opt("/eɪ/"),opt("/ɔɪ/"),opt("/aʊ/")],
+      hint:T("“buy” glides /aɪ/.","“buy” 滑的是 /aɪ/。","“buy” meluncur /aɪ/.")}),
     // ——— expanded pools (PRIORITY 1): more diphthong identify / read / listen ———
     ...genDiphIdentify(),
     ...genDiphRead(),
     ...genDiphListen(),
     ...vocabRead(VOCAB.daily)
   ],
-  reward:{ xp:300, badge:"diphthong_hero", title:"Your sound gliding is improving beautifully!", line:"Stage 3 Unlocked — Consonants" }
+  reward:{ xp:300, badge:"diphthong_hero", title:"Your sound gliding is improving beautifully!" }
 },
 {
   id:"s3", title:"Consonants", short:"Consonants", icon:"🔤", color:"plum",
   video:{key:"consonants", title:"Lesson 3 — Consonants", caption:"Voiced vs voiceless sounds"},
   learn:{
     heading:"Voiced vs Voiceless",
-    intro:"Put your hand on your throat. <b>Voiced</b> sounds <b>vibrate</b>; <b>voiceless</b> sounds don't. Same mouth shape, different power!",
+    intro:"Put your hand on your throat. <b>Voiced</b> sounds make your voice box <b>vibrate</b>; <b>voiceless</b> sounds are only air. In each pair the mouth does the same thing — only the vibration changes.",
     groups:[
       {title:"Voiceless (no vibration)", cls:"voiceless", items:[["p","pen"],["t","ten"],["k","key"],["s","sun"],["ʃ","she"],["tʃ","chair"],["f","fan"],["θ","think"],["h","hat"]]},
-      {title:"Voiced (vibration)", cls:"voiced", items:[["b","boot"],["d","dog"],["g","good"],["z","zoo"],["ʒ","vision"],["dʒ","jump"],["v","van"],["ð","this"],["w","we"],["j","yes"],["m","man"],["n","no"],["ŋ","sing"],["l","leg"],["r","red"]]}
+      // same order as the row above, so each voiced sound sits under its voiceless partner
+      {title:"Voiced (vibration)", cls:"voiced", items:[["b","boot"],["d","dog"],["ɡ","good"],["z","zoo"],["ʒ","vision"],["dʒ","jump"],["v","van"],["ð","this"]]},
+      // m n ŋ l r w j are voiced too, but have no voiceless partner to compare with
+      {title:"Always voiced (no voiceless partner)", cls:"voiced", items:[["m","man"],["n","no"],["ŋ","sing"],["l","leg"],["r","red"],["w","we"],["j","yes"]]}
     ],
     note:"Try /s/ then /z/ — same shape, but /z/ buzzes. That buzz is voicing."
   },
+  // the two "th" sounds, v/w, and a voiced/voiceless pair (often at the end of a word)
+  must:[{any:["/θ/ vs /s/","/θ/ vs /t/","/θ/"],n:1},{any:["/ð/ vs /d/","/ð/ vs /z/","/ð/"],n:1},{any:["/w/ vs /v/"],n:1},{any:["/f/ vs /v/","/ɡ/ vs /k/","/b/ vs /p/"],n:1}],
   exercises:[
     // TYPE A
-    ex({kind:"Choose the IPA", prompt:"wealthy", options:[opt("/ˈwelθi/",true),opt("/ˈwelði/")], hint:"“wealthy” has the soft “th” (no buzz), like in “think”."}),
-    ex({kind:"Choose the IPA", prompt:"chimney", options:[opt("/ˈtʃɪmni/",true),opt("/ˈtʃemni/")], hint:"First vowel is short /ɪ/, and the start is /tʃ/."}),
-    ex({kind:"Choose the IPA", prompt:"tongue", options:[opt("/tʌŋ/",true),opt("/tɒŋ/")], hint:"“tongue” = /tʌŋ/ ending in the /ŋ/ sound."}),
-    ex({kind:"Choose the IPA", prompt:"humble", options:[opt("/ˈhʌmbl/",true),opt("/ˈhʊmbl/")], hint:"The “u” here is the short /ʌ/ as in cup."}),
+    ex({kind:"Choose the IPA", prompt:"wealthy", options:[opt("/ˈwelθi/",true),opt("/ˈwelði/")], fam:"/θ/",
+      hint:T("“wealthy” has the voiceless “th” (no buzz), like in “think”.","“wealthy” 的 th 是无声的（不会震），跟 “think” 一样。","“wealthy” ada “th” tidak bersuara (tiada getaran), seperti “think”.")}),
+    ex({kind:"Choose the IPA", prompt:"chimney", options:[opt("/ˈtʃɪmni/",true),opt("/ˈtʃemni/")],
+      hint:T("First vowel is short /ɪ/, and the start is /tʃ/.","第一个元音是短的 /ɪ/，开头是 /tʃ/。","Vokal pertama ialah /ɪ/ pendek, dan bermula dengan /tʃ/.")}),
+    ex({kind:"Choose the IPA", prompt:"tongue", options:[opt("/tʌŋ/",true),opt("/tɒŋ/")], fam:"/n/ vs /ŋ/",
+      hint:T("“tongue” = /tʌŋ/ ending in the /ŋ/ sound.","“tongue” = /tʌŋ/，结尾是 /ŋ/ 的音。","“tongue” = /tʌŋ/, berakhir dengan bunyi /ŋ/.")}),
+    ex({kind:"Choose the IPA", prompt:"humble", options:[opt("/ˈhʌmbl/",true),opt("/ˈhʊmbl/")],
+      hint:T("The “u” here is the short /ʌ/ as in cup.","这里的 u 是短的 /ʌ/，跟 cup 一样。","Huruf “u” di sini ialah /ʌ/ pendek seperti cup.")}),
     // TYPE B — IPA to word
-    ex({kind:"Read the IPA", variant:"word", prompt:"/pliːz/", options:[opt("please",true),opt("piece")], hint:"/pl…z/ with a buzzing /z/ → please."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈdʒɜːnəlɪst/", options:[opt("journalist",true),opt("jernalist")], hint:"Starts with /dʒ/ and the /ɜː/ of bird."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈvɪʒn/", options:[opt("vision",true),opt("visen")], hint:"The middle sound is the soft /ʒ/ (like the s in pleasure)."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/ðæt/", options:[opt("that",true),opt("there")], hint:"Voiced /ð/ + the short /æ/ → that."}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/pliːz/", options:[opt("please",true),opt("piece")],
+      hint:T("/pl…z/ with a buzzing /z/ → please.","/pl…z/，结尾是会震的 /z/ → please。","/pl…z/ dengan /z/ yang berdengung → please.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈdʒɜːnəlɪst/", options:[opt("journalist",true),opt("journalism")],
+      hint:T("Starts with /dʒ/ and the /ɜː/ of bird, and ends in /-ɪst/ → journalist.","开头是 /dʒ/ 和 bird 的 /ɜː/，结尾是 /-ɪst/ → journalist。","Bermula dengan /dʒ/ dan /ɜː/ seperti bird, berakhir dengan /-ɪst/ → journalist.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈvɪʒn/", options:[opt("vision",true),opt("version")],
+      hint:T("The middle sound is the soft, buzzing /ʒ/ (like the s in pleasure) → vision. “version” is /ˈvɜːʃn/.","中间是轻柔、会震的 /ʒ/（像 pleasure 里的 s）→ vision。“version” 是 /ˈvɜːʃn/。","Bunyi tengahnya /ʒ/ yang lembut dan berdengung (seperti s dalam pleasure) → vision. “version” ialah /ˈvɜːʃn/.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ðæt/", options:[opt("that",true),opt("there")], fam:"/ð/",
+      hint:T("Voiced /ð/ + the short /æ/ → that.","有声的 /ð/ 加短的 /æ/ → that。","/ð/ bersuara + /æ/ pendek → that.")}),
     // LISTENING practice (integrated into the lesson)
-    ex({kind:"Listen & choose", variant:"listen", word:"van", sub:"Which word did you hear?",
-      options:[opt("van",true),opt("fan")], hint:"Voiced /v/ buzzes → van. Voiceless /f/ → fan. Tap 🔊 to compare."}),
-    ex({kind:"Listen & choose", variant:"listen", word:"think", sub:"Which word did you hear?",
-      options:[opt("think",true),opt("sink")], hint:"/θ/ (tongue between teeth) → think. /s/ → sink."}),
+    ex({kind:"Listen & choose", variant:"listen", word:"van", sub:"Which word did you hear?", fam:"/f/ vs /v/",
+      options:[opt("van",true),opt("fan")],
+      hint:T("Voiced /v/ buzzes → van. Voiceless /f/ → fan. Tap 🔊 to compare.","有声的 /v/ 会震 → van。无声的 /f/ → fan。点 🔊 比一比。","/v/ bersuara berdengung → van. /f/ tidak bersuara → fan. Ketik 🔊 untuk bandingkan.")}),
+    ex({kind:"Listen & choose", variant:"listen", word:"think", sub:"Which word did you hear?", fam:"/θ/ vs /s/",
+      options:[opt("think",true),opt("sink")],
+      hint:T("/θ/ (tongue between teeth) → think. /s/ → sink.","/θ/（舌头放在上下牙齿之间）→ think。/s/ → sink。","/θ/ (lidah di antara gigi) → think. /s/ → sink.")}),
     // TYPE C — identify consonant
-    ex({kind:"Spot the sound", variant:"identify", prompt:"/θ/", sub:"Which word contains this sound?",
-      options:[opt("threat",true),opt("though"),opt("this")], hint:"“though” & “this” use voiced /ð/. “threat” uses voiceless /θ/."}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/θ/", sub:"Which word contains this sound?", fam:"/θ/",
+      options:[opt("threat",true),opt("though"),opt("this")],
+      hint:T("“though” & “this” use voiced /ð/. “threat” uses voiceless /θ/.","“though” 和 “this” 用有声的 /ð/。“threat” 用无声的 /θ/。","“though” & “this” guna /ð/ bersuara. “threat” guna /θ/ tidak bersuara.")}),
     ex({kind:"Spot the sound", variant:"identify", prompt:"/ʒ/", sub:"Which word contains this sound?",
-      options:[opt("usury",true),opt("usher"),opt("username")], hint:"“usher” has /ʃ/. “usury” has the buzzing /ʒ/."}),
+      options:[opt("pleasure",true),opt("pressure"),opt("pledge")],
+      hint:T("“pleasure” has the buzzing /ʒ/. “pressure” has /ʃ/ (no buzz) and “pledge” ends in /dʒ/.","“pleasure” 有会震的 /ʒ/。“pressure” 是 /ʃ/（不震），“pledge” 结尾是 /dʒ/。","“pleasure” ada /ʒ/ yang berdengung. “pressure” ada /ʃ/ (tiada dengung) dan “pledge” berakhir dengan /dʒ/.")}),
     ex({kind:"Spot the sound", variant:"identify", prompt:"/dʒ/", sub:"Which word contains this sound?",
-      options:[opt("joke",true),opt("version"),opt("leisure")], hint:"“version”/“leisure” use /ʒ/. “joke” starts with the harder /dʒ/."}),
+      options:[opt("joke",true),opt("version"),opt("leisure")],
+      hint:T("“joke” starts with /dʒ/. “leisure” has the softer /ʒ/, and in British English “version” usually has /ʃ/.","“joke” 开头是 /dʒ/。“leisure” 是比较轻柔的 /ʒ/，“version” 在英式英语里通常是 /ʃ/。","“joke” bermula dengan /dʒ/. “leisure” ada /ʒ/ yang lebih lembut, dan dalam bahasa Inggeris British “version” biasanya ada /ʃ/.")}),
     // ——— expanded pools (PRIORITY 1 & 2): consonant minimal pairs + vocab ———
     ...genPairIPA(CONS_PAIRS),
     ...genReadPair(CONS_PAIRS),
@@ -973,7 +1134,7 @@ const COURSE = [
     ...vocabListen(VOCAB.workplace),
     ...vocabListen(VOCAB.daily)
   ],
-  reward:{ xp:400, badge:"consonant_champion", title:"You can now hear consonant differences much more clearly!", line:"Stage 4 Unlocked — Bonus Final Review" }
+  reward:{ xp:400, badge:"consonant_champion", title:"You can now hear consonant differences much more clearly!" }
 },
 {
   id:"s4", title:"Bonus Final Review", short:"Final", icon:"🏆", color:"sun",
@@ -987,21 +1148,32 @@ const COURSE = [
     note:"Remember: <b>Consistency is more important than perfection.</b> Show up, repeat, improve.",
     quote:{cn:"持之以恒，胜过完美", en:"Consistency beats perfection."}
   },
+  must:[{any:["/ɪ/ vs /iː/"],n:1},{any:["/θ/ vs /s/","/θ/ vs /t/","/ð/ vs /d/","/ð/ vs /z/","/θ/","/ð/"],n:1},{any:["glide /eɪ/","glide /əʊ/"],n:1}],
   exercises:[
     // 10 mixed, harder, random-feeling
-    ex({kind:"Choose the IPA", prompt:"thorough", options:[opt("/ˈθʌrə/",true),opt("/ˈθɜːrəʊ/")], hint:"BrE “thorough” = /ˈθʌrə/ — voiceless /θ/, short ending."}),
-    ex({kind:"Choose the IPA", prompt:"measure", options:[opt("/ˈmeʒə/",true),opt("/ˈmiːʒə/")], hint:"Short /e/ + the soft /ʒ/ → /ˈmeʒə/."}),
-    ex({kind:"Spot the sound", variant:"identify", prompt:"/ɔɪ/", sub:"Which word contains this glide?",
-      options:[opt("employ",true),opt("elbow"),opt("ally")], hint:"“employ” ends in the /ɔɪ/ glide as in toy."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈnɒlɪdʒ/", options:[opt("knowledge",true),opt("nollage")], hint:"Silent k, short /ɒ/, ends in /dʒ/ → knowledge."}),
-    ex({kind:"Choose the IPA", prompt:"beard", options:[opt("/bɪəd/",true),opt("/bɜːd/")], hint:"“beard” glides /ɪə/ as in beer. /bɜːd/ = “bird”."}),
-    ex({kind:"Spot the sound", variant:"identify", prompt:"/ŋ/", sub:"Which word contains this sound?",
-      options:[opt("sing",true),opt("seen"),opt("sin")], hint:"“sing” ends in the nasal /ŋ/."}),
-    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈkætəɡəri/", options:[opt("category",true),opt("cattery")], hint:"Four syllables starting /ˈkæt…/ → category."}),
-    ex({kind:"Choose the IPA", prompt:"world", options:[opt("/wɜːld/",true),opt("/wɔːld/")], hint:"“world” uses the /ɜː/ of bird, not /ɔː/."}),
-    ex({kind:"Spot the sound", variant:"identify", prompt:"/ð/", sub:"Which word has the buzzing “th”?",
-      options:[opt("those",true),opt("think"),opt("thumb")], hint:"“think” and “thumb” have a soft “th”. “those” buzzes — feel it in your throat."}),
-    ex({kind:"Choose the IPA", prompt:"queue", options:[opt("/kjuː/",true),opt("/kweɪ/")], hint:"“queue” is simply /kjuː/ — a /k/, a /j/ glide, then long /uː/."}),
+    ex({kind:"Choose the IPA", prompt:"thorough", options:[opt("/ˈθʌrə/",true),opt("/ˈθɜːrəʊ/")], fam:"/θ/",
+      hint:T("British “thorough” = /ˈθʌrə/ — voiceless /θ/, short ending.","英式的 “thorough” = /ˈθʌrə/ —— 无声的 /θ/，结尾很短。","“thorough” dalam bahasa Inggeris British = /ˈθʌrə/ — /θ/ tidak bersuara, hujungnya pendek.")}),
+    ex({kind:"Choose the IPA", prompt:"measure", options:[opt("/ˈmeʒə/",true),opt("/ˈmiːʒə/")],
+      hint:T("Short /e/ + the soft /ʒ/ → /ˈmeʒə/.","短的 /e/ 加轻柔的 /ʒ/ → /ˈmeʒə/。","/e/ pendek + /ʒ/ lembut → /ˈmeʒə/.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ɔɪ/", sub:"Which word contains this glide?", fam:"glide /ɔɪ/",
+      options:[opt("employ",true),opt("elbow"),opt("ally")],
+      hint:T("“employ” ends in the /ɔɪ/ glide as in toy.","“employ” 结尾是 /ɔɪ/ 滑音，跟 toy 一样。","“employ” berakhir dengan luncuran /ɔɪ/ seperti toy.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈnɒlɪdʒ/", options:[opt("knowledge",true),opt("college")],
+      hint:T("Silent k, short /ɒ/, ends in /dʒ/ → knowledge. “college” starts with /k/: /ˈkɒlɪdʒ/.","k 不发音，短的 /ɒ/，结尾 /dʒ/ → knowledge。“college” 开头是 /k/：/ˈkɒlɪdʒ/。","k senyap, /ɒ/ pendek, berakhir dengan /dʒ/ → knowledge. “college” bermula dengan /k/: /ˈkɒlɪdʒ/.")}),
+    ex({kind:"Choose the IPA", prompt:"beard", options:[opt("/bɪəd/",true),opt("/bɜːd/")], fam:"glide /ɪə/",
+      hint:T("“beard” glides /ɪə/ as in beer. /bɜːd/ = “bird”.","“beard” 滑的是 /ɪə/，跟 beer 一样。/bɜːd/ 是 “bird”。","“beard” meluncur /ɪə/ seperti beer. /bɜːd/ = “bird”.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ŋ/", sub:"Which word contains this sound?", fam:"/n/ vs /ŋ/",
+      options:[opt("sing",true),opt("seen"),opt("sin")],
+      hint:T("“sing” ends in the nasal /ŋ/.","“sing” 结尾是鼻音 /ŋ/。","“sing” berakhir dengan bunyi sengau /ŋ/.")}),
+    ex({kind:"Read the IPA", variant:"word", prompt:"/ˈkætəɡəri/", options:[opt("category",true),opt("catalogue")],
+      hint:T("Four syllables, /ˈkæt-ə-ɡə-ri/ → category. “catalogue” is /ˈkætəlɒɡ/.","四个音节 /ˈkæt-ə-ɡə-ri/ → category。“catalogue” 是 /ˈkætəlɒɡ/。","Empat suku kata, /ˈkæt-ə-ɡə-ri/ → category. “catalogue” ialah /ˈkætəlɒɡ/.")}),
+    ex({kind:"Choose the IPA", prompt:"world", options:[opt("/wɜːld/",true),opt("/wɔːld/")],
+      hint:T("“world” uses the /ɜː/ of bird, not /ɔː/.","“world” 用 bird 的 /ɜː/，不是 /ɔː/。","“world” guna /ɜː/ seperti bird, bukan /ɔː/.")}),
+    ex({kind:"Spot the sound", variant:"identify", prompt:"/ð/", sub:"Which word has the buzzing “th”?", fam:"/ð/",
+      options:[opt("those",true),opt("think"),opt("thumb")],
+      hint:T("“think” and “thumb” have a voiceless “th”. “those” buzzes — feel it in your throat.","“think” 和 “thumb” 的 th 是无声的。“those” 会震 —— 摸喉咙就感觉得到。","“think” dan “thumb” ada “th” tidak bersuara. “those” bergetar — rasakan pada kerongkong.")}),
+    ex({kind:"Choose the IPA", prompt:"queue", options:[opt("/kjuː/",true),opt("/kweɪ/")],
+      hint:T("“queue” is simply /kjuː/ — a /k/, a /j/ glide, then long /uː/.","“queue” 就是 /kjuː/ —— 一个 /k/，一个 /j/，再接长的 /uː/。","“queue” hanyalah /kjuː/ — /k/, luncuran /j/, kemudian /uː/ panjang.")}),
     // ——— mixed final pool (PRIORITY 1): vowels + diphthongs + consonants ———
     ...genReadPair(VOWEL_PAIRS),
     ...genReadPair(CONS_PAIRS),
@@ -1125,7 +1297,7 @@ function awardXP(amount, atEl){
 function goalReached(){
   confetti(70); sfx("reward");
   const d=document.createElement("div"); d.className="lvlup"; d.style.background="var(--sun)"; d.style.color="#5A3A1E";
-  d.innerHTML="🎯 Daily goal reached!"; document.getElementById("fx").appendChild(d);
+  d.innerHTML="🎯 "+L("Daily goal reached!","今天的目标达成了！","Matlamat harian tercapai!"); document.getElementById("fx").appendChild(d);
   setTimeout(()=>d.remove(),1700);
 }
 
@@ -1141,18 +1313,18 @@ function nextStageId(id){ const i=COURSE.findIndex(s=>s.id===id); return COURSE[
    ===================================================================== */
 /* 答对／答错／连击的话。整组换语言，不逐句配对 —— 反正是随机挑一句。 */
 const PRAISE_ALL = {
-  en: ["Awesome!","You're getting sharper!","Perfect vowel control!","Great listening!",
+  en: ["Awesome!","You're getting sharper!","Perfect sound control!","Great listening!",
   "Your pronunciation awareness is improving!","Nailed it!","Beautiful ear!","Spot on!","You're on fire!","Crisp & clear!",
   "You're hearing the difference now!","Excellent sound recognition!","You're building real communication skills!",
   "Clear and confident!","That's the difference an attentive ear makes.","Your accuracy is climbing!",
   "Strong control of that sound!","You're tuning in beautifully!","Precise — well done!","Real progress right there!"],
-  zh: ["很好！","你越听越准了！","母音控制得很好！","耳朵很灵！",
+  zh: ["很好！","你越听越准了！","这个音控制得很好！","耳朵很灵！",
   "你对发音越来越有感觉了！","答对了！","好耳力！","完全正确！","状态很好！","又清楚又干脆！",
   "你现在听得出差别了！","辨音能力很强！","这就是能沟通的真本事！",
   "清楚又有自信！","专心听就是不一样。","你的准确度在往上走！",
   "这个音你掌握得很稳！","耳朵调对频了！","很精准 —— 做得好！","这就是实实在在的进步！"],
-  ms: ["Bagus!","Pendengaran anda makin tajam!","Kawalan vokal yang tepat!","Pendengaran yang baik!",
-  "Kesedaran sebutan anda makin baik!","Tepat sekali!","Telinga yang tajam!","Betul!","Anda sedang panas!","Jelas dan bersih!",
+  ms: ["Bagus!","Pendengaran anda makin tajam!","Kawalan bunyi yang tepat!","Pendengaran yang baik!",
+  "Kesedaran sebutan anda makin baik!","Tepat sekali!","Telinga yang tajam!","Betul!","Anda memang hebat!","Jelas dan bersih!",
   "Anda sudah dengar bezanya!","Pengecaman bunyi yang cemerlang!","Anda sedang bina kemahiran komunikasi sebenar!",
   "Jelas dan yakin!","Itulah bezanya bila telinga fokus.","Ketepatan anda makin naik!",
   "Kawalan bunyi itu kukuh!","Telinga anda makin selaras!","Tepat — syabas!","Itu kemajuan yang nyata!"]
@@ -1162,7 +1334,7 @@ const COMBO_ALL = {
   10:"🌟 10 streak — phenomenal!",15:"💎 15 streak — masterful!",20:"🚀 20 streak — incredible focus!"},
   zh: {3:"连对 3 题！继续！",5:"🔥 连对 5 题 —— 状态很好！",8:"⚡ 连对 8 题 —— 挡不住了！",
   10:"🌟 连对 10 题 —— 太强了！",15:"💎 连对 15 题 —— 大师级！",20:"🚀 连对 20 题 —— 专注力惊人！"},
-  ms: {3:"3 berturut-turut! Teruskan!",5:"🔥 5 berturut — sedang panas!",8:"⚡ 8 berturut — tidak dapat dihalang!",
+  ms: {3:"3 berturut-turut! Teruskan!",5:"🔥 5 berturut — hebat sungguh!",8:"⚡ 8 berturut — tidak dapat dihalang!",
   10:"🌟 10 berturut — luar biasa!",15:"💎 15 berturut — tahap mahir!",20:"🚀 20 berturut — fokus yang hebat!"}
 };
 
@@ -1208,7 +1380,7 @@ const Q_SUB = {
   "Which sound do you hear?":          { zh:"你听到的是哪一个音？", ms:"Bunyi mana yang anda dengar?" },
   "Which word contains this sound?":   { zh:"哪一个字里面有这个音？", ms:"Perkataan mana mengandungi bunyi ini?" },
   "Type-free: which word did you hear?":{ zh:"不用打字：你听到的是哪一个字？", ms:"Tanpa menaip: perkataan mana yang anda dengar?" },
-  "Pick the TOUCH way 👇":             { zh:"选出 TOUCH 的念法 👇", ms:"Pilih cara TOUCH 👇" },
+  "Pick the TOUCH way 👇":             { zh:"选出 TOUCH 的做法 👇", ms:"Pilih cara TOUCH 👇" },
   "Which word contains this glide?":   { zh:"哪一个字里面有这个滑音？", ms:"Perkataan mana mengandungi bunyi luncur ini?" },
   "Which word has the buzzing “th”?":  { zh:"哪一个字的 th 是有声的（会震）？", ms:"Perkataan mana ada “th” yang bergetar?" }
 };
@@ -1221,27 +1393,27 @@ function trQ(str, table){
    查不到就原样显示英文，所以之後加新关卡不会因为漏翻而变空白。 */
 const STAGE_TITLE = {
   "Welcome Aboard":      { zh:"欢迎上路",       ms:"Selamat Datang" },
-  "Short & Long Vowels": { zh:"长短母音",       ms:"Vokal Pendek & Panjang" },
-  "Diphthongs":          { zh:"双母音",         ms:"Diftong" },
-  "Consonants":          { zh:"子音",           ms:"Konsonan" },
+  "Short & Long Vowels": { zh:"长短元音",       ms:"Vokal Pendek & Panjang" },
+  "Diphthongs":          { zh:"双元音",         ms:"Diftong" },
+  "Consonants":          { zh:"辅音",           ms:"Konsonan" },
   "Bonus Final Review":  { zh:"加码：总复习",   ms:"Bonus: Ulang Kaji Akhir" },
   "Today's Review":      { zh:"今天的复习",     ms:"Ulang Kaji Hari Ini" },
   "Sound Practice":      { zh:"音标练习",       ms:"Latihan Bunyi" }
 };
 const BADGE_TEXT = {
   "Starter":              { zh:"起步",       ms:"Permulaan",        d:{ zh:"开始了你的旅程",   ms:"Memulakan perjalanan anda" } },
-  "Vowel Master":         { zh:"母音高手",   ms:"Sarjana Vokal",    d:{ zh:"母音全过关",       ms:"Tamatkan semua vokal" } },
-  "Diphthong Hero":       { zh:"双母音英雄", ms:"Wira Diftong",     d:{ zh:"滑音掌握了",       ms:"Menguasai bunyi luncur" } },
-  "Consonant Champ":      { zh:"子音冠军",   ms:"Juara Konsonan",   d:{ zh:"子音全搞定",       ms:"Menakluk konsonan" } },
-  "Pronunciation Master": { zh:"发音大师",   ms:"Sarjana Sebutan",  d:{ zh:"整个课程都完成了", ms:"Tamatkan keseluruhan kursus" } },
-  "Hot Streak":           { zh:"连击中",     ms:"Rentetan Panas",   d:{ zh:"连对 5 题",        ms:"5 betul berturut-turut" } },
+  "Vowel Master":         { zh:"元音高手",   ms:"Pakar Vokal",      d:{ zh:"元音全过关",       ms:"Tamatkan semua vokal" } },
+  "Diphthong Hero":       { zh:"双元音英雄", ms:"Wira Diftong",     d:{ zh:"滑音掌握了",       ms:"Menguasai bunyi luncur" } },
+  "Consonant Champ":      { zh:"辅音冠军",   ms:"Juara Konsonan",   d:{ zh:"辅音全搞定",       ms:"Menakluk konsonan" } },
+  "Pronunciation Master": { zh:"发音大师",   ms:"Pakar Sebutan",    d:{ zh:"整个课程都完成了", ms:"Tamatkan keseluruhan kursus" } },
+  "Hot Streak":           { zh:"连击中",     ms:"Rentetan Hebat",   d:{ zh:"连对 5 题",        ms:"5 betul berturut-turut" } },
   "Flawless":             { zh:"零失误",     ms:"Tanpa Silap",      d:{ zh:"一整关全对",       ms:"Satu peringkat sempurna" } }
 };
 const REWARD_TEXT = {
   "You're all set!":                                          { zh:"准备好了！", ms:"Anda dah bersedia!" },
-  "You're mastering English vowel sounds!":                   { zh:"英文母音你越掌握越好了！", ms:"Anda semakin menguasai bunyi vokal Inggeris!" },
+  "You're mastering English vowel sounds!":                   { zh:"英文元音你越掌握越好了！", ms:"Anda semakin menguasai bunyi vokal Inggeris!" },
   "Your sound gliding is improving beautifully!":             { zh:"你的滑音进步很明显！", ms:"Bunyi luncur anda makin baik!" },
-  "You can now hear consonant differences much more clearly!":{ zh:"子音的差别你现在听得清楚多了！", ms:"Anda kini dengar beza konsonan dengan lebih jelas!" },
+  "You can now hear consonant differences much more clearly!":{ zh:"辅音的差别你现在听得清楚多了！", ms:"Anda kini dengar beza konsonan dengan lebih jelas!" },
   "Congratulations!":                                         { zh:"恭喜！", ms:"Tahniah!" },
   "Review complete!":                                         { zh:"复习完成！", ms:"Ulang kaji selesai!" },
   "Practice complete!":                                       { zh:"练习完成！", ms:"Latihan selesai!" },
@@ -1252,7 +1424,7 @@ function trReward(t){ const e = REWARD_TEXT[t]; return e ? L(t, e.zh, e.ms) : (t
    他们看不懂 "diphthong glides from one vowel into another" 就学不下去。
    一样查表翻，教材资料本身（英文）不动。 */
 const LEARN_TEXT = {
-  "The TOUCH Mindset":  { zh:"TOUCH 的心态", ms:"Pemikiran TOUCH" },
+  "The TOUCH Mindset":  { zh:"TOUCH 的心态", ms:"Minda TOUCH" },
   "Before we start, let's get the right mindset. Pronunciation is a skill — and skills grow with practice, not pressure.":
     { zh:"开始之前，先把心态摆对。发音是一种技能 —— 技能是练出来的，不是逼出来的。",
       ms:"Sebelum mula, betulkan pemikiran dahulu. Sebutan ialah kemahiran — kemahiran tumbuh dengan latihan, bukan tekanan." },
@@ -1268,32 +1440,37 @@ const LEARN_TEXT = {
   "<b>Communication comes before perfection.</b>":
     { zh:"<b>先能沟通，再谈完美。</b>", ms:"<b>Komunikasi didahulukan, bukan kesempurnaan.</b>" },
 
-  "Short vs Long Vowels": { zh:"短母音 vs 长母音", ms:"Vokal Pendek vs Panjang" },
+  "Short vs Long Vowels": { zh:"短元音 vs 长元音", ms:"Vokal Pendek vs Panjang" },
   "Vowels carry the music of English. Long vowels are <b>longer & steady</b>; short vowels are <b>quick & light</b>. Tap any sound to listen.":
-    { zh:"母音是英文的旋律。长母音<b>拉得长、稳</b>；短母音<b>快、轻</b>。点任何一个音就能听。",
+    { zh:"元音是英文的旋律。长元音<b>拉得长、稳</b>；短元音<b>快、轻</b>。点任何一个音就能听。",
       ms:"Vokal membawa irama Bahasa Inggeris. Vokal panjang <b>lebih lama & mantap</b>; vokal pendek <b>cepat & ringan</b>. Ketik mana-mana bunyi untuk mendengar." },
-  "Short vowels": { zh:"短母音", ms:"Vokal pendek" },
-  "Long vowels":  { zh:"长母音", ms:"Vokal panjang" },
+  "Short vowels": { zh:"短元音", ms:"Vokal pendek" },
+  "Long vowels":  { zh:"长元音", ms:"Vokal panjang" },
   "Tip: tap each word, then say it back. Hearing it a few times is all it takes.":
     { zh:"小提示：点每一个字，然后跟着念回去。听几次就会了。",
       ms:"Petua: ketik setiap perkataan, kemudian sebut semula. Dengar beberapa kali sudah memadai." },
 
   "Gliding Sounds": { zh:"滑音", ms:"Bunyi Luncur" },
   "A <b>diphthong</b> glides from one vowel into another in a single breath. Let your mouth move smoothly — don't stop halfway.":
-    { zh:"<b>双母音</b>是一口气里从一个母音滑到另一个母音。嘴巴要顺顺地移动 —— 不要滑到一半停住。",
+    { zh:"<b>双元音</b>是一口气里从一个元音滑到另一个元音。嘴巴要顺顺地移动 —— 不要滑到一半停住。",
       ms:"<b>Diftong</b> meluncur dari satu vokal ke vokal lain dalam satu nafas. Biarkan mulut bergerak lancar — jangan berhenti separuh jalan." },
   "Closing glides":  { zh:"收合滑音", ms:"Luncur menutup" },
   "Centring glides": { zh:"向央滑音", ms:"Luncur ke tengah" },
-  "Say “go” slowly: /əʊ/ starts open, then rounds. One smooth move.":
-    { zh:"慢慢念 “go”：/əʊ/ 一开始嘴巴是开的，然後收圆。一个顺顺的动作。",
-      ms:"Sebut “go” perlahan-lahan: /əʊ/ bermula terbuka, kemudian membulat. Satu gerakan lancar." },
+  "Say “go” slowly: /əʊ/ starts in the middle of the mouth (the relaxed ‘uh’ of about), then the lips round. One smooth move.":
+    { zh:"慢慢念 “go”：/əʊ/ 从嘴巴中间、放松的 ‘uh’（about 的第一个音）开始，然后嘴唇收圆。一个顺顺的动作。",
+      ms:"Sebut “go” perlahan-lahan: /əʊ/ bermula di tengah mulut (bunyi ‘uh’ yang santai dalam about), kemudian bibir membulat. Satu gerakan lancar." },
 
   "Voiced vs Voiceless": { zh:"有声 vs 无声", ms:"Bersuara vs Tidak Bersuara" },
-  "Put your hand on your throat. <b>Voiced</b> sounds <b>vibrate</b>; <b>voiceless</b> sounds don't. Same mouth shape, different power!":
-    { zh:"手放在喉咙上。<b>有声</b>的音<b>会震</b>；<b>无声</b>的不会。嘴型一样，力道不一样！",
-      ms:"Letak tangan pada kerongkong. Bunyi <b>bersuara</b> <b>bergetar</b>; bunyi <b>tidak bersuara</b> tidak. Bentuk mulut sama, kuasa berbeza!" },
+  "Put your hand on your throat. <b>Voiced</b> sounds make your voice box <b>vibrate</b>; <b>voiceless</b> sounds are only air. In each pair the mouth does the same thing — only the vibration changes.":
+    { zh:"手放在喉咙上。<b>有声</b>的音会让声带<b>震动</b>；<b>无声</b>的音只有气流。每一对音嘴巴的动作一样 —— 差别只在有没有震动。",
+      ms:"Letak tangan pada kerongkong. Bunyi <b>bersuara</b> membuat peti suara <b>bergetar</b>; bunyi <b>tidak bersuara</b> hanya udara. Dalam setiap pasangan, mulut bergerak sama — hanya getaran yang berbeza." },
   "Voiceless (no vibration)": { zh:"无声（不会震）", ms:"Tidak bersuara (tiada getaran)" },
   "Voiced (vibration)":       { zh:"有声（会震）",   ms:"Bersuara (bergetar)" },
+  "Always voiced (no voiceless partner)": { zh:"一定有声（没有无声的对应音）", ms:"Sentiasa bersuara (tiada pasangan tidak bersuara)" },
+  // Sounds tab / Sound Reference card group names
+  "Diphthongs":           { zh:"双元音", ms:"Diftong" },
+  "Voiceless consonants": { zh:"无声辅音", ms:"Konsonan tidak bersuara" },
+  "Voiced consonants":    { zh:"有声辅音", ms:"Konsonan bersuara" },
   "Try /s/ then /z/ — same shape, but /z/ buzzes. That buzz is voicing.":
     { zh:"念念看 /s/ 再念 /z/ —— 嘴型一样，但 /z/ 会嗡嗡震。那个震就是「有声」。",
       ms:"Cuba /s/ kemudian /z/ — bentuk sama, tetapi /z/ berdengung. Dengungan itulah suara." },
@@ -1378,16 +1555,25 @@ const Audio$ = {
     const load = ()=>{
       const vs = speechSynthesis.getVoices();
       if(!vs.length) return;
-      // prefer a natural en-GB / en-US voice
+      // Every transcription in this course is British RP, so a British voice
+      // first; then other non-American English (AU/NZ/IE/IN/ZA keep more of the
+      // RP vowel contrasts); American last, because it merges cot/caught and
+      // says heart/car with an r. Android reports "en_GB", hence [-_].
+      // Until pre-recorded mp3s replace TTS (shared/voice.js), the voice is
+      // whatever the learner's phone has — buildQueue() skips the listening
+      // items for RP-only contrasts when this is not an en-GB voice.
+      const en = re => vs.find(v=>re.test(v.lang));
       this.voice =
-        vs.find(v=>/en-GB/i.test(v.lang) && /google|natural|female/i.test(v.name)) ||
-        vs.find(v=>/en-GB/i.test(v.lang)) ||
-        vs.find(v=>/en-US/i.test(v.lang)) ||
-        vs.find(v=>/^en/i.test(v.lang)) || vs[0];
+        vs.find(v=>/en[-_]GB/i.test(v.lang) && /google|natural|female/i.test(v.name)) ||
+        en(/en[-_]GB/i) || en(/en[-_](AU|NZ|IE)/i) || en(/en[-_](IN|ZA)/i) ||
+        vs.find(v=>/^en/i.test(v.lang) && !/en[-_]US/i.test(v.lang)) ||
+        en(/en[-_]US/i) || vs[0];
       this.ready = true;
     };
     load(); speechSynthesis.onvoiceschanged = load;
   },
+  // true only when TTS will speak with a British voice (see the order above)
+  isBritish(){ return !!(this.voice && /en[-_]GB/i.test(this.voice.lang)); },
   // word: text to speak | src: optional MP3 URL (future teacher audio)
   play(word, src){
     this._seq = {};                            // invalidate any pending phoneme→word timers
@@ -1466,13 +1652,13 @@ const PHONEME_SAY = {
   "iː":["sheep",0.75],"ɑː":["car",0.75],"ɔː":["door",0.75],"uː":["food",0.75],"ɜː":["bird",0.75],
   // diphthongs — gliding
   "eɪ":["day",0.85],"aɪ":["my",0.85],"ɔɪ":["boy",0.85],"aʊ":["now",0.85],"əʊ":["go",0.85],
-  "ɪə":["here",0.85],"eə":["hair",0.85],"ʊə":["tour",0.85],
+  "ɪə":["here",0.85],"eə":["hair",0.85],"ʊə":["pure",0.85],
   // voiceless consonants — anchor == tile word
   "p":["pen",1.05],"t":["ten",1.05],"k":["key",1.05],"f":["fan",1.05],
   "θ":["think",1.0],"s":["sun",1.05],"ʃ":["she",1.0],"tʃ":["chair",1.0],"h":["hat",1.05],
-  // voiced consonants — anchor == tile word (NB: /d/≠day, /g/≠go to avoid
+  // voiced consonants — anchor == tile word (NB: /d/≠day, /ɡ/≠go to avoid
   // colliding with the /eɪ/ and /əʊ/ diphthongs)
-  "b":["boot",1.0],"d":["dog",1.0],"g":["good",1.0],"v":["van",1.0],
+  "b":["boot",1.0],"d":["dog",1.0],"ɡ":["good",1.0],"v":["van",1.0],
   "ð":["this",1.0],"z":["zoo",1.0],"ʒ":["vision",0.95],"dʒ":["jump",1.0],
   "m":["man",1.0],"n":["no",1.0],"ŋ":["sing",0.95],
   "l":["leg",1.0],"r":["red",1.0],"w":["we",1.0],"j":["yes",1.0]
@@ -1484,7 +1670,10 @@ const SOUND_LIBRARY = [
   {title:"Long vowels", items:[["iː","sheep"],["ɑː","car"],["ɔː","door"],["uː","food"],["ɜː","bird"]]},
   {title:"Diphthongs", items:[["eɪ","day"],["aɪ","my"],["ɔɪ","boy"],["aʊ","now"],["əʊ","go"],["ɪə","here"],["eə","hair"],["ʊə","tour"]]},
   {title:"Voiceless consonants", cls:"voiceless", items:[["p","pen"],["t","ten"],["k","key"],["f","fan"],["θ","think"],["s","sun"],["ʃ","she"],["tʃ","chair"],["h","hat"]]},
-  {title:"Voiced consonants", cls:"voiced", items:[["b","boot"],["d","dog"],["g","good"],["v","van"],["ð","this"],["z","zoo"],["ʒ","vision"],["dʒ","jump"],["m","man"],["n","no"],["ŋ","sing"],["l","leg"],["r","red"],["w","we"],["j","yes"]]}
+  {title:"Voiced consonants", cls:"voiced", items:[["b","boot"],["d","dog"],["ɡ","good"],["v","van"],["ð","this"],["z","zoo"],["ʒ","vision"],["dʒ","jump"]]},
+  // voiced too, but with no voiceless partner — listed apart so the two groups
+  // above read as pairs (p/b, t/d, k/ɡ, f/v, θ/ð, s/z, ʃ/ʒ, tʃ/dʒ)
+  {title:"Always voiced (no voiceless partner)", cls:"voiced", items:[["m","man"],["n","no"],["ŋ","sing"],["l","leg"],["r","red"],["w","we"],["j","yes"]]}
 ];
 // Pure voiceless fricatives can't come from TTS (any spelling adds a vowel or
 // letter names). Synthesize them as filtered noise — physically what /s/ is.
@@ -1537,15 +1726,17 @@ function playWord(word, src, el, ipa){
 // Goal: play ONLY the target sound itself — not a letter name, not a word.
 // Browser TTS cannot utter a bare phoneme, so:
 //   1. If a real human recording exists (PHONEME_AUDIO[ipa]), play that.
-//   2. Otherwise fall back to the closest isolated TTS approximation, spoken
-//      slowly — never a full word. (Replace with recordings for true accuracy.)
+//   2. Otherwise play the sound's example word (see playPhoneme below for why
+//      the old isolated TTS approximations were removed).
 // PHONEME_AUDIO is intentionally empty now: drop in MP3 URLs later, e.g.
 //   "ɪ":"sounds/ipa-i.mp3"  → the top button will play the real /ɪ/ instantly.
 // ===== HUMAN-RECORDED IPA AUDIO (always higher priority than TTS) =====
 // Canonical filename for every sound: "IPA Chart - /xxx/.mp3", keyed by the
 // FINAL IPA symbol (never ee/er/ay etc). All 44 slots are pre-reserved below.
 // To activate: drop the .mp3 into AUDIO_DIR and the top button plays the real
-// recording automatically; until then it falls back to the TTS cue.
+// recording automatically; until then it plays the example word.
+// NB: these names contain "/", which a URL reads as a folder — rename the files
+// (or encode the slash) when the recordings actually arrive.
 let AUDIO_DIR = "";   // set to "audio/" (or a URL prefix) once your mp3s exist
 const PHONEME_AUDIO_FILES = {
   // short vowels
@@ -1563,7 +1754,7 @@ const PHONEME_AUDIO_FILES = {
   "f":"IPA Chart - /f/.mp3", "θ":"IPA Chart - /θ/.mp3", "s":"IPA Chart - /s/.mp3",
   "ʃ":"IPA Chart - /ʃ/.mp3", "tʃ":"IPA Chart - /tʃ/.mp3", "h":"IPA Chart - /h/.mp3",
   // voiced consonants
-  "b":"IPA Chart - /b/.mp3", "d":"IPA Chart - /d/.mp3", "g":"IPA Chart - /g/.mp3",
+  "b":"IPA Chart - /b/.mp3", "d":"IPA Chart - /d/.mp3", "ɡ":"IPA Chart - /ɡ/.mp3",
   "v":"IPA Chart - /v/.mp3", "ð":"IPA Chart - /ð/.mp3", "z":"IPA Chart - /z/.mp3",
   "ʒ":"IPA Chart - /ʒ/.mp3", "dʒ":"IPA Chart - /dʒ/.mp3", "m":"IPA Chart - /m/.mp3",
   "n":"IPA Chart - /n/.mp3", "ŋ":"IPA Chart - /ŋ/.mp3", "l":"IPA Chart - /l/.mp3",
@@ -1580,49 +1771,23 @@ function phonemeAudioSrc(ipa){
   if(AUDIO_DIR && PHONEME_AUDIO_FILES[ipa]) return AUDIO_DIR + PHONEME_AUDIO_FILES[ipa];
   return "";
 }
-// Isolated approximations per teaching spec — a near-sound CUE, never a word
-// or letter name. Browser TTS cannot make a true isolated phoneme, so these are
-// learner-friendly hints; human recordings (above) always take priority.
-const PHONEME_ISO = {
-  // ----- short vowels -----
-  "ɪ":["ee",1.15],     // short "ee"
-  "ə":["err",1.15],    // clearer short "er"
-  "æ":["aa",1.1],      // "at" without the t
-  "ʌ":["ah",1.1],      // short "ah"
-  "ɒ":["o",1.1],       // short "o"
-  "e":["eh",1.1],
-  "ʊ":["wu",1.1],      // closer to "wu" short
-  // ----- long vowels -----
-  "ɜː":["err",0.6],    // clearer long "er"
-  "iː":["ee",0.6],
-  "ɑː":["ah",0.6],     // long "ah"
-  "ɔː":["aw",0.6],"uː":["oo",0.6],
-  // ----- diphthongs -----
-  "eɪ":["ay",0.8],     // "ay" (not "ei")
-  "ɪə":["eer",0.8],    // "eer"
-  "eə":["air",0.8],    // "air"
-  "ʊə":["wu er",0.8],  // "wu-er"
-  "aɪ":["eye",0.8],"ɔɪ":["oy",0.8],"aʊ":["ow",0.8],"əʊ":["oh",0.8],
-  // ----- voiceless consonants (light "er" support so TTS says the SOUND,
-  //        not the letter name; still not a full word) -----
-  "p":["per",1.0],"t":["ter",1.0],"k":["ker",1.0],"f":["fer",1.0],
-  "θ":["ther",1.0],"s":["ser",1.0],"ʃ":["sher",1.0],"tʃ":["cher",1.0],"h":["her",1.0],
-  // ----- voiced consonants (with -er support) -----
-  "b":["bur",1.0],"d":["dur",1.0],"g":["ger",1.0],"v":["vur",1.0],
-  "ð":["dher",1.0],"ʒ":["zhur",1.0],"dʒ":["jur",1.0],
-  "m":["mur",1.0],"n":["nur",1.0],"ŋ":["erng",1.0],
-  "l":["lur",1.0],"r":["rur",1.0],"w":["wer",1.0],"j":["yer",1.0],
-  "z":["zur",1.0]
-};
 // PRIORITY RULE: human-recorded IPA audio ALWAYS wins over TTS. If browser TTS
 // cannot produce a proper isolated IPA sound, the PHONEME_AUDIO hook lets us
 // drop in human recordings later without changing the system.
+/* The isolated-sound TTS cues (PHONEME_ISO) were removed 2026-09-24: browser TTS
+   cannot say a bare phoneme, and the spellings it was fed came out wrong —
+   /ɪ/ as "ee", /ʌ/ and /ɑː/ both "ah", /ə/ and /ɜː/ both "err", /ð/ "dher".
+   A learner copying those learns the wrong vowel. Until real recordings exist
+   the Listen button plays the sound's anchor WORD (PHONEME_SAY, e.g. /ɪ/ →
+   "ship"), which TTS does say correctly. Recordings go in the reserved
+   PHONEME_AUDIO / AUDIO_DIR slots above (planned: pre-generated mp3s through
+   shared/voice.js) and win automatically once present. */
 function playPhoneme(ipa){
   sfx("tap");
   const src = phonemeAudioSrc(ipa);
   if(src){ Audio$.play(null, src); return; }     // human recording ALWAYS wins
-  const iso = PHONEME_ISO[ipa];
-  if(iso){ Audio$.speakSeq([iso]); }             // isolated cue only — never a word/letter
+  const anchor = PHONEME_SAY[ipa];
+  if(anchor) Audio$.speakSeq([anchor]);          // the example word, never a fake bare sound
 }
 // clean SVG speaker glyph (replaces plain emoji for a more tappable look)
 const SPK_SVG = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 9 4 15 8 15 13 19 13 5 8 9" fill="currentColor" stroke="none"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>';
@@ -1644,7 +1809,7 @@ function xpFloat(amount, el){
 }
 function levelUp(lvl){
   sfx("reward"); confetti();
-  const d=document.createElement("div"); d.className="lvlup"; d.textContent="⭐ Level "+lvl+"!";
+  const d=document.createElement("div"); d.className="lvlup"; d.textContent="⭐ "+L(`Level ${lvl}!`,`升到第 ${lvl} 级！`,`Tahap ${lvl}!`);
   document.getElementById("fx").appendChild(d); setTimeout(()=>d.remove(),1600);
 }
 const CONF_COLORS=["#15357B","#8B1E3F","#D9B56B","#4FAE8A","#3E6FA0","#BE9648"];
@@ -1682,7 +1847,8 @@ function render(){
   if(view.name==="soundcard") return renderSoundCard(view.ipa);
   if(view.name==="profile") return renderProfile();
   if(view.name==="stage") return renderStageFlow();
-  if(view.name==="done") return renderCourseComplete();
+  // the trophy screen belongs to a finished course only (pass mark, 2026-09-24)
+  if(view.name==="done") return S.courseDone ? renderCourseComplete() : renderMap();
 }
 
 // Full-screen first-run language chooser.
@@ -1722,6 +1888,7 @@ function renderNameAsk(){
           placeholder="${L('Your name','你的名字','Nama anda')}" autocomplete="off"
           onkeydown="if(event.key==='Enter'){event.preventDefault();commitName();}">
         <button class="btn coral" data-action="saveName">${L("Start Learning →","开始学习 →","Mula Belajar →")}</button>
+        <div id="nameErr" class="lang-sub" role="alert" style="color:var(--coral);min-height:1.2em"></div>
       </div>
     </div>`;
   const inp=document.getElementById("nameInput"); if(inp){ try{ inp.focus(); }catch(e){} }
@@ -1729,7 +1896,12 @@ function renderNameAsk(){
 function commitName(){
   const inp=document.getElementById("nameInput");
   const val=(inp && inp.value ? inp.value : "").trim();
-  if(!val) return;                 // require a name to continue
+  if(!val){                        // require a name to continue — and say so
+    const er=document.getElementById("nameErr");
+    if(er) er.textContent = L("Please type your name first.","请先输入你的名字。","Sila taip nama anda dahulu.");
+    if(inp){ try{ inp.focus(); }catch(e){} }
+    return;
+  }
   S.name = val; save();
   if(SP){ SP.set({name:val}); SP.markAsked(); }
   go({name:"map"});
@@ -1750,7 +1922,7 @@ function renderHUD(){
       </span>
     </div>
     <div class="xpbar"><i style="width:${(li.pct*100).toFixed(1)}%"></i></div>
-    <div class="xptxt">${li.into} / ${li.span} XP ${L("to Lvl","升到 Lvl","ke Lvl")} ${li.lvl+1} · 🎯 ${S.todayXP}/${S.dailyGoal} ${L("today","今天","hari ini")} (${goalPct}%)</div>`;
+    <div class="xptxt">${L(`${li.into} / ${li.span} XP to Lvl ${li.lvl+1}`,`${li.into} / ${li.span} XP 升到第 ${li.lvl+1} 级`,`${li.into} / ${li.span} XP ke Tahap ${li.lvl+1}`)} · 🎯 ${S.todayXP}/${S.dailyGoal} ${L("today","今天","hari ini")} (${goalPct}%)</div>`;
 }
 /* ---------- SOUNDS LIBRARY (all 44 phonemes; tap a card → reference card) ---------- */
 function renderSounds(){
@@ -1783,9 +1955,7 @@ function soundTiles(items, cls){
    Teaching principle: the learner ALWAYS hears the target sound first, then
    sees how that sound appears in common English words. This is a reference
    card, not a quiz — no auto-advance, no click limit, replay freely.        */
-// IPA units that must be treated as ONE symbol so a target like /ɪ/ is not
-// matched inside a diphthong like /eɪ/.
-const IPA_UNITS = ["eɪ","aɪ","ɔɪ","aʊ","əʊ","ɪə","eə","ʊə","iː","ɑː","ɔː","uː","ɜː","tʃ","dʒ"];
+// IPA_UNITS (two-character symbols) is declared with the content model at the top.
 // normalise look-alike glyphs (script-ɡ U+0261 vs ascii g) so matching works
 function ipaNorm(ch){ return ch==="ɡ" ? "g" : ch; }
 // Wrap the FIRST occurrence of the target sound inside a transcription with a
@@ -1833,10 +2003,17 @@ function renderSoundCard(ipa){
       <div class="sc-hero ${cls}">
         <div class="sc-ipa-big">/${ipa}/</div>
         <button class="btn sc-listen" data-action="playPhoneme" data-ipa="${ipa}">
-          ${SPK_SVG}<span>${L("Listen","听","Dengar")}</span>
+          ${SPK_SVG}<span>${phonemeAudioSrc(ipa) || !anchorWord
+            ? L("Listen","听","Dengar")
+            /* no recording yet → the button says the example word, and says so */
+            : L(`Hear it in “${anchorWord}”`,`听 “${anchorWord}” 里的这个音`,`Dengar dalam “${anchorWord}”`)}</span>
         </button>
         ${groupTitle?`<div class="sc-group">${trLearn(groupTitle)}</div>`:""}
       </div>
+      ${ipa==="ʊə" ? `<div class="note">💡 <span>${L(
+        "Many British speakers now say some of these words (like tour) with /ɔː/, as in door. Both are correct.",
+        "现在很多英国人会把其中一些字（例如 tour）念成 /ɔː/，跟 door 一样。两种都对。",
+        "Ramai penutur British kini menyebut sesetengah perkataan ini (seperti tour) dengan /ɔː/, seperti door. Kedua-duanya betul.")}</span></div>` : ""}
       <div class="sc-lead">${L("This sound appears in these common words. Tap any word to hear it.","这个音会出现在下面这些常用字里。点任何一个字就能听。","Bunyi ini muncul dalam perkataan biasa di bawah. Ketik mana-mana perkataan untuk mendengarnya.")}</div>
       <div class="card block sc-list">${rows}</div>
       <div class="fineprint">${L("Hear the sound first, then say each word out loud. Replay as many times as you like.","先听那个音，再把每个字念出声。想听几次就听几次。","Dengar bunyinya dahulu, kemudian sebut setiap perkataan kuat-kuat. Ulang sebanyak mana pun.")}</div>
@@ -1887,6 +2064,7 @@ function renderMap(){
   const nextStage = COURSE.find(s=>isUnlocked(s.id) && !S.stages[s.id]?.completed)
                  || COURSE.find(s=>!S.stages[s.id]?.completed) || COURSE[COURSE.length-1];
   const allDone = doneStages===totalStages;
+  const isNew = !Object.keys(S.stages).length;          // never finished a round of anything
   const progressCard = `
     <div class="card course-progress">
       <div class="cp-top">
@@ -1906,15 +2084,17 @@ function renderMap(){
     <div class="card continue-card" ${allDone?'':`data-action="openStage" data-id="${nextStage.id}"`}>
       <div class="cc-badge">${allDone?'🏆':nextStage.icon}</div>
       <div class="cc-meta">
-        <div class="cc-kicker">${allDone?L("Course complete","课程完成","Kursus selesai"):L("Continue learning","继续学","Sambung belajar")}</div>
+        <div class="cc-kicker">${allDone?L("Course complete","课程完成","Kursus selesai"):(isNew?L("Start learning","开始学","Mula belajar"):L("Continue learning","继续学","Sambung belajar"))}</div>
         <b>${trStage(nextStage.title)}</b>
         <span>${allDone
           ? L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")
-          : (S.stages[nextStage.id]?.completed
-              ? L("Review this stage","复习这一关","Ulang kaji peringkat ini")
-              : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti"))}</span>
+          : isNew
+              ? L("Start with the first stage","从第一关开始","Mulakan dengan peringkat pertama")
+              : S.stages[nextStage.id]?.practised
+                ? L(`Practised — reach ${Math.round(PASS*100)}% to complete it`,`练习过 —— 答对 ${Math.round(PASS*100)}% 就完成`,`Sudah berlatih — capai ${Math.round(PASS*100)}% untuk selesai`)
+                : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti")}</span>
       </div>
-      ${allDone?'':`<div class="cc-go">${L("Continue","继续","Teruskan")}</div>`}
+      ${allDone?'':`<div class="cc-go">${isNew?L("Start","开始","Mula"):L("Continue","继续","Teruskan")}</div>`}
     </div>`;
   const goalCard = `
     <div class="card goal-card" data-action="cycleGoal">
@@ -1934,7 +2114,7 @@ function renderMap(){
       <div class="rv-ic">🔁</div>
       <div class="rv-meta">
         <b>${L("Today\u2019s Review","今天的复习","Ulang Kaji Hari Ini")}</b>
-        <span>${reviewCount} ${L("sound","个音","bunyi")}${LANG==="en"&&reviewCount>1?"s":""} — ${L("a quick 2-minute warm-up.","两分钟热身。","pemanasan 2 minit.")}</span>
+        <span>${L(`${reviewCount} question${reviewCount>1?"s":""}`,`${reviewCount} 题`,`${reviewCount} soalan`)} — ${L("a quick 2-minute warm-up.","两分钟热身。","pemanasan 2 minit.")}</span>
       </div>
       <div class="rv-go">▶</div>
     </div>` : `
@@ -1960,37 +2140,81 @@ function renderMap(){
 /* ---------- 10b. STAGE FLOW (Video → Learn → Exercises → Reward) ---------- */
 // Keep a single session short & satisfying even though the bank is large.
 const STAGE_QUESTION_CAP = 16;
-// SOFT GROUPED SEQUENCING (learning-flow improvement):
-// instead of fully random questions, keep similar-sound questions together in
-// short blocks of 4–6, then transition naturally to another sound family.
-// Lightweight: just group by the internal `fam` tag, no scoring or tracking.
+// The hand-written exercises are the teacher's best items (fill-the-sound, spot
+// the sound, tricky words). The old queue put every item without a `fam` tag
+// LAST, and the 16-question cap was always reached first, so 0 of the 54 / 30 /
+// 49 / 46 hand-written items in S1–S4 ever reached a learner. Now each run
+// reserves HAND_SHARE of its 16 for them (fixed 2026-09-24).
+const HAND_SHARE = 6;
+// the generated vocabulary items (water, colleague…) are the easy filler — cap them
+const VOCAB_MAX = 3;
+// the words a question is "about", so one run never asks the same word twice
+function qWords(q){
+  const w = [];
+  if(q.word) w.push(q.word);
+  if(q.prompt && isWordLabel(q.prompt)) w.push(q.prompt);
+  if(q.pair) w.push(...q.pair);
+  const c = (q.options||[]).find(o=>o.correct);
+  if(c && isWordLabel(c.label)) w.push(c.label);
+  return [...new Set(w.map(x=>String(x).toLowerCase()))];
+}
+// SOFT GROUPED SEQUENCING: questions on the same contrast (`fam`) sit together,
+// so the learner gets repeated exposure to one sound before moving on.
 function buildQueue(s){
   const all = s.exercises.slice();
   if(s.id==="s0") return all;                 // welcome = its single check
 
-  // bucket by sound family (questions without a fam tag → "general" vocab pool)
+  // an RP-only contrast (cot/caught) cannot be heard in an American voice
+  const rpOK = Audio$.isBritish();
+  const usable = all.filter(q=>!(q.rpOnly && !rpOK));
+  const hand = shuffle(usable.filter(q=>!q.gen));
+  const gen  = shuffle(usable.filter(q=>q.gen));
+  const picked = [], used = new Set();
+  const take = q=>{
+    if(picked.length>=STAGE_QUESTION_CAP || picked.includes(q)) return false;
+    const ws = qWords(q);
+    if(ws.some(w=>used.has(w))) return false;
+    ws.forEach(w=>used.add(w)); picked.push(q); return true;
+  };
+  // 1. the hand-written share
+  for(const q of hand){ if(picked.length>=HAND_SHARE) break; take(q); }
+  // 2. the stage's key contrasts (s.must) — topped up from anything in the stage
+  for(const m of (s.must||[])){
+    let have = picked.filter(q=>m.any.includes(q.fam)).length;
+    for(const q of shuffle(usable)){
+      if(have>=m.n) break;
+      if(m.any.includes(q.fam) && take(q)) have++;
+    }
+  }
+  // 3. fill up with generated items, a few per family in turn, vocabulary capped
   const fams = new Map();
-  for(const q of all){
-    const key = q.fam || "_general";
-    if(!fams.has(key)) fams.set(key, []);
-    fams.get(key).push(q);
+  for(const q of gen){
+    const k = q.vocab ? "_vocab" : (q.fam || "_misc");
+    if(!fams.has(k)) fams.set(k, []);
+    fams.get(k).push(q);
   }
-  // shuffle questions inside each family, and shuffle the order families appear
-  const famKeys = shuffle([...fams.keys()]);
-  for(const k of famKeys) fams.set(k, shuffle(fams.get(k)));
-
-  // emit families as blocks of 4–6 until we reach the cap, so the learner gets
-  // repeated exposure to one sound before moving on. General vocab comes last.
-  famKeys.sort((a,b)=> (a==="_general") - (b==="_general"));   // general → end
-  const queue = [];
-  for(const k of famKeys){
-    if(queue.length >= STAGE_QUESTION_CAP) break;
-    const pool = fams.get(k);
-    const blockSize = Math.min(pool.length, 4 + Math.floor(Math.random()*3)); // 4–6
-    const room = STAGE_QUESTION_CAP - queue.length;
-    queue.push(...pool.slice(0, Math.min(blockSize, room)));
+  let vocab = picked.filter(q=>q.vocab).length, progress = true;
+  const keys = shuffle([...fams.keys()]);
+  while(picked.length<STAGE_QUESTION_CAP && progress){
+    progress = false;
+    for(const k of keys){
+      const pool = fams.get(k);
+      let n = 2 + Math.floor(Math.random()*2);          // 2–3 from this family
+      while(n>0 && pool.length && picked.length<STAGE_QUESTION_CAP){
+        const q = pool.shift();
+        if(q.vocab && vocab>=VOCAB_MAX){ pool.length = 0; break; }
+        if(take(q)){ n--; progress = true; if(q.vocab) vocab++; }
+      }
+    }
   }
-  return queue.slice(0, STAGE_QUESTION_CAP);
+  // 4. order: families in random order, each family's questions together
+  const groups = new Map();
+  for(const q of picked){
+    const k = q.fam || q;                              // no family → its own slot
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(q);
+  }
+  return shuffle([...groups.values()]).flat();
 }
 function startStage(id){
   const s = COURSE.find(x=>x.id===id);
@@ -2040,13 +2264,13 @@ const SOUND_WORDS = {
   "əʊ":["go","home","nose","boat","road","snow","phone","coat","bone","note"],
   "ɪə":["here","ear","beer","year","dear","near","clear","fear","deer","cheer"],
   "eə":["hair","air","chair","bear","pear","care","share","wear","square","stare"],
-  "ʊə":["tour","pure","cure","sure","poor","tourist","mature","secure","detour","Europe"],
+  "ʊə":["tour","pure","cure","jury","curious","tourist","mature","secure","detour","Europe"],
   // ---- voiceless consonants ----
   "p":["pen","pig","cup","map","top","pet","pan","lip","cap","tap"],
   "t":["ten","cat","top","toy","hat","tea","net","bat","sit","tie"],
   "k":["key","cat","cup","cake","book","kid","car","milk","duck","kick"],
   "f":["fan","fish","four","leaf","fun","fly","foot","knife","life","off"],
-  "θ":["think","thin","bath","math","mouth","tooth","path","thick","cloth","fourth"],
+  "θ":["think","thin","bath","maths","mouth","tooth","path","thick","cloth","fourth"],
   "s":["sun","sit","bus","yes","see","sea","sad","kiss","sock","sing"],
   "ʃ":["she","shop","fish","ship","shoe","wash","push","cash","dish","brush"],
   "tʃ":["chair","cheese","catch","watch","lunch","chip","much","rich","teach","match"],
@@ -2054,7 +2278,7 @@ const SOUND_WORDS = {
   // ---- voiced consonants ----
   "b":["boot","bed","big","bus","bag","ball","book","bird","boy","cab"],
   "d":["dog","day","desk","door","duck","red","bad","mud","ride","bed"],
-  "g":["good","go","big","dog","bag","game","girl","green","egg","gun"],
+  "ɡ":["good","go","big","dog","bag","game","girl","green","egg","gun"],
   "v":["van","very","love","five","give","live","seven","river","voice","save"],
   "ð":["this","that","they","them","then","the","mother","father","brother","weather"],
   "z":["zoo","zip","buzz","nose","rose","jazz","size","prize","zebra","lazy"],
@@ -2072,7 +2296,7 @@ const SOUND_WORDS = {
 
 // Verified British-RP IPA for every curated SOUND_WORDS entry (317 words).
 // Hand-checked by a pronunciation teacher — shown on the Sound Reference Card.
-const WORD_IPA = {"about":"/əˈbaʊt/", "again":"/əˈɡen/", "air":"/eə/", "arm":"/ɑːm/", "bad":"/bæd/", "bag":"/bæɡ/", "ball":"/bɔːl/", "banana":"/bəˈnɑːnə/", "bar":"/bɑː/", "bat":"/bæt/", "bath":"/bɑːθ/", "bear":"/beə/", "bed":"/bed/", "bee":"/biː/", "beer":"/bɪə/", "beige":"/beɪʒ/", "bell":"/bel/", "beyond":"/bɪˈjɒnd/", "big":"/bɪɡ/", "bike":"/baɪk/", "bird":"/bɜːd/", "blue":"/bluː/", "boat":"/bəʊt/", "bone":"/bəʊn/", "book":"/bʊk/", "boot":"/buːt/", "box":"/bɒks/", "boy":"/bɔɪ/", "bridge":"/brɪdʒ/", "bring":"/brɪŋ/", "brother":"/ˈbrʌðə/", "brown":"/braʊn/", "brush":"/brʌʃ/", "bull":"/bʊl/", "burn":"/bɜːn/", "bus":"/bʌs/", "buzz":"/bʌz/", "cab":"/kæb/", "cage":"/keɪdʒ/", "cake":"/keɪk/", "call":"/kɔːl/", "camera":"/ˈkæmərə/", "cap":"/kæp/", "car":"/kɑː/", "card":"/kɑːd/", "care":"/keə/", "cash":"/kæʃ/", "casual":"/ˈkæʒuəl/", "cat":"/kæt/", "catch":"/kætʃ/", "chair":"/tʃeə/", "cheer":"/tʃɪə/", "cheese":"/tʃiːz/", "chip":"/tʃɪp/", "clear":"/klɪə/", "clock":"/klɒk/", "cloth":"/klɒθ/", "cloud":"/klaʊd/", "coat":"/kəʊt/", "coin":"/kɔɪn/", "comma":"/ˈkɒmə/", "cook":"/kʊk/", "cool":"/kuːl/", "corn":"/kɔːn/", "cow":"/kaʊ/", "cup":"/kʌp/", "cure":"/kjʊə/", "cut":"/kʌt/", "dark":"/dɑːk/", "data":"/ˈdeɪtə/", "day":"/deɪ/", "dear":"/dɪə/", "decision":"/dɪˈsɪʒn/", "deer":"/dɪə/", "desk":"/desk/", "detour":"/ˈdiːtʊə/","Europe":"/ˈjʊərəp/","bin":"/bɪn/","six":"/sɪks/","mop":"/mɒp/","pop":"/pɒp/","pot":"/pɒt/","put":"/pʊt/", "dish":"/dɪʃ/", "dog":"/dɒɡ/", "door":"/dɔː/", "down":"/daʊn/", "draw":"/drɔː/", "duck":"/dʌk/", "ear":"/ɪə/", "egg":"/eɡ/", "face":"/feɪs/", "fan":"/fæn/", "far":"/fɑː/", "father":"/ˈfɑːðə/", "fear":"/fɪə/", "feet":"/fiːt/", "first":"/fɜːst/", "fish":"/fɪʃ/", "five":"/faɪv/", "fly":"/flaɪ/", "food":"/fuːd/", "foot":"/fʊt/", "fork":"/fɔːk/", "four":"/fɔː/", "fourth":"/fɔːθ/", "fridge":"/frɪdʒ/", "fun":"/fʌn/", "game":"/ɡeɪm/", "garage":"/ˈɡærɑːʒ/", "gate":"/ɡeɪt/", "girl":"/ɡɜːl/", "give":"/ɡɪv/", "glue":"/ɡluː/", "go":"/ɡəʊ/", "good":"/ɡʊd/", "grass":"/ɡrɑːs/", "green":"/ɡriːn/", "gun":"/ɡʌn/", "hair":"/heə/", "hand":"/hænd/", "hang":"/hæŋ/", "hard":"/hɑːd/", "hat":"/hæt/", "help":"/help/", "hen":"/hen/", "here":"/hɪə/", "hill":"/hɪl/", "hit":"/hɪt/", "home":"/həʊm/", "hook":"/hʊk/", "hop":"/hɒp/", "hot":"/hɒt/", "house":"/haʊs/", "hug":"/hʌɡ/", "ice":"/aɪs/", "jacket":"/ˈdʒækɪt/", "jam":"/dʒæm/", "jar":"/dʒɑː/", "jazz":"/dʒæz/", "job":"/dʒɒb/", "join":"/dʒɔɪn/", "joy":"/dʒɔɪ/", "juice":"/dʒuːs/", "jump":"/dʒʌmp/", "key":"/kiː/", "kick":"/kɪk/", "kid":"/kɪd/", "king":"/kɪŋ/", "kiss":"/kɪs/", "kite":"/kaɪt/", "knife":"/naɪf/", "lamp":"/læmp/", "large":"/lɑːdʒ/", "late":"/leɪt/", "law":"/lɔː/", "lazy":"/ˈleɪzi/", "leaf":"/liːf/", "leg":"/leɡ/", "leisure":"/ˈleʒə/", "life":"/laɪf/", "light":"/laɪt/", "line":"/laɪn/", "lion":"/ˈlaɪən/", "lip":"/lɪp/", "live":"/lɪv/", "lock":"/lɒk/", "long":"/lɒŋ/", "look":"/lʊk/", "love":"/lʌv/", "luck":"/lʌk/", "lunch":"/lʌntʃ/", "man":"/mæn/", "map":"/mæp/", "match":"/mætʃ/", "math":"/mæθ/", "mature":"/məˈtʃʊə/", "measure":"/ˈmeʒə/", "meet":"/miːt/", "milk":"/mɪlk/", "moon":"/muːn/", "mother":"/ˈmʌðə/", "mouse":"/maʊs/", "mouth":"/maʊθ/", "much":"/mʌtʃ/", "mud":"/mʌd/", "mum":"/mʌm/", "my":"/maɪ/", "name":"/neɪm/", "near":"/nɪə/", "net":"/net/", "night":"/naɪt/", "nine":"/naɪn/", "no":"/nəʊ/", "noise":"/nɔɪz/", "nose":"/nəʊz/", "note":"/nəʊt/", "now":"/naʊ/", "nurse":"/nɜːs/", "nut":"/nʌt/", "off":"/ɒf/", "oil":"/ɔɪl/", "page":"/peɪdʒ/", "pan":"/pæn/", "panda":"/ˈpændə/", "park":"/pɑːk/", "path":"/pɑːθ/", "pear":"/peə/", "pen":"/pen/", "pet":"/pet/", "phone":"/fəʊn/", "pig":"/pɪɡ/", "pin":"/pɪn/", "pizza":"/ˈpiːtsə/", "play":"/pleɪ/", "pleasure":"/ˈpleʒə/", "point":"/pɔɪnt/", "pool":"/puːl/", "poor":"/pʊə/", "prize":"/praɪz/", "pull":"/pʊl/", "pure":"/pjʊə/", "push":"/pʊʃ/", "rain":"/reɪn/", "read":"/riːd/", "red":"/red/", "rich":"/rɪtʃ/", "ride":"/raɪd/", "ring":"/rɪŋ/", "river":"/ˈrɪvə/", "road":"/rəʊd/", "rock":"/rɒk/", "room":"/ruːm/", "rose":"/rəʊz/", "run":"/rʌn/", "sad":"/sæd/", "save":"/seɪv/", "saw":"/sɔː/", "sea":"/siː/", "secure":"/sɪˈkjʊə/", "see":"/siː/", "seven":"/ˈsevn/", "share":"/ʃeə/", "she":"/ʃiː/", "sheep":"/ʃiːp/", "ship":"/ʃɪp/", "shirt":"/ʃɜːt/", "shoe":"/ʃuː/", "shop":"/ʃɒp/", "sing":"/sɪŋ/", "sit":"/sɪt/", "size":"/saɪz/", "snow":"/snəʊ/", "sock":"/sɒk/", "sofa":"/ˈsəʊfə/", "soil":"/sɔɪl/", "song":"/sɒŋ/", "sound":"/saʊnd/", "spoon":"/spuːn/", "square":"/skweə/", "star":"/stɑː/", "stare":"/steə/", "strong":"/strɒŋ/", "sun":"/sʌn/", "sure":"/ʃʊə/", "tap":"/tæp/", "tea":"/tiː/", "teach":"/tiːtʃ/", "ten":"/ten/", "that":"/ðæt/", "the":"/ðə/", "them":"/ðem/", "then":"/ðen/", "they":"/ðeɪ/", "thick":"/θɪk/", "thin":"/θɪn/", "think":"/θɪŋk/", "third":"/θɜːd/", "this":"/ðɪs/", "tie":"/taɪ/", "time":"/taɪm/", "tooth":"/tuːθ/", "top":"/tɒp/", "tour":"/tʊə/", "tourist":"/ˈtʊərɪst/", "town":"/taʊn/", "toy":"/tɔɪ/", "train":"/treɪn/", "treasure":"/ˈtreʒə/", "tree":"/triː/", "turn":"/tɜːn/", "usual":"/ˈjuːʒuəl/", "van":"/væn/", "very":"/ˈveri/", "vision":"/ˈvɪʒn/", "voice":"/vɔɪs/", "wall":"/wɔːl/", "wash":"/wɒʃ/", "watch":"/wɒtʃ/", "water":"/ˈwɔːtə/", "we":"/wiː/", "wear":"/weə/", "weather":"/ˈweðə/", "week":"/wiːk/", "west":"/west/", "wet":"/wet/", "win":"/wɪn/", "wind":"/wɪnd/", "wing":"/wɪŋ/", "wood":"/wʊd/", "word":"/wɜːd/", "work":"/wɜːk/", "yard":"/jɑːd/", "yawn":"/jɔːn/", "year":"/jɪə/", "yellow":"/ˈjeləʊ/", "yes":"/jes/", "yet":"/jet/", "yoga":"/ˈjəʊɡə/", "you":"/juː/", "young":"/jʌŋ/", "zebra":"/ˈzebrə/", "zip":"/zɪp/", "zoo":"/zuː/"};
+const WORD_IPA = {"about":"/əˈbaʊt/", "again":"/əˈɡen/", "air":"/eə/", "arm":"/ɑːm/", "bad":"/bæd/", "bag":"/bæɡ/", "ball":"/bɔːl/", "banana":"/bəˈnɑːnə/", "bar":"/bɑː/", "bat":"/bæt/", "bath":"/bɑːθ/", "bear":"/beə/", "bed":"/bed/", "bee":"/biː/", "beer":"/bɪə/", "beige":"/beɪʒ/", "bell":"/bel/", "beyond":"/bɪˈjɒnd/", "big":"/bɪɡ/", "bike":"/baɪk/", "bird":"/bɜːd/", "blue":"/bluː/", "boat":"/bəʊt/", "bone":"/bəʊn/", "book":"/bʊk/", "boot":"/buːt/", "box":"/bɒks/", "boy":"/bɔɪ/", "bridge":"/brɪdʒ/", "bring":"/brɪŋ/", "brother":"/ˈbrʌðə/", "brown":"/braʊn/", "brush":"/brʌʃ/", "bull":"/bʊl/", "burn":"/bɜːn/", "bus":"/bʌs/", "buzz":"/bʌz/", "cab":"/kæb/", "cage":"/keɪdʒ/", "cake":"/keɪk/", "call":"/kɔːl/", "camera":"/ˈkæmərə/", "cap":"/kæp/", "car":"/kɑː/", "card":"/kɑːd/", "care":"/keə/", "cash":"/kæʃ/", "casual":"/ˈkæʒuəl/", "cat":"/kæt/", "catch":"/kætʃ/", "chair":"/tʃeə/", "cheer":"/tʃɪə/", "cheese":"/tʃiːz/", "chip":"/tʃɪp/", "clear":"/klɪə/", "clock":"/klɒk/", "cloth":"/klɒθ/", "cloud":"/klaʊd/", "coat":"/kəʊt/", "coin":"/kɔɪn/", "comma":"/ˈkɒmə/", "cook":"/kʊk/", "cool":"/kuːl/", "corn":"/kɔːn/", "cow":"/kaʊ/", "cup":"/kʌp/", "cure":"/kjʊə/", "cut":"/kʌt/", "dark":"/dɑːk/", "data":"/ˈdeɪtə/", "day":"/deɪ/", "dear":"/dɪə/", "decision":"/dɪˈsɪʒn/", "deer":"/dɪə/", "desk":"/desk/", "detour":"/ˈdiːtʊə/","Europe":"/ˈjʊərəp/","bin":"/bɪn/","six":"/sɪks/","mop":"/mɒp/","pop":"/pɒp/","pot":"/pɒt/","put":"/pʊt/", "dish":"/dɪʃ/", "dog":"/dɒɡ/", "door":"/dɔː/", "down":"/daʊn/", "draw":"/drɔː/", "duck":"/dʌk/", "ear":"/ɪə/", "egg":"/eɡ/", "face":"/feɪs/", "fan":"/fæn/", "far":"/fɑː/", "father":"/ˈfɑːðə/", "fear":"/fɪə/", "feet":"/fiːt/", "first":"/fɜːst/", "fish":"/fɪʃ/", "five":"/faɪv/", "fly":"/flaɪ/", "food":"/fuːd/", "foot":"/fʊt/", "fork":"/fɔːk/", "four":"/fɔː/", "fourth":"/fɔːθ/", "fridge":"/frɪdʒ/", "fun":"/fʌn/", "game":"/ɡeɪm/", "garage":"/ˈɡærɑːʒ/", "gate":"/ɡeɪt/", "girl":"/ɡɜːl/", "give":"/ɡɪv/", "glue":"/ɡluː/", "go":"/ɡəʊ/", "good":"/ɡʊd/", "grass":"/ɡrɑːs/", "green":"/ɡriːn/", "gun":"/ɡʌn/", "hair":"/heə/", "hand":"/hænd/", "hang":"/hæŋ/", "hard":"/hɑːd/", "hat":"/hæt/", "help":"/help/", "hen":"/hen/", "here":"/hɪə/", "hill":"/hɪl/", "hit":"/hɪt/", "home":"/həʊm/", "hook":"/hʊk/", "hop":"/hɒp/", "hot":"/hɒt/", "house":"/haʊs/", "hug":"/hʌɡ/", "ice":"/aɪs/", "jacket":"/ˈdʒækɪt/", "jam":"/dʒæm/", "jar":"/dʒɑː/", "jazz":"/dʒæz/", "job":"/dʒɒb/", "join":"/dʒɔɪn/", "joy":"/dʒɔɪ/", "juice":"/dʒuːs/", "jump":"/dʒʌmp/", "key":"/kiː/", "kick":"/kɪk/", "kid":"/kɪd/", "king":"/kɪŋ/", "kiss":"/kɪs/", "kite":"/kaɪt/", "knife":"/naɪf/", "lamp":"/læmp/", "large":"/lɑːdʒ/", "late":"/leɪt/", "law":"/lɔː/", "lazy":"/ˈleɪzi/", "leaf":"/liːf/", "leg":"/leɡ/", "leisure":"/ˈleʒə/", "life":"/laɪf/", "light":"/laɪt/", "line":"/laɪn/", "lion":"/ˈlaɪən/", "lip":"/lɪp/", "live":"/lɪv/", "lock":"/lɒk/", "long":"/lɒŋ/", "look":"/lʊk/", "love":"/lʌv/", "luck":"/lʌk/", "lunch":"/lʌntʃ/", "man":"/mæn/", "map":"/mæp/", "match":"/mætʃ/", "maths":"/mæθs/", "jury":"/ˈdʒʊəri/", "curious":"/ˈkjʊəriəs/", "mature":"/məˈtʃʊə/", "measure":"/ˈmeʒə/", "meet":"/miːt/", "milk":"/mɪlk/", "moon":"/muːn/", "mother":"/ˈmʌðə/", "mouse":"/maʊs/", "mouth":"/maʊθ/", "much":"/mʌtʃ/", "mud":"/mʌd/", "mum":"/mʌm/", "my":"/maɪ/", "name":"/neɪm/", "near":"/nɪə/", "net":"/net/", "night":"/naɪt/", "nine":"/naɪn/", "no":"/nəʊ/", "noise":"/nɔɪz/", "nose":"/nəʊz/", "note":"/nəʊt/", "now":"/naʊ/", "nurse":"/nɜːs/", "nut":"/nʌt/", "off":"/ɒf/", "oil":"/ɔɪl/", "page":"/peɪdʒ/", "pan":"/pæn/", "panda":"/ˈpændə/", "park":"/pɑːk/", "path":"/pɑːθ/", "pear":"/peə/", "pen":"/pen/", "pet":"/pet/", "phone":"/fəʊn/", "pig":"/pɪɡ/", "pin":"/pɪn/", "pizza":"/ˈpiːtsə/", "play":"/pleɪ/", "pleasure":"/ˈpleʒə/", "point":"/pɔɪnt/", "pool":"/puːl/", "poor":"/pɔː/", "prize":"/praɪz/", "pull":"/pʊl/", "pure":"/pjʊə/", "push":"/pʊʃ/", "rain":"/reɪn/", "read":"/riːd/", "red":"/red/", "rich":"/rɪtʃ/", "ride":"/raɪd/", "ring":"/rɪŋ/", "river":"/ˈrɪvə/", "road":"/rəʊd/", "rock":"/rɒk/", "room":"/ruːm/", "rose":"/rəʊz/", "run":"/rʌn/", "sad":"/sæd/", "save":"/seɪv/", "saw":"/sɔː/", "sea":"/siː/", "secure":"/sɪˈkjʊə/", "see":"/siː/", "seven":"/ˈsevn/", "share":"/ʃeə/", "she":"/ʃiː/", "sheep":"/ʃiːp/", "ship":"/ʃɪp/", "shirt":"/ʃɜːt/", "shoe":"/ʃuː/", "shop":"/ʃɒp/", "sing":"/sɪŋ/", "sit":"/sɪt/", "size":"/saɪz/", "snow":"/snəʊ/", "sock":"/sɒk/", "sofa":"/ˈsəʊfə/", "soil":"/sɔɪl/", "song":"/sɒŋ/", "sound":"/saʊnd/", "spoon":"/spuːn/", "square":"/skweə/", "star":"/stɑː/", "stare":"/steə/", "strong":"/strɒŋ/", "sun":"/sʌn/", "sure":"/ʃɔː/", "tap":"/tæp/", "tea":"/tiː/", "teach":"/tiːtʃ/", "ten":"/ten/", "that":"/ðæt/", "the":"/ðə/", "them":"/ðem/", "then":"/ðen/", "they":"/ðeɪ/", "thick":"/θɪk/", "thin":"/θɪn/", "think":"/θɪŋk/", "third":"/θɜːd/", "this":"/ðɪs/", "tie":"/taɪ/", "time":"/taɪm/", "tooth":"/tuːθ/", "top":"/tɒp/", "tour":"/tʊə/", "tourist":"/ˈtʊərɪst/", "town":"/taʊn/", "toy":"/tɔɪ/", "train":"/treɪn/", "treasure":"/ˈtreʒə/", "tree":"/triː/", "turn":"/tɜːn/", "usual":"/ˈjuːʒuəl/", "van":"/væn/", "very":"/ˈveri/", "vision":"/ˈvɪʒn/", "voice":"/vɔɪs/", "wall":"/wɔːl/", "wash":"/wɒʃ/", "watch":"/wɒtʃ/", "water":"/ˈwɔːtə/", "we":"/wiː/", "wear":"/weə/", "weather":"/ˈweðə/", "week":"/wiːk/", "west":"/west/", "wet":"/wet/", "win":"/wɪn/", "wind":"/wɪnd/", "wing":"/wɪŋ/", "wood":"/wʊd/", "word":"/wɜːd/", "work":"/wɜːk/", "yard":"/jɑːd/", "yawn":"/jɔːn/", "year":"/jɪə/", "yellow":"/ˈjeləʊ/", "yes":"/jes/", "yet":"/jet/", "yoga":"/ˈjəʊɡə/", "you":"/juː/", "young":"/jʌŋ/", "zebra":"/ˈzebrə/", "zip":"/zɪp/", "zoo":"/zuː/"};
 
 const REVIEW_STAGE = { id:"review", title:"Today's Review", short:"Review", icon:"🔁", color:"coral",
   exercises:[], reward:{ xp:0, title:"Review complete!", line:"" } };
@@ -2137,7 +2361,7 @@ const SOUND_FAMILY = {
   long:["iː","ɑː","ɔː","uː","ɜː"],
   diph:["eɪ","aɪ","ɔɪ","aʊ","əʊ","ɪə","eə","ʊə"],
   vless:["p","t","k","f","θ","s","ʃ","tʃ","h"],
-  vced:["b","d","g","v","ð","z","ʒ","dʒ","m","n","ŋ","l","r","w","j"]
+  vced:["b","d","ɡ","v","ð","z","ʒ","dʒ","m","n","ŋ","l","r","w","j"]
 };
 function familyOf(ipa){
   for(const [fam,arr] of Object.entries(SOUND_FAMILY)) if(arr.includes(ipa)) return fam;
@@ -2409,14 +2633,16 @@ function renderExercise(s){
                   <div class="big-listen"><button class="listen-btn" data-action="listen" data-word="${q.word}"${q.audioSrc?` data-src="${q.audioSrc}"`:""}><span class="li-ic">${SPK_SVG}</span> ${L("Tap to listen","点一下听","Ketik untuk dengar")}</button></div>`;
   } else { // choose IPA for a word
     promptHTML = `<div class="q-sub">${q.sub ? trQ(q.sub, Q_SUB) : L("Choose the correct IPA for","选出正确的音标：","Pilih IPA yang betul untuk")}</div>
-                  <div class="q-prompt"><span class="big">${q.prompt}</span> ${speaker(q.prompt,q.audioSrc,"big")}</div>`;
+                  <div class="q-prompt"><span class="big">${q.promptText ? tx(q.promptText) : q.prompt}</span> ${q.noSpeak ? "" : speaker(q.prompt,q.audioSrc,"big")}</div>`;
   }
   const optsHTML = opts.map((o,idx)=>{
-    const spk = isWordLabel(o.label) ? speaker(o.label, o.src) : "";
+    const spk = (!q.noSpeak && isWordLabel(o.label)) ? speaker(o.label, o.src) : "";
+    // gloss = a translation under an English option that is not course content (Welcome question)
+    const gloss = o.gloss && tx(o.gloss) ? `<small style="display:block;font-size:12px;font-weight:600;opacity:.7;margin-top:2px">${tx(o.gloss)}</small>` : "";
     return `
     <button class="opt ${isChip?'chipopt':''}" data-action="pick" data-idx="${idx}">
       ${isChip?"":`<span class="key">${String.fromCharCode(65+idx)}</span>`}
-      <span class="ipa">${o.label}</span>${spk?`<span class="opt-spk">${spk}</span>`:""}
+      <span class="ipa">${o.label}${gloss}</span>${spk?`<span class="opt-spk">${spk}</span>`:""}
     </button>`;}).join("");
 
   $screen().innerHTML = `
@@ -2462,6 +2688,7 @@ function checkAnswer(){
   if(correct){
     sfx("ok");
     S.combo++; if(S.combo>S.bestCombo) S.bestCombo=S.combo;
+    session.bestRun = Math.max(session.bestRun||0, S.combo);   // "best combo" on the results = this run
     session.correct++;
     let gain = 10 + (S.combo>=5?5:0);          // 4. XP per correct + combo bonus
     session.earned += gain;
@@ -2474,7 +2701,7 @@ function checkAnswer(){
     } else if(!isWordLabel(cl) && S.weak[cl]){
       S.weak[cl] = Math.max(0, S.weak[cl]-1);  // normal lesson: ease off a weak sound
     }
-    const okMsg = q.okMsg || pick(praiseList());
+    const okMsg = tx(q.okMsg) || pick(praiseList());
     if(S.combo===5 && !S.badges.hot_streak){ S.badges.hot_streak=true; setTimeout(()=>miniBadge("hot_streak"),300); }
     if(comboLine(S.combo)) comboFlash(comboLine(S.combo));
     feedbackOK(okMsg, gain);
@@ -2487,7 +2714,8 @@ function checkAnswer(){
     const cl = opts.find(o=>o.correct).label;
     if(!isWordLabel(cl)) S.weak[cl] = (S.weak[cl]||0)+1;
     // PRIORITY 3: stash this question for "Today's Review" (dedupe by prompt, cap 30)
-    addToReview(q);
+    // — not the Welcome mindset question, which is not a pronunciation item
+    if(session.stageId!=="s0") addToReview(q);
     els[sel].classList.add("shake");
     // TEACHING FEEDBACK: explain chosen vs correct & why, falling back to the hint
     const chosenLbl = opts[sel].label;
@@ -2498,7 +2726,7 @@ function checkAnswer(){
     if(teach && PHONEME_SAY[cTok] && PHONEME_SAY[aTok]){
       compare = { a: PHONEME_SAY[aTok][0], b: PHONEME_SAY[cTok][0] };  // correct word first
     }
-    feedbackNO(teach || q.hint, compare);
+    feedbackNO(teach || tx(q.hint), compare);
     renderHUD();
   }
   save();
@@ -2550,35 +2778,59 @@ const GENTLE_ALL = {
   "Hampir — inilah bezanya","Selaraskan telinga untuk yang ini","Bandingkan sekali lagi"]
 };
 // ===== TEACHING FEEDBACK: explain WHY the chosen sound differs from the answer =====
+// [en, zh, ms] — shown inside the "You chose /x/ … the answer is /y/ …" hint,
+// so it has to be in the learner's explanation language like the rest of it.
 const SOUND_DESC = {
-  "ɪ":"short, relaxed ‘i’ (ship)","iː":"long, tense ‘ee’ (sheep)",
-  "e":"short ‘e’ (bed)","æ":"open ‘a’, mouth wide (cat)","ʌ":"short ‘uh’ (cup)",
-  "ɒ":"short, rounded ‘o’ (hot)","ɑː":"long, open ‘ah’ (car)",
-  "ʊ":"short ‘oo’ (book)","uː":"long ‘oo’ (food)","ɔː":"long ‘aw’ (door)",
-  "ə":"weak, unstressed ‘uh’ (about)","ɜː":"long ‘er’ (bird)",
-  "eɪ":"glide ‘ay’ (day)","aɪ":"glide ‘eye’ (my)","ɔɪ":"glide ‘oy’ (boy)",
-  "aʊ":"glide ‘ow’ (now)","əʊ":"glide ‘oh’ (go)",
-  "ɪə":"glide ‘ear’ (here)","eə":"glide ‘air’ (hair)","ʊə":"glide ‘oor’ (tour)",
-  "p":"voiceless ‘p’","b":"voiced ‘b’","t":"voiceless ‘t’","d":"voiced ‘d’",
-  "k":"voiceless ‘k’","g":"voiced ‘g’","f":"voiceless ‘f’","v":"voiced ‘v’",
-  "θ":"voiceless ‘th’ (think)","ð":"voiced ‘th’ (this)","s":"voiceless ‘s’ (hiss)","z":"voiced ‘z’ (buzz)",
-  "ʃ":"voiceless ‘sh’ (she)","ʒ":"voiced ‘zh’ (vision)","tʃ":"voiceless ‘ch’ (chair)","dʒ":"voiced ‘j’ (jump)",
-  "h":"breathy ‘h’","m":"‘m’, lips together","n":"‘n’, tongue up","ŋ":"‘ng’ (sing)",
-  "l":"‘l’, tongue tip up","r":"‘r’","w":"‘w’, rounded lips","j":"‘y’ (yes)"
+  "ɪ":["short, relaxed ‘i’ (ship)","短而放松的 i（ship）","‘i’ pendek dan santai (ship)"],
+  "iː":["long, tense ‘ee’ (sheep)","长而拉紧的 ee（sheep）","‘ee’ panjang dan tegang (sheep)"],
+  "e":["short ‘e’ (bed)","短的 e（bed）","‘e’ pendek (bed)"],
+  "æ":["open ‘a’, mouth wide (cat)","嘴巴张大的 a（cat）","‘a’ terbuka, mulut luas (cat)"],
+  "ʌ":["short ‘uh’ (cup)","短的 uh（cup）","‘uh’ pendek (cup)"],
+  "ɒ":["short, rounded ‘o’ (hot)","短而圆唇的 o（hot）","‘o’ pendek, bibir bulat (hot)"],
+  "ɑː":["long, open ‘ah’ (car)","长而张开的 ah（car）","‘ah’ panjang dan terbuka (car)"],
+  "ʊ":["short ‘oo’ (book)","短的 oo（book）","‘oo’ pendek (book)"],
+  "uː":["long ‘oo’ (food)","长的 oo（food）","‘oo’ panjang (food)"],
+  "ɔː":["long ‘aw’ (door)","长的 aw（door）","‘aw’ panjang (door)"],
+  "ə":["weak, unstressed ‘uh’ (about)","弱读、不重读的 uh（about）","‘uh’ lemah tanpa tekanan (about)"],
+  "ɜː":["long ‘er’ (bird)","长的 er（bird）","‘er’ panjang (bird)"],
+  "eɪ":["glide ‘ay’ (day)","滑音 ay（day）","luncuran ‘ay’ (day)"],
+  "aɪ":["glide ‘eye’ (my)","滑音 eye（my）","luncuran ‘eye’ (my)"],
+  "ɔɪ":["glide ‘oy’ (boy)","滑音 oy（boy）","luncuran ‘oy’ (boy)"],
+  "aʊ":["glide ‘ow’ (now)","滑音 ow（now）","luncuran ‘ow’ (now)"],
+  "əʊ":["glide ‘oh’ (go)","滑音 oh（go）","luncuran ‘oh’ (go)"],
+  "ɪə":["glide ‘ear’ (here)","滑音 ear（here）","luncuran ‘ear’ (here)"],
+  "eə":["glide ‘air’ (hair)","滑音 air（hair）","luncuran ‘air’ (hair)"],
+  "ʊə":["glide ‘oor’ (tour)","滑音 oor（tour）","luncuran ‘oor’ (tour)"],
+  "h":["breathy ‘h’","只有气流的 h","‘h’ berhembus"],
+  "m":["‘m’, lips together","m，双唇合起来","‘m’, bibir rapat"],
+  "n":["‘n’, tongue up","n，舌尖顶上去","‘n’, lidah naik"],
+  "ŋ":["‘ng’ (sing)","ng（sing）","‘ng’ (sing)"],
+  "l":["‘l’, tongue tip up","l，舌尖往上","‘l’, hujung lidah naik"],
+  "r":["‘r’","r","‘r’"],
+  "w":["‘w’, rounded lips","w，嘴唇收圆","‘w’, bibir bulat"],
+  "j":["‘y’ (yes)","y（yes）","‘y’ (yes)"]
 };
+// the voiced/voiceless pairs share one pattern: [symbol, spelling, example]
+[["p","p"],["t","t"],["k","k"],["f","f"],["θ","th","think"],["s","s","hiss"],["ʃ","sh","she"],["tʃ","ch","chair"]]
+  .forEach(([x,sp,e])=>{ const ex_=e?` (${e})`:"", exz=e?`（${e}）`:"";
+    SOUND_DESC[x]=[`voiceless ‘${sp}’${ex_}`,`无声的 ${sp}${exz}`,`‘${sp}’ tidak bersuara${ex_}`]; });
+[["b","b"],["d","d"],["ɡ","g"],["v","v"],["ð","th","this"],["z","z","buzz"],["ʒ","zh","vision"],["dʒ","j","jump"]]
+  .forEach(([x,sp,e])=>{ const ex_=e?` (${e})`:"", exz=e?`（${e}）`:"";
+    SOUND_DESC[x]=[`voiced ‘${sp}’${ex_}`,`有声的 ${sp}${exz}`,`‘${sp}’ bersuara${ex_}`]; });
+const soundDesc = x => SOUND_DESC[x] ? L(...SOUND_DESC[x]) : "";
 const LENGTH_PAIRS = {"ɪ":"iː","iː":"ɪ","ʊ":"uː","uː":"ʊ","ɒ":"ɔː","ɔː":"ɒ","ʌ":"ɑː","ɑː":"ʌ","ə":"ɜː","ɜː":"ə"};
-const VOICE_PAIRS  = {"p":"b","b":"p","t":"d","d":"t","k":"g","g":"k","f":"v","v":"f","θ":"ð","ð":"θ","s":"z","z":"s","ʃ":"ʒ","ʒ":"ʃ","tʃ":"dʒ","dʒ":"tʃ"};
+const VOICE_PAIRS  = {"p":"b","b":"p","t":"d","d":"t","k":"ɡ","ɡ":"k","f":"v","v":"f","θ":"ð","ð":"θ","s":"z","z":"s","ʃ":"ʒ","ʒ":"ʃ","tʃ":"dʒ","dʒ":"tʃ"};
 // Build a teaching explanation comparing the chosen vs correct option.
 // Works when the options are IPA tokens (e.g. /ɪ/ vs /iː/). Returns "" otherwise.
 function whyDifferent(chosenLabel, correctLabel){
   const norm = s => String(s).replace(/[\/\[\]]/g,"").trim();
   const c = norm(chosenLabel), a = norm(correctLabel);
   if(!c || !a || c===a) return "";
-  const cDesc = SOUND_DESC[c], aDesc = SOUND_DESC[a];
+  const cDesc = soundDesc(c), aDesc = soundDesc(a);
   if(!cDesc || !aDesc) return "";
   let why;
   if(LENGTH_PAIRS[a]===c){
-    why = L("They differ in length — listen for how long the vowel is held.","差别在长短 —— 听母音拉多久。","Bezanya pada panjang — dengar berapa lama vokal itu ditahan.");
+    why = L("They differ in length — listen for how long the vowel is held.","差别在长短 —— 听元音拉多久。","Bezanya pada panjang — dengar berapa lama vokal itu ditahan.");
   } else if(VOICE_PAIRS[a]===c){
     why = L("Same mouth shape, but one is voiced (throat buzzes) and one is voiceless. Rest a finger on your throat to feel it.","嘴型一样，但一个有声（喉咙会震），一个无声。手指按在喉咙上就摸得出来。","Bentuk mulut sama, tetapi satu bersuara (kerongkong bergetar) dan satu tidak. Letak jari pada kerongkong untuk merasainya.");
   } else {
@@ -2617,6 +2869,14 @@ function nextQuestion(){
 /* =====================================================================
    8. REWARD SYSTEM  —  STEP 4 of the stage template.
    ===================================================================== */
+// Pass mark. Marco 2026-09-24 选 A：一关答对 70% 以上才算「完成」；低于 70% 记为
+// 「练习过」—— 不给关卡奖励 XP、不给跟完成挂钩的徽章，也不算进结业。
+// 已经存档的「完成」照旧保留，不会因为这条规则被收回。
+const PASS = 0.7;
+// the course (certificate screen + Pronunciation Master) needs every teaching
+// stage AND the final review passed; the welcome stage is not a test
+const CORE_STAGES = ["s1","s2","s3","s4"];
+function coreLeft(){ return CORE_STAGES.filter(id=>!S.stages[id]?.completed); }
 function finishStage(s){
   if(session.isReview){                                 // PRIORITY 3: review wrap-up
     // NOTE: correctly-answered items are already removed during checkAnswer via
@@ -2628,24 +2888,40 @@ function finishStage(s){
     render();
     return;
   }
-  // record progress
   const prev = S.stages[s.id]||{};
-  const wasDone = prev.completed;
+  const wasDone = !!prev.completed;
+  const acc = session.total ? session.correct/session.total : 1;
+  // Welcome is a mindset check, not a test — it always completes. Everything else
+  // compares the ROUNDED percentage the learner is shown, so "70%" on screen can
+  // never come with a "practised" verdict (69.6% shows as 70% and passes).
+  const passed = s.id==="s0" || Math.round(acc*100) >= Math.round(PASS*100);
+  session.passed = passed;
+  session.bonus = 0;                                    // stage XP actually paid THIS run
+  session.flawless = false;
   S.stages[s.id] = {
-    completed:true,
+    completed: wasDone || passed,                       // a pass is never taken back
+    practised: true,
     correct:session.correct, total:session.total,
-    best: Math.max(prev.best||0, session.correct)
+    best: Math.max(prev.best||0, session.correct),
+    bestPct: Math.max(prev.bestPct||0, Math.round(acc*100))
   };
-  if(!wasDone){
-    awardXP(s.reward.xp);                              // big stage bonus
-    if(s.reward.badge && !S.badges[s.reward.badge]) S.badges[s.reward.badge]=true;
-    if(session.perfect && session.total>0 && !S.badges.flawless) S.badges.flawless=true;
-    unlock(nextStageId(s.id));                          // progression
-    if(s.reward.final) S.courseDone=true;
+  if(passed){
+    if(!wasDone){
+      session.bonus = s.reward.xp;
+      awardXP(s.reward.xp);                            // big stage bonus, first pass only
+      unlock(nextStageId(s.id));                        // bookkeeping only — every stage is open
+    }
+    // the final stage's badge is the course badge — it waits for CORE_STAGES below
+    if(s.reward.badge && s.reward.badge!=="master" && !S.badges[s.reward.badge]) S.badges[s.reward.badge]=true;
+    // a stage of one question (Welcome) is not "a perfect stage"
+    if(session.perfect && session.total>=5){ session.flawless = true; S.badges.flawless = true; }
+  }
+  if(!S.courseDone && coreLeft().length===0){
+    S.courseDone = true; S.badges.master = true; session.courseJustDone = true;
   }
   save();
   session.step="reward";
-  sfx("reward"); confetti(120);
+  sfx("reward"); confetti(passed?120:40);
   render();
 }
 function renderReward(s){
@@ -2669,28 +2945,71 @@ function renderReward(s){
     return;
   }
   const r=s.reward, b=BADGES[r.badge];
-  const acc = session.total? Math.round(session.correct/session.total*100) : 100;
-  const earnedFlawless = session.perfect && session.total>0;
+  const accPct = session.total? Math.round(session.correct/session.total*100) : 100;
+  const passPct = Math.round(PASS*100);
+  const next = COURSE.find(x=>x.id===nextStageId(s.id));
+  const left = coreLeft();
+  const tally = `
+      <div class="tally">
+        <div class="tally-row" style="animation-delay:.05s"><span class="ic">⚡</span><span class="lbl">${L("XP this stage","这一关的 XP","XP peringkat ini")}</span><span class="val">+${session.earned + (session.bonus||0)}</span></div>
+        ${session.total?`<div class="tally-row" style="animation-delay:.15s"><span class="ic">🎯</span><span class="lbl">${L("Accuracy","准确度","Ketepatan")}</span><span class="val">${accPct}%</span></div>`:""}
+        <div class="tally-row" style="animation-delay:.25s"><span class="ic">🔥</span><span class="lbl">${L("Best combo this round","这一轮最佳连击","Kombo terbaik pusingan ini")}</span><span class="val">${session.bestRun||0}</span></div>
+        ${session.flawless?`<div class="tally-row" style="animation-delay:.35s"><span class="ic">💎</span><span class="lbl">${L("Flawless bonus","全对奖励","Bonus tanpa silap")}</span><span class="val">${L("unlocked!","拿到了！","dibuka!")}</span></div>`:""}
+      </div>`;
+  const passRule = L(`A stage counts as complete at ${passPct}% correct or more.`,
+                     `答对 ${passPct}% 以上，这一关才算完成。`,
+                     `Satu peringkat dikira selesai jika sekurang-kurangnya ${passPct}% jawapan betul.`);
+  if(!session.passed){
+    // below the pass mark: saved as practice — no stage XP, no badge, no "complete"
+    $screen().innerHTML = `
+    <div class="reward">
+      <div class="burst">💪</div>
+      <h2>${L("Good practice!","练习过了！","Latihan yang baik!")}</h2>
+      <div class="sub">${L("Practised","练习过","Sudah berlatih")} · ${session.correct}/${session.total} ${L("first-try","一次答对","cubaan pertama")}</div>
+      <div class="note" style="text-align:left">💡 <span>${passRule} ${L(
+        `You got ${accPct}%, so this round is saved as practice. Try again when you're ready — the questions change every time.`,
+        `你这次是 ${accPct}%，先记为「练习过」。准备好再来一次 —— 每次的题目都不一样。`,
+        `Anda dapat ${accPct}%, jadi pusingan ini disimpan sebagai latihan. Cuba lagi bila bersedia — soalan berubah setiap kali.`)}</span></div>
+      ${tally}
+      <div style="height:16px"></div>
+      <button class="btn coral" data-action="openStage" data-id="${s.id}">${L("Try again","再试一次","Cuba lagi")}</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" data-action="goMap">${L("Back to map","回到地图","Kembali ke peta")}</button>
+    </div>`;
+    return;
+  }
+  // the badge card shows only a badge the learner actually holds
+  const showBadge = r.badge && S.badges[r.badge];
+  // the course can be finished by ANY stage — whichever of s1–s4 is passed last
+  const trophy = (r.final && S.courseDone) || session.courseJustDone;
+  const finalLine = COURSE.find(x=>x.reward.final).reward.line;
+  const courseLine = trophy
+    ? `<div class="unlock-toast"><span class="ut-ic">🎓</span><span class="ut-body"><span class="ut-text">${trReward(finalLine)}</span></span></div>` : "";
+  // every stage is open from the start, so this says what comes next — not "unlocked"
+  const nextLine = !r.final && !trophy && next
+    ? `<div class="unlock-toast"><span class="ut-ic">➡️</span><span class="ut-body"><span class="ut-tag">${L("Next up","下一关","Seterusnya")}</span><span class="ut-text">${trStage(next.title)}</span></span></div>` : "";
+  // passed the final review but not every stage yet: say exactly what is missing
+  const stillNeed = r.final && !S.courseDone && left.length
+    ? `<div class="note" style="text-align:left">💡 <span>${L(
+        `To finish the course, also pass: ${left.map(id=>trStage(COURSE.find(x=>x.id===id).title)).join(", ")} (${passPct}% or more each).`,
+        `还要通过：${left.map(id=>trStage(COURSE.find(x=>x.id===id).title)).join("、")}（每关 ${passPct}% 以上），才算完成整个课程。`,
+        `Untuk tamatkan kursus, lulus juga: ${left.map(id=>trStage(COURSE.find(x=>x.id===id).title)).join(", ")} (${passPct}% atau lebih setiap satu).`)}</span></div>` : "";
   $screen().innerHTML = `
     <div class="reward">
-      <div class="burst">${r.final?"🎉":"🌟"}</div>
+      <div class="burst">${trophy?"🎉":"🌟"}</div>
       <h2>${trReward(r.title)}</h2>
       <div class="sub">${L("Stage complete","这一关完成","Peringkat selesai")}${session.total?` · ${session.correct}/${session.total} ${L("first-try","一次答对","cubaan pertama")}`:""}</div>
 
-      ${r.badge?`<div class="badge-card">${badgeMedal(b)}<b>${badgeName(b)} ${L("Badge","徽章","Lencana")}</b><span>${badgeDesc(b)}</span></div>`:""}
-
-      <div class="tally">
-        <div class="tally-row" style="animation-delay:.05s"><span class="ic">⚡</span><span class="lbl">${L("XP this stage","这一关的 XP","XP peringkat ini")}</span><span class="val">+${session.earned + (S.stages[s.id]?r.xp:0)}</span></div>
-        ${session.total?`<div class="tally-row" style="animation-delay:.15s"><span class="ic">🎯</span><span class="lbl">${L("Accuracy","准确度","Ketepatan")}</span><span class="val">${acc}%</span></div>`:""}
-        <div class="tally-row" style="animation-delay:.25s"><span class="ic">🔥</span><span class="lbl">${L("Best combo","最佳连击","Kombo terbaik")}</span><span class="val">${S.bestCombo}</span></div>
-        ${earnedFlawless?`<div class="tally-row" style="animation-delay:.35s"><span class="ic">💎</span><span class="lbl">${L("Flawless bonus","全对奖励","Bonus tanpa silap")}</span><span class="val">${L("unlocked!","拿到了！","dibuka!")}</span></div>`:""}
-      </div>
-
-      ${r.line?`<div class="unlock-toast"><span class="ut-ic">🔓</span><span class="ut-body"><span class="ut-tag">${L("Unlocked","解锁","Dibuka")}</span><span class="ut-text">${trStage(r.line.replace(/^.*?Unlocked\s*[—-]\s*/i,"").trim()) || trReward(r.line)}</span></span></div>`:""}
+      ${showBadge?`<div class="badge-card">${badgeMedal(b)}<b>${L(`${badgeName(b)} Badge`,`${badgeName(b)} 徽章`,`Lencana ${badgeName(b)}`)}</b><span>${badgeDesc(b)}</span></div>`:""}
+      ${tally}
+      ${session.total>1?`<div class="fineprint" style="padding:6px 0 0">${passRule}</div>`:""}
+      ${stillNeed}${courseLine}${nextLine}
       <div style="height:20px"></div>
-      ${r.final
+      ${trophy
         ? `<button class="btn sun" data-action="goDone">${L("See your trophy 🏆","看你的奖杯 🏆","Lihat trofi anda 🏆")}</button>`
-        : `<button class="btn" data-action="goMap">${L("Continue your journey →","继续下一关 →","Sambung perjalanan →")}</button>`}
+        : r.final
+          ? `<button class="btn" data-action="goMap">${L("Back to map","回到地图","Kembali ke peta")}</button>`
+          : `<button class="btn" data-action="goMap">${L("Continue your journey →","继续下一关 →","Sambung perjalanan →")}</button>`}
     </div>`;
 }
 
@@ -2701,7 +3020,7 @@ function renderCourseComplete(){
   $screen().innerHTML = `
     <div class="reward">
       <div class="burst">👑</div>
-      <h2>${L("TOUCH Pronunciation Master!","TOUCH 发音大师！","Sarjana Sebutan TOUCH!")}</h2>
+      <h2>${L("TOUCH Pronunciation Master!","TOUCH 发音大师！","Pakar Sebutan TOUCH!")}</h2>
       <div class="sub">${L("You completed the entire course 🎓","整个课程你都走完了 🎓","Anda tamatkan seluruh kursus 🎓")}</div>
       <div class="badge-card" style="margin-top:14px">${badgeMedal(BADGES.master)}
         <b>${badgeName(BADGES.master)}</b><span>${L("The highest TOUCH honour","TOUCH 的最高荣誉","Penghormatan tertinggi TOUCH")}</span></div>
@@ -2734,7 +3053,7 @@ function renderProfile(){
           <h2>${displayName}</h2>
           <p>🔥 ${L(`${S.streak}-day streak`, `连续 ${S.streak} 天`, `${S.streak} hari berturut`)}</p>
           <div class="pf-bar"><i style="width:${(li.pct*100).toFixed(0)}%"></i></div>
-          <small>${li.into} / ${li.span} XP ${L("to Level","升到等级","ke Tahap")} ${li.lvl+1}</small>
+          <small>${L(`${li.into} / ${li.span} XP to Level ${li.lvl+1}`,`${li.into} / ${li.span} XP 升到第 ${li.lvl+1} 级`,`${li.into} / ${li.span} XP ke Tahap ${li.lvl+1}`)}</small>
         </div>
       </div>
       <div class="stat-grid">
@@ -2762,7 +3081,7 @@ function renderProfile(){
 function miniBadge(id){
   const b=BADGES[id]; const d=document.createElement("div"); d.className="lvlup";
   d.style.background="var(--sun)"; d.style.color="#5A3A1E";
-  d.innerHTML=`🏅 ${b.name} Badge!`;
+  d.innerHTML=`🏅 ${L(`${badgeName(b)} Badge!`,`${badgeName(b)} 徽章！`,`Lencana ${badgeName(b)}!`)}`;
   document.getElementById("fx").appendChild(d); setTimeout(()=>d.remove(),1700); confetti(40);
 }
 
