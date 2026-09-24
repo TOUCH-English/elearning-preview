@@ -62,6 +62,7 @@
     l4: { c: "#15335E", ink: "#fff" },
   };
   var ORDER = ["p1", "l1", "l2", "l3", "l4"];
+  var CAST = ["amy", "siti", "kumar", "meiling", "tan", "ali"];   // same order as coach.js
   // Serpentine offsets (px from centre), Duolingo's shape: out to one side and back.
   var X = [0, -44, -66, -44, 0, 44, 66, 44];
 
@@ -242,7 +243,7 @@
     if (r.bottom > vh - 90) window.scrollBy({ top: r.bottom - vh + 110, behavior: "smooth" });
   }
 
-  function openGuide(sec, colour, L, assetBase) {
+  function openGuide(sec, colour, L, assetBase, who) {
     var g = sec.guide || {};
     var sh = document.createElement("div");
     sh.className = "th-sheet";
@@ -258,7 +259,7 @@
       return '<div class="th-tip">' + (typeof t === "string" ? esc(t) : esc(t.text) + (t.sub ? "<small>" + esc(t.sub) + "</small>" : "")) + "</div>";
     }).join("");
     sh.innerHTML = '<div class="th-sh"><button type="button" aria-label="' + esc(L.back) + '">' + ICON.back + "</button><b>" + esc(g.title || L.guide) + "</b></div>" +
-      '<div class="th-gh"><img alt="" src="' + esc(assetBase) + 'assets/characters/amy/amy-wave.webp"><div><h2>' + esc(sec.title) + "</h2>" +
+      '<div class="th-gh"><img alt="" src="' + esc(assetBase) + 'assets/characters/' + who + "/" + who + '-wave.webp"><div><h2>' + esc(sec.title) + "</h2>" +
       (g.intro ? "<p>" + esc(g.intro) + "</p>" : "") + "</div></div>" +
       (phrases ? '<div class="th-gs">' + esc(L.keyPhrases) + "</div>" + phrases : "") +
       (tips ? '<div class="th-gs">' + esc(L.tips) + "</div>" + tips : "");
@@ -339,14 +340,16 @@
           "</button></div>";
         gi++;
       });
-      // Amy stands beside the unit the learner is in (the one holding the next
-      // lesson, or the first unit when there is none), on the side the path bends away from
-      var here = nodes.some(function (n) { return n.state === "go"; }) ||
-        (si === 0 && !(spec.sections || []).some(function (s) { return (s.nodes || []).some(function (n) { return n.state === "go"; }); }));
-      if (here && nodes.length >= 3) {
-        // full body, pointing at the path: "point" points left, so on the left side she is mirrored
-        h += '<span class="th-amy" data-th="amy" data-flip="' + (flip ? 1 : 0) + '" style="top:118px;' + (flip ? "left:4px" : "right:4px") + '">' +
-          '<img alt="" src="' + esc(assetBase) + 'assets/characters/amy/amy-point.webp"' + (flip ? ' style="transform:scaleX(-1)"' : "") + "></span>";
+      // A character stands beside every unit, the cast taking turns (Amy, Siti, Kumar, Mei Ling,
+      // Mr. Tan, Ali — the people the course sentences talk about; Marco 2026-09-24, like
+      // Duolingo's one character per unit). In the unit the learner is in they point at the
+      // path; elsewhere they just stand there. Mirrored on the left side so they face the path.
+      if (nodes.length >= 3) {
+        var who = CAST[si % CAST.length];
+        var here = nodes.some(function (n) { return n.state === "go"; });
+        var pose = here ? "point" : si === 0 ? "wave" : "idle";
+        h += '<span class="th-amy" data-th="amy" data-who="' + who + '" data-pose="' + pose + '" data-flip="' + (flip ? 1 : 0) + '" style="top:118px;' + (flip ? "left:0" : "right:0") + '">' +
+          '<img alt="" src="' + esc(assetBase) + "assets/characters/" + who + "/" + who + "-" + pose + '.webp"' + (flip ? ' style="transform:scaleX(-1)"' : "") + "></span>";
       }
       h += "</div></section>";
     });
@@ -356,7 +359,7 @@
     var root = el.firstChild;
     // with coach.js on the page she breathes instead of standing still
     if (window.TouchCoach) root.querySelectorAll('[data-th="amy"]').forEach(function (a) {
-      window.TouchCoach.mount(a, { pose: "point", height: 150, mirror: a.dataset.flip === "1" });
+      window.TouchCoach.mount(a, { who: a.dataset.who, pose: a.dataset.pose, height: 150, mirror: a.dataset.flip === "1" });
     });
     place(root.querySelector('[data-th="before"]'), spec.before);
     place(root.querySelector('[data-th="after"]'), spec.after);
@@ -364,7 +367,7 @@
     if (r && r.onClick) root.querySelector('[data-th="review"]').onclick = r.onClick;
     root.querySelectorAll('[data-th="guide"]').forEach(function (b) {
       var si = +b.dataset.s;
-      b.onclick = function (e) { e.stopPropagation(); closePop(root); openGuide(spec.sections[si], colourAt(spec.level, si), L, assetBase); };
+      b.onclick = function (e) { e.stopPropagation(); closePop(root); openGuide(spec.sections[si], colourAt(spec.level, si), L, assetBase, CAST[si % CAST.length]); };
     });
     root.querySelectorAll('[data-th="node"]').forEach(function (b) {
       var sec = spec.sections[+b.dataset.s], n = sec.nodes[+b.dataset.n];

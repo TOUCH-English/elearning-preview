@@ -12,11 +12,16 @@
    the pose changes, a hop when she celebrates), and changing pose IS the
    animation — thinking while you answer, celebrating when you're right.
 
-   The seven pictures were aligned before they came in: the source layout.json
-   (scale + offset per pose) was baked into the files, all seven cropped to the
-   same box, so the feet sit on the same line and any pose can replace any other
-   in the same spot. Files: shared/assets/characters/<who>/<who>-<pose>.webp,
-   702:1300 (width:height), feet 13px above the bottom at full size.
+   The cast (2026-09-25, generated in ChatGPT by Codex from characters-brief):
+   Amy the coach, and the people the course sentences already talk about —
+   Siti, Kumar, Mei Ling, Mr. Tan, Ali — seven poses each, 42 pictures.
+
+   They were aligned before they came in: each source layout.json (scale +
+   offset per pose) was baked into the files, and ALL 42 cropped to one box,
+   centred on the stage's middle, so every character stands on the same line
+   at the same scale and any pose of anyone can replace any other in the same
+   spot. Files: shared/assets/characters/<who>/<who>-<pose>.webp, 924:1324
+   (width:height), feet about 1% above the bottom.
 
    "point" points to the viewer's LEFT; mirror:true makes it point right.
 
@@ -32,7 +37,13 @@
   if (window.TouchCoach) return;
 
   var POSES = ["idle", "wave", "talk", "point", "celebrate", "think", "listen"];
-  var RATIO = 702 / 1300;
+  var RATIO = 924 / 1324;
+  var CAST = ["amy", "siti", "kumar", "meiling", "tan", "ali"];
+  // how the course sentences name them
+  var NAMES = [
+    ["tan", /\bMr\.?\s+Tan\b/i], ["meiling", /\bMei\s*Ling\b/i], ["siti", /\bSiti\b/i],
+    ["kumar", /\bKumar\b/i], ["ali", /\bAli\b/i],
+  ];
 
   // where shared/ is: taken from this script's own address, so it works from any course
   var BASE = (function () {
@@ -64,7 +75,7 @@
   }
 
   function src(who, pose) {
-    who = who || "amy";
+    if (CAST.indexOf(who) < 0) who = "amy";
     if (POSES.indexOf(pose) < 0) pose = "idle";
     return BASE + "assets/characters/" + who + "/" + who + "-" + pose + ".webp";
   }
@@ -123,5 +134,17 @@
     return api;
   }
 
-  window.TouchCoach = { mount: mount, src: src, poses: POSES.slice(), ratio: RATIO, preload: preload };
+  /* Which cast member a piece of text is about, or null. `skip` = names that belong
+     to the learner (a student called Ali is not the Ali of the course). */
+  function whoIn(text, skip) {
+    text = String(text || "");
+    var own = (skip || []).map(function (n) { return String(n || "").toLowerCase().trim(); }).filter(Boolean);
+    for (var i = 0; i < NAMES.length; i++) {
+      var m = text.match(NAMES[i][1]);
+      if (m && own.indexOf(m[0].toLowerCase().replace(/^mr\.?\s+/, "")) < 0 && own.indexOf(m[0].toLowerCase()) < 0) return NAMES[i][0];
+    }
+    return null;
+  }
+
+  window.TouchCoach = { mount: mount, src: src, poses: POSES.slice(), cast: CAST.slice(), ratio: RATIO, preload: preload, whoIn: whoIn };
 })();

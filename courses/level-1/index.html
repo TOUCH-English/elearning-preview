@@ -1348,7 +1348,16 @@ function coachStep(){
  if(bubbleAmy){
   slot.remove();
   const k = P && P.steps && P.steps[P.idx] && P.steps[P.idx].kind;
-  COACH = TouchCoach.mount(bubbleAmy, COACH_POSE[k] === "listen" ? { pose: "listen", height: 150 } : { pose: "point", mirror: true, height: 150 });
+  // the person the sentence is about steps in (Mr. Tan for "Good morning, Mr. Tan."),
+  // never the learner's own name; otherwise Amy points at the bubble
+  const bubble = document.querySelector("#stepbox .bubble");
+  const own = (window.TouchVoice && TouchVoice.names) || [];
+  const who = TouchCoach.whoIn(bubble ? bubble.textContent : "", own.concat([S && S.name]));
+  const greet = bubble && /\b(hello|hi|good (morning|afternoon|evening)|goodbye|bye)\b/i.test(bubble.textContent);
+  COACH = TouchCoach.mount(bubbleAmy,
+    COACH_POSE[k] === "listen" ? { who: who || "amy", pose: "listen", height: 150 }
+    : who ? { who, pose: greet ? "wave" : "talk", height: 150 }
+    : { pose: "point", mirror: true, height: 150 });
   return;
  }
  const st = P && P.steps && P.steps[P.idx];
