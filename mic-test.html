@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Mic Delay Test</title>
+<!--
+  录音延迟检测 —— 在学生的手机上量出「按下录音到真的收到声音」差多少。
+
+  课程的录音流程（shared/record.js，Pre-Beginner / Level 1 / Level 2 各自一份同样的）：
+  按录音 → 开麦克风 → 3·2·1 倒数（每格 650ms）→ 录音器启动 → 400ms 後显示「现在说」。
+  那 400ms（HEAD_BUF）是赌「录音器启动後 400ms 内一定已经在收音」。这一页量的就是这个赌注：
+  录下来的档案开头有多长是完全没有讯号的（麦克风还没真的通），以及拍手的声音在档案里的位置。
+
+  流程和课程一模一样（同样的倒数、同样的 400ms），只多记时间、多分析录音档。
+  不存任何东西、不上传：结果只显示在画面上。
+-->
+<style>
+:root{--brand:#15357B;--ink:#16202E;--muted:#5C6779;--line:#DFE5F0;--ok:#3C8E6F;--bad:#9E2E47;--warn:#B87420}
+*{box-sizing:border-box}
+body{margin:0;background:#EEF2FB;color:var(--ink);font-family:-apple-system,'PingFang SC',sans-serif;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 6px}
+p{color:var(--muted);line-height:1.55;font-size:15px;margin:6px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px}
+button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:14px 20px;width:100%;background:var(--brand);color:#fff;font-size:17px}
+button:disabled{opacity:.45}
+button.sec{background:#fff;color:var(--brand);border:1px solid var(--line);margin-top:10px}
+#stat{font-size:28px;font-weight:700;text-align:center;min-height:44px;margin:14px 0 4px}
+#stat.go{color:var(--ok)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.row:first-child{border-top:0}
+.row b{white-space:nowrap}
+.verdict{font-size:17px;font-weight:700;margin-top:10px;line-height:1.5}
+.good{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+canvas{width:100%;height:90px;display:block;margin-top:10px;border-radius:12px;background:#F4F6FB}
+ol{padding-left:20px;color:var(--muted);line-height:1.6;font-size:15px;margin:6px 0}
+small{color:var(--muted)}
+</style>
+</head>
+<body>
+<h1>录音延迟检测</h1>
+<p>量出这台手机「按下录音」到「真的开始收音」差多少，跟课程里的录音流程一模一样。</p>
+<div class="card">
+ <ol>
+  <li>按「开始」，会跟课程一样倒数 3·2·1。</li>
+  <li>看到 <b style="color:var(--ok)">🟢 现在拍手</b> 的一瞬间，<b>马上拍一下手</b>，然後说「one two three」。</li>
+  <li>说完按「停止」。结果会出现在下面。</li>
+ </ol>
+ <p><small>请做 2～3 次：第一次、连续第二次，还有（如果平时会用）戴着蓝牙耳机做一次。</small></p>
+ <div id="stat"></div>
+ <button id="go">开始</button>
+ <button id="stop" class="sec" disabled>停止</button>
+ <button id="play" class="sec" disabled>▶ 听刚才录的</button>
+</div>
+<div id="out"></div>
+
+<script>
+"use strict";
+const CD_TICK = 650, HEAD_BUF = 400, TAIL_BUF = 450;   // 与 shared/record.js 相同
+const $ = id => document.getElementById(id);
+let run = 0, blob = null, st = null;
+
+function fmt(ms){ return Math.round(ms) + " ms"; }
+
+$("go").onclick = async () => {
+  $("go").disabled = true; $("play").disabled = true; blob = null;
+  const T = { press: performance.now() };
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { $("stat").textContent = "没有麦克风权限"; $("go").disabled = false; return; }
+  T.mic = performance.now();
+  const track = stream.getAudioTracks()[0];
+  const label = track && track.label || "";
+  let n = 3; $("stat").className = ""; $("stat").textContent = "准备… " + n;
+  await new Promise(res => {
+    const tick = () => { n--; if (n > 0) { $("stat").textContent = "准备… " + n; setTimeout(tick, CD_TICK); } else res(); };
+    setTimeout(tick, CD_TICK);
+  });
+  const chunks = [];
+  const rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstart = () => { T.onstart = performance.now(); };
+  const stopped = new Promise(res => rec.onstop = res);
+  T.start = performance.now();
+  rec.start();
+  await new Promise(r => setTimeout(r, HEAD_BUF));
+  T.speak = performance.now();
+  $("stat").className = "go"; $("stat").textContent = "🟢 现在拍手";
+  $("stop").disabled = false;
+  await new Promise(res => $("stop").onclick = res);
+  $("stop").disabled = true; $("stat").className = ""; $("stat").textContent = "分析中…";
+  await new Promise(r => setTimeout(r, TAIL_BUF));
+  rec.stop(); await stopped;
+  stream.getTracks().forEach(t => t.stop());
+  blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
+  run++;
+  await analyse(blob, T, label, rec.mimeType);
+  $("stat").textContent = ""; $("go").disabled = false; $("play").disabled = false; $("go").textContent = "再测一次";
+};
+
+$("play").onclick = () => { if (blob) new Audio(URL.createObjectURL(blob)).play(); };
+
+async function analyse(b, T, label, mime) {
+  const box = document.createElement("div"); box.className = "card";
+  let pcm, rate, dur;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = await ctx.decodeAudioData(await b.arrayBuffer());
+    pcm = buf.getChannelData(0); rate = buf.sampleRate; dur = buf.duration * 1000;
+    ctx.close && ctx.close();
+  } catch (e) {
+    box.innerHTML = `<b>第 ${run} 次</b><p class="bad">这台浏览器解不开录音档（${mime||"?"}），没办法分析。</p>`;
+    $("out").prepend(box); return;
+  }
+  // 10ms 一格的音量
+  const win = Math.round(rate / 100), lv = [];
+  for (let i = 0; i < pcm.length; i += win) {
+    let s = 0, m = 0; const e = Math.min(pcm.length, i + win);
+    for (let j = i; j < e; j++) { const a = Math.abs(pcm[j]); s += a * a; if (a > m) m = a; }
+    lv.push({ rms: Math.sqrt(s / (e - i)), peak: m });
+  }
+  // 1) 档案开头完全没讯号（麦克风还没通）的长度：连续 peak 近乎 0
+  let dead = 0; while (dead < lv.length && lv[dead].peak < 2e-4) dead++;
+  const deadMs = dead * 10;
+  // 2) 拍手：底噪之上第一个明显的峰
+  const quiet = lv.slice(dead, dead + 15).map(x => x.rms).sort((a, z) => a - z);
+  const floor = quiet.length ? quiet[Math.floor(quiet.length / 2)] : 0;
+  const thr = Math.max(floor * 6, 0.02);
+  const from = Math.max(dead, Math.round((T.speak - T.start) / 10) - 30);   // 提示前 300ms 起找，避开倒数时的杂音
+  let clap = -1; for (let i = from; i < lv.length; i++) if (lv[i].rms > thr) { clap = i; break; }
+  const clapMs = clap < 0 ? null : clap * 10;
+  // 档案的 0 点 ≈ rec.start()；「现在拍手」出现在 HEAD_BUF 之後
+  const speakAt = T.speak - T.start;
+  const react = clapMs == null ? null : clapMs - speakAt;   // 拍手离「现在拍手」多久（含人的反应时间）
+
+  let verdict, cls;
+  if (clapMs == null) { verdict = "录音里找不到拍手声 —— 可能拍太小声，或是声音整段没收到。请听一下回放。"; cls = "warn"; }
+  else if (deadMs >= speakAt) { verdict = `有问题：录音器启动後 ${fmt(deadMs)} 才真的收到声音，比课程预留的 ${HEAD_BUF} ms 还久。学生一看到「现在说」马上开口，前 ${fmt(deadMs - speakAt)} 的声音会被吃掉 —— 就是「慢一拍」。`; cls = "bad"; }
+  else if (react < 100) { verdict = `有问题：拍手出现在提示之後只有 ${fmt(react)}，人不可能这么快（一般要 200～350 ms）。代表录音档的开头被手机丢掉了，大约少了 ${fmt(250 - react)} —— 学生一开口的那一段就会不见，这就是「慢一拍」。`; cls = "bad"; }
+  else if (deadMs >= speakAt - 100) { verdict = `很勉强：${fmt(deadMs)} 才收到声音，只比预留的 ${HEAD_BUF} ms 少一点，快一点开口就会被切到。`; cls = "warn"; }
+  else { verdict = `正常：录音器 ${fmt(deadMs)} 内就在收音，比「现在拍手」早，开头不会被切掉。`; cls = "good"; }
+
+  box.innerHTML = `<b>第 ${run} 次</b>
+   <div class="row"><span>按下到麦克风打开</span><b>${fmt(T.mic - T.press)}</b></div>
+   <div class="row"><span>录音开头完全没声音的长度</span><b>${fmt(deadMs)}</b></div>
+   <div class="row"><span>「现在拍手」出现在录音的第</span><b>${fmt(speakAt)}</b></div>
+   <div class="row"><span>拍手声在录音的第</span><b>${clapMs == null ? "—" : fmt(clapMs)}</b></div>
+   <div class="row"><span>你的反应时间（拍手 − 提示）</span><b>${react == null ? "—" : fmt(react)}</b></div>
+   <div class="row"><span>录音总长</span><b>${fmt(dur)}</b></div>
+   <div class="verdict ${cls}">${verdict}</div>
+   <canvas></canvas>
+   <p><small>麦克风：${label || "（没有名字）"} · 格式 ${mime || "?"} · ${navigator.userAgent.replace(/^.*?\(([^)]*)\).*$/, "$1")}</small></p>`;
+  $("out").prepend(box);
+  draw(box.querySelector("canvas"), lv, dead, clap, Math.round(speakAt / 10));
+}
+
+function draw(cv, lv, dead, clap, speak) {
+  const W = cv.width = cv.clientWidth * 2, H = cv.height = 180, g = cv.getContext("2d");
+  const max = Math.max(...lv.map(x => x.peak), 0.01), bw = W / lv.length;
+  if (dead) { g.fillStyle = "rgba(158,46,71,.15)"; g.fillRect(0, 0, dead * bw, H); }
+  g.fillStyle = "#15357B";
+  lv.forEach((x, i) => { const h = Math.max(1, x.peak / max * (H - 10)); g.fillRect(i * bw, (H - h) / 2, Math.max(1, bw - .5), h); });
+  const mark = (i, c) => { g.fillStyle = c; g.fillRect(i * bw, 0, 3, H); };
+  mark(speak, "#3C8E6F"); if (clap >= 0) mark(clap, "#B87420");
+}
+</script>
+</body>
+</html>
