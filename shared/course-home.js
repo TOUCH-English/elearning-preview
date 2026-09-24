@@ -128,7 +128,8 @@
     ".th-tag{position:absolute;left:50%;top:-14px;transform:translateX(-50%);white-space:nowrap;background:#fff;color:color-mix(in srgb,var(--c) 75%,#000);font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;box-shadow:0 2px 6px rgba(20,33,50,.16);z-index:2}",
     ".th-bub{position:absolute;left:50%;top:-54px;transform:translateX(-50%);background:#fff;border:2px solid #E3E8EF;color:color-mix(in srgb,var(--c) 80%,#000);font-weight:800;font-size:14px;letter-spacing:.03em;padding:6px 13px;border-radius:12px;white-space:nowrap;z-index:3;animation:th-bob 2.4s ease-in-out infinite}",
     ".th-bub::after{content:'';position:absolute;left:50%;bottom:-7px;width:11px;height:11px;margin-left:-6px;background:#fff;border:2px solid #E3E8EF;border-top:0;border-left:0;transform:rotate(45deg)}",
-    ".th-amy{position:absolute;width:112px;pointer-events:none;z-index:1;clip-path:inset(0 0 24% 0)}",
+    ".th-amy{position:absolute;pointer-events:none;z-index:1;line-height:0}",
+    ".th-amy img{height:150px;width:auto}",
     // popover
     ".th-pop{position:absolute;left:14px;right:14px;z-index:30;border-radius:18px;padding:15px 16px 16px;color:var(--ink);background:var(--c);background-image:linear-gradient(168deg,rgba(255,255,255,.3),rgba(255,255,255,0) 50%);box-shadow:0 5px 0 color-mix(in srgb,var(--c) 70%,#000),0 18px 34px -10px rgba(20,33,50,.35);animation:th-pop .18s ease-out both}",
     ".th-pop::before{content:'';position:absolute;top:-8px;left:var(--ax);width:16px;height:16px;margin-left:-8px;background:var(--c);transform:rotate(45deg);border-radius:3px}",
@@ -147,7 +148,7 @@
     ".th-sh button svg{width:20px;height:20px}",
     ".th-sh b{font-family:var(--te-font-display,'Sora',sans-serif);font-size:16px}",
     ".th-gh{display:flex;gap:14px;align-items:center;margin:0 16px;padding:10px 0 16px;border-bottom:2px solid #EEF1F5}",
-    ".th-gh img{width:70px;height:70px;border-radius:50%;object-fit:cover;object-position:50% 8%;background:color-mix(in srgb,var(--c) 22%,#fff);flex:none}",
+    ".th-gh img{width:70px;height:70px;border-radius:50%;object-fit:cover;object-position:50% 4%;background:color-mix(in srgb,var(--c) 22%,#fff);flex:none}",
     ".th-gh h2{margin:0;font-family:var(--te-font-display,'Sora',sans-serif);font-size:19px;line-height:1.25}",
     ".th-gh p{margin:4px 0 0;font-size:13.5px;color:#5C6779;line-height:1.45}",
     ".th-gs{margin:18px 16px 10px;font-weight:800;font-size:13px;letter-spacing:.04em;color:color-mix(in srgb,var(--c) 80%,#000)}",
@@ -257,7 +258,7 @@
       return '<div class="th-tip">' + (typeof t === "string" ? esc(t) : esc(t.text) + (t.sub ? "<small>" + esc(t.sub) + "</small>" : "")) + "</div>";
     }).join("");
     sh.innerHTML = '<div class="th-sh"><button type="button" aria-label="' + esc(L.back) + '">' + ICON.back + "</button><b>" + esc(g.title || L.guide) + "</b></div>" +
-      '<div class="th-gh"><img alt="" src="' + esc(assetBase) + 'assets/characters/amy-coach.webp"><div><h2>' + esc(sec.title) + "</h2>" +
+      '<div class="th-gh"><img alt="" src="' + esc(assetBase) + 'assets/characters/amy/amy-wave.webp"><div><h2>' + esc(sec.title) + "</h2>" +
       (g.intro ? "<p>" + esc(g.intro) + "</p>" : "") + "</div></div>" +
       (phrases ? '<div class="th-gs">' + esc(L.keyPhrases) + "</div>" + phrases : "") +
       (tips ? '<div class="th-gs">' + esc(L.tips) + "</div>" + tips : "");
@@ -343,8 +344,9 @@
       var here = nodes.some(function (n) { return n.state === "go"; }) ||
         (si === 0 && !(spec.sections || []).some(function (s) { return (s.nodes || []).some(function (n) { return n.state === "go"; }); }));
       if (here && nodes.length >= 3) {
-        h += '<img class="th-amy" alt="" src="' + esc(assetBase) + 'assets/characters/amy-coach.webp" style="top:150px;' +
-          (flip ? "left:0;transform:scaleX(-1)" : "right:0") + '">';
+        // full body, pointing at the path: "point" points left, so on the left side she is mirrored
+        h += '<span class="th-amy" data-th="amy" data-flip="' + (flip ? 1 : 0) + '" style="top:118px;' + (flip ? "left:4px" : "right:4px") + '">' +
+          '<img alt="" src="' + esc(assetBase) + 'assets/characters/amy/amy-point.webp"' + (flip ? ' style="transform:scaleX(-1)"' : "") + "></span>";
       }
       h += "</div></section>";
     });
@@ -352,6 +354,10 @@
 
     el.innerHTML = h;
     var root = el.firstChild;
+    // with coach.js on the page she breathes instead of standing still
+    if (window.TouchCoach) root.querySelectorAll('[data-th="amy"]').forEach(function (a) {
+      window.TouchCoach.mount(a, { pose: "point", height: 150, mirror: a.dataset.flip === "1" });
+    });
     place(root.querySelector('[data-th="before"]'), spec.before);
     place(root.querySelector('[data-th="after"]'), spec.after);
     if (g && g.onClick) root.querySelector('[data-th="goal"]').onclick = g.onClick;
