@@ -41,7 +41,7 @@
    放在 TOUCH 平台里（/elearning/…，要登入）的时候：
 
    课程页在 storage.js 之前先载入 <script src="/api/learn/state.js">，
-   它会设好 window.TOUCH_PLATFORM = { student:{id,name,lang}, staff, blobs:{课程id:{…}} }。
+   它会设好 window.TOUCH_PLATFORM = { student:{id,name,nickname,lang}, staff, blobs:{课程id:{…}} }。
    有这个物件，这里就自动：
      (a) localStorage 的 key 加上学生 id：touch:v1:<学生id>:<课程id>
          —— 同一支手机两个学生登入，进度不会混在一起
