@@ -152,35 +152,7 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
   background:#EAF0FB;border:1px solid #C5D2E2;padding:5px 12px;border-radius:99px}
 .hero h1{font-size:27px;margin:12px 0 4px;line-height:1.1}
 .hero p{color:var(--ink-soft);font-weight:600;margin:0;font-size:14px}
-.path{position:relative;padding:22px 0 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.node-wrap{position:relative;width:100%;display:flex;justify-content:center}
-.node-wrap[data-side="l"]{justify-content:flex-start;padding-left:22%}
-.node-wrap[data-side="r"]{justify-content:flex-end;padding-right:22%}
-.node{
-  width:96px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
-  text-align:center;position:relative;
-}
-.node .disc{
-  width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:34px;position:relative;
-  background:linear-gradient(160deg,#FFFFFF,#EEF3FA);border:2px solid var(--line);
-  box-shadow:0 5px 0 #D6DEEA,0 10px 18px rgba(27,36,51,.14),inset 0 2px 0 rgba(255,255,255,.7);
-  transition:transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .14s cubic-bezier(.34,1.56,.64,1);
-}
-.node:active .disc{transform:translateY(4px);box-shadow:0 1px 0 #D6DEEA,0 4px 8px rgba(27,36,51,.16),inset 0 2px 0 rgba(255,255,255,.7)}
-.node.open .disc{border:none;color:#fff;
-  background:linear-gradient(160deg,#3A6094 0%,#1E4296 55%,#15357B 100%);
-  box-shadow:0 5px 0 #16314F,0 11px 20px rgba(21,53,123,.30),inset 0 2px 0 rgba(255,255,255,.22)}
-.node.open:active .disc{transform:translateY(4px);box-shadow:0 1px 0 #16314F,0 4px 9px rgba(21,53,123,.26),inset 0 2px 0 rgba(255,255,255,.22)}
-.node.done .disc{border:none;color:#fff;
-  background:linear-gradient(160deg,#5BBE9B 0%,#4FAE8A 55%,#3C8E6F 100%);
-  box-shadow:0 5px 0 #2E7459,0 11px 20px rgba(43,108,80,.28),inset 0 2px 0 rgba(255,255,255,.30),0 0 0 4px #D9B56B}
-.node.done:active .disc{transform:translateY(4px);box-shadow:0 1px 0 #2E7459,0 4px 9px rgba(43,108,80,.24),inset 0 2px 0 rgba(255,255,255,.30),0 0 0 4px #D9B56B}
-.node .nm{font-family:var(--te-font-display,'Fredoka');font-weight:600;font-size:13px;line-height:1.15;color:var(--ink);margin-top:2px}
-.node .badge-dot{position:absolute;top:-8px;right:-2px}
-.connector{width:4px;height:30px;border-radius:9px;background:repeating-linear-gradient(180deg,var(--line) 0 6px,transparent 6px 12px)}
-.start-flag{position:absolute;left:50%;transform:translateX(-50%);top:-2px;
-  background:var(--teal);color:#fff;font-family:var(--te-font-display,'Fredoka');font-weight:700;font-size:11px;
-  padding:5px 13px;border-radius:99px;box-shadow:0 2px 6px rgba(21,53,123,.28);letter-spacing:.6px;z-index:10}
+/* course home: drawn by ../../shared/course-home.js (TouchHome); renderMap() sets its sticky offset */
 
 /* ---------- STAGE INTRO / SECTIONS ---------- */
 .topbar{display:flex;align-items:center;gap:10px;padding:12px 16px 4px}
@@ -454,72 +426,6 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
 .ipa-pill{position:relative}
 .ipa-pill.pulse{box-shadow:0 0 0 3px #C5D2E2}
 
-/* COURSE PROGRESS — leading panel (Apple-inspired) */
-.course-progress{position:relative;overflow:hidden;margin-bottom:12px;padding:20px 20px 17px;border:none;
-  border-radius:var(--r-lg);
-  background:linear-gradient(155deg,#274973 0%,#15357B 55%,#172B4C 100%);
-  color:#fff;box-shadow:var(--soft-lg)}
-.course-progress::before{content:"";position:absolute;inset:0;border-radius:inherit;
-  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 38%);pointer-events:none}
-.course-progress::after{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;
-  background:radial-gradient(circle,rgba(217,181,107,.20),rgba(217,181,107,0) 70%);pointer-events:none}
-.cp-top{display:flex;align-items:center;justify-content:space-between;position:relative}
-.cp-label{font-family:var(--te-font-display,'Fredoka');font-weight:500;font-size:13.5px;letter-spacing:.2px;color:#CBD8E8}
-.cp-icon{font-size:20px;opacity:.95}
-.cp-pct{font-family:var(--te-font-display,'Fredoka');font-weight:700;font-size:44px;line-height:1.04;margin-top:5px;letter-spacing:-.5px;position:relative}
-.cp-pct span{font-size:22px;margin-left:2px;color:#E2C27E;font-weight:600}
-.cp-sub{font-size:12.5px;color:#AFC0D6;font-weight:600;margin-top:0}
-.cp-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden;margin:14px 0 14px;
-  box-shadow:inset 0 1px 1.5px rgba(0,0,0,.2);position:relative}
-.cp-bar > i{display:block;height:100%;border-radius:99px;
-  background:linear-gradient(90deg,#D9B56B,#E9C988);
-  transition:width .7s cubic-bezier(.33,1,.68,1)}
-.cp-stats{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#AFC0D6;font-weight:600;position:relative}
-.cp-stats b{color:#fff;font-family:var(--te-font-display,'Fredoka');font-weight:600;font-size:14px;display:block;margin-bottom:1px}
-.cp-stats span{text-align:center;flex:1}
-.cp-stats span+span{border-left:1px solid rgba(255,255,255,.12)}
-
-/* CONTINUE LEARNING card */
-.continue-card{display:flex;align-items:center;gap:14px;padding:14px 15px;margin-bottom:12px;cursor:pointer;
-  border-radius:var(--r-md);border:1px solid var(--hair);
-  transition:transform .18s cubic-bezier(.33,1,.68,1), box-shadow .18s}
-.continue-card:hover{transform:translateY(-1px);box-shadow:var(--soft-lg)}
-.continue-card:active{transform:translateY(0)}
-.continue-card .cc-badge{width:50px;height:50px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:25px;
-  background:linear-gradient(160deg,#EEF3F9,#E0E8F2);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 1px 2px rgba(27,36,51,.05)}
-.continue-card .cc-meta{flex:1;min-width:0}
-.continue-card .cc-kicker{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--teal);opacity:.85}
-.continue-card .cc-meta b{display:block;font-family:var(--te-font-display,'Fredoka');font-size:16px;color:var(--ink);line-height:1.15;margin:1px 0;letter-spacing:-.2px}
-.continue-card .cc-meta span{font-size:12.5px;color:var(--ink-soft);font-weight:600}
-.continue-card .cc-go{flex:none;font-family:var(--te-font-display,'Fredoka');font-weight:600;font-size:13px;color:#fff;
-  padding:9px 16px;border-radius:10px;background:linear-gradient(180deg,#1E4296,var(--teal));
-  box-shadow:0 1px 3px rgba(20,38,64,.26),inset 0 1px 0 rgba(255,255,255,.16)}
-
-.goal-card{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
-.goal-ring{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;
-  background:conic-gradient(var(--sun) var(--g,0deg), #E4E9F0 0deg)}
-.goal-ring span{width:40px;height:40px;border-radius:50%;background:#fff;display:grid;place-items:center;
-  font-family:var(--te-font-display,'Fredoka');font-weight:700;font-size:13px;color:var(--sun-d)}
-.goal-meta b{font-family:var(--te-font-display,'Fredoka');font-size:15px;display:block}
-.goal-meta span{font-size:13px;color:var(--ink-soft);font-weight:700}
-.goal-meta small{display:block;font-size:11px;color:var(--sky-d);font-weight:700;margin-top:2px}
-
-/* today's review card (PRIORITY 3) */
-.review-card{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;
-  background:linear-gradient(120deg,#F7EBEE,#F0DDE3);border:1px solid #E3C4CD;
-  transition:transform .12s, box-shadow .12s}
-.review-card:active{transform:scale(.985)}
-.review-card .rv-ic{width:46px;height:46px;border-radius:14px;flex:none;display:grid;place-items:center;
-  font-size:22px;background:#fff;box-shadow:0 1px 4px rgba(139,30,63,.16)}
-.review-card .rv-meta b{font-family:var(--te-font-display,'Fredoka');font-size:15px;display:block;color:var(--coral-d)}
-.review-card .rv-meta span{font-size:12.5px;color:var(--ink-soft);font-weight:700}
-.review-card .rv-go{margin-left:auto;width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;
-  background:var(--coral);color:#fff;font-size:14px;box-shadow:0 2px 6px rgba(139,30,63,.26)}
-.review-card.done{cursor:default;background:#E6F4EE;border-color:#C5D2E2}
-.review-card.done:active{transform:none}
-.review-card.done .rv-ic{color:var(--teal-dd);box-shadow:0 1px 3px rgba(21,53,123,.12)}
-.review-card.done .rv-meta b{color:var(--teal-dd)}
-
 /* in-lesson listening exercise */
 .big-listen{display:grid;place-items:center;margin:22px 0 6px}
 .listen-btn{font-family:var(--te-font-display,'Fredoka');font-weight:700;font-size:18px;color:#fff;background:var(--sky);border:none;
@@ -557,9 +463,6 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
 .q-tag b{color:var(--coral-d);text-transform:uppercase;letter-spacing:.5px;font-size:11px;margin-right:4px}
 /* learn-page rule cards (endings, stress) */
 .rules{font-size:14.5px;line-height:1.65;font-weight:600;color:var(--ink)}
-/* map: a unit added after the learner had started */
-.stage-new{display:table;margin:4px auto 0;background:var(--sun);color:#5A3A1E;font-family:var(--te-font-display,'Fredoka');
-  font-weight:700;font-size:10.5px;letter-spacing:.6px;padding:3px 8px;border-radius:99px;box-shadow:0 2px 6px rgba(190,150,72,.35)}
 
 /* mobile polish */
 *{ -webkit-touch-callout:none }
@@ -584,6 +487,8 @@ h1,h2,h3,.disp{font-family:var(--te-font-display,'Fredoka',sans-serif);font-weig
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
+<!-- 课程首页的共用版面（进度卡、继续卡、路线图），见档头说明 -->
+<script src="../../shared/course-home.js"></script>
 <!-- 「开口说」步骤用的共用录音模组（倒数 → 说 → 停 → 回放，录音只存在这台装置的 IndexedDB） -->
 <script src="../../shared/record.js"></script>
 <script>
@@ -2554,30 +2459,36 @@ function renderNav(){
 /* ---------- 10a. STAGE MAP ---------- */
 
 
+// The course home is drawn by the shared layout (../../shared/course-home.js,
+// Marco 2026-09-24: every course opens on Pre-Beginner's layout). This function
+// only decides IPA's content — which stage is next, what a tap opens — and hands
+// the layout translated strings.
+//
+// Band = a stage, in the course's display order. Disc = a step of that stage as
+// the stage flow runs it (Watch → Learn → Exercises); the exercises are the
+// stage's test, so they are the BOSS disc. Watch appears only when the stage has
+// a video in the current language (the same test startStage() uses). Progress is
+// saved per stage, not per step, so a step's state is read from the stage:
+// completed → every step done; practised (a run below the pass mark) → Watch and
+// Learn done, the exercises still to pass.
+function stageSteps(s){
+  const steps = [];
+  if(s.video && ytId(videoUrl(s.video.key))) steps.push({step:"video", label:L("Watch","看影片","Tonton")});
+  if(s.learn) steps.push({step:"learn", label:L("Learn","学","Belajar")});
+  steps.push({step:"quiz", label:L("Exercises","练习","Latihan"), boss:true});
+  return steps.map((x,i)=>Object.assign(x, {label:`${i+1}. ${x.label}`}));
+}
+// open a stage at one of its steps; "video" (or the first step) is the ordinary entry
+function openStageAt(id, step){
+  startStage(id);
+  if(!session || session.stageId!==id) return;
+  if(step==="learn" && session.step==="video"){ session.step="learn"; render(); window.scrollTo(0,0); }
+  else if(step==="quiz" && session.step!=="quiz"){ session.step="quiz"; session.qi=0; S.combo=0; renderHUD(); render(); window.scrollTo(0,0); }
+}
+// daily goal: tap the home card to step 20 → 50 → 100 → 20
+function cycleGoal(){ const order=[20,50,100]; S.dailyGoal = order[(order.indexOf(S.dailyGoal)+1)%order.length]; save(); renderHUD(); renderMap(); }
 function renderMap(){
-  let nodes="";
   const hadOldProgress = ["s1","s2","s3","s4"].some(id=>S.stages[id]?.completed);
-  const firstIncomplete = COURSE.find(s=>!S.stages[s.id]?.completed);
-  COURSE.forEach((s,i)=>{
-    const st = S.stages[s.id]||{};
-    const done = st.completed;
-    const cls = done?"done":"open";          // adult system: no locked state
-    const side = i%2===0 ? "c" : (i%4===1?"l":"r");
-    const badgeDot = done && BADGES[s.reward.badge] ? `<span class="badge-dot">${badgeMedal(BADGES[s.reward.badge]).replace('class="medal ','class="medal sm ')}</span>` : "";
-    const start = (firstIncomplete && firstIncomplete.id===s.id) ? `<span class="start-flag">${L("START","从这里","MULA")}</span>` : "";
-    // a unit added after this learner had already passed stages of the old course
-    const fresh = s.isNew && !done && hadOldProgress ? `<span class="stage-new">${L("NEW","新","BARU")}</span>` : "";
-    const checkSVG = '<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 18 19 6"/></svg>';
-    const face = done ? checkSVG : s.icon;
-    nodes += (i>0?`<div class="connector"></div>`:"") + `
-      <div class="node-wrap" data-side="${i===0?'c':(i%2?'l':'r')}">
-        <div class="node ${cls}" data-action="openStage" data-id="${s.id}">
-          ${start}${badgeDot}
-          <div class="disc">${face}</div>
-          <div class="nm">${trStage(s.title)}${fresh}</div>
-        </div>
-      </div>`;
-  });
   const goalPct = Math.min(100, Math.round((S.todayXP/Math.max(1,S.dailyGoal))*100));
   // COURSE PROGRESS — computed from completed stages (display only, no logic change)
   const totalStages = COURSE.length;
@@ -2588,68 +2499,32 @@ function renderMap(){
                  || COURSE.find(s=>!S.stages[s.id]?.completed) || COURSE[COURSE.length-1];
   const allDone = doneStages===totalStages;
   const isNew = !Object.keys(S.stages).length;          // never finished a round of anything
-  const progressCard = `
-    <div class="card course-progress">
-      <div class="cp-top">
-        <div class="cp-label">${L("Course Progress","课程进度","Kemajuan Kursus")}</div>
-        <div class="cp-icon">🎯</div>
-      </div>
-      <div class="cp-pct">${coursePct}<span>%</span></div>
-      <div class="cp-sub">${L("Complete","完成","Selesai")}</div>
-      <div class="cp-bar"><i style="width:${coursePct}%"></i></div>
-      <div class="cp-stats">
-        <span><b>${S.xp}</b> ${L("XP earned","XP 累积","XP dikumpul")}</span>
-        <span><b>${doneStages}/${totalStages}</b> ${L("stages","关","peringkat")}</span>
-        <span><b>🔥 ${S.streak}</b> ${L("day streak","天连续","hari berturut")}</span>
-      </div>
-    </div>`;
-  const continueCard = `
-    <div class="card continue-card" ${allDone?'':`data-action="openStage" data-id="${nextStage.id}"`}>
-      <div class="cc-badge">${allDone?'🏆':nextStage.icon}</div>
-      <div class="cc-meta">
-        <div class="cc-kicker">${allDone?L("Course complete","课程完成","Kursus selesai"):(isNew?L("Start learning","开始学","Mula belajar"):(S.courseDone&&nextStage.isNew)?L("New unit","新单元","Unit baharu"):L("Continue learning","继续学","Sambung belajar"))}</div>
-        <b>${trStage(nextStage.title)}</b>
-        <span>${allDone
-          ? L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")
-          : isNew
-              ? L("Start with the first stage","从第一关开始","Mulakan dengan peringkat pertama")
-              : (S.courseDone && nextStage.isNew && !S.stages[nextStage.id]?.practised)
-                ? L("Added after you finished the course — your trophy stays.","你完成课程之后才加的新单元 —— 奖杯照样是你的。","Ditambah selepas anda tamatkan kursus — trofi anda kekal.")
-              : S.stages[nextStage.id]?.practised
-                ? L(`Practised — reach ${Math.round(PASS*100)}% to complete it`,`练习过 —— 答对 ${Math.round(PASS*100)}% 就完成`,`Sudah berlatih — capai ${Math.round(PASS*100)}% untuk selesai`)
-                : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti")}</span>
-      </div>
-      ${allDone?'':`<div class="cc-go">${isNew?L("Start","开始","Mula"):L("Continue","继续","Teruskan")}</div>`}
-    </div>`;
-  const goalCard = `
-    <div class="card goal-card" data-action="cycleGoal">
-      <div class="goal-ring" style="--g:${goalPct*3.6}deg"><span>${goalPct}%</span></div>
-      <div class="goal-meta">
-        <b>${L("Daily Goal","每日目标","Matlamat Harian")} · ${S.dailyGoal} XP</b>
-        <span>${S.todayXP>=S.dailyGoal
-          ? L("Done for today — amazing! 🎉","今天的目标达成了 —— 很棒！🎉","Selesai untuk hari ini — hebat! 🎉")
-          : `${S.dailyGoal-S.todayXP} ${L("XP to go today","XP 就达标了","XP lagi hari ini")}`}</span>
-        <small>${L("Tap to change goal (20 / 50 / 100)","点一下换目标（20 / 50 / 100）","Ketik untuk tukar matlamat (20 / 50 / 100)")}</small>
-      </div>
-    </div>`;
-  // PRIORITY 3 — Today's Review card (shows a completed state when empty)
+
+  const sections = COURSE.map((s,i)=>{
+    const st = S.stages[s.id]||{};
+    const steps = stageSteps(s);
+    const isNext = !allDone && nextStage.id===s.id;
+    // the step to start from: the exercises once the stage has been practised, else the first step
+    const goIdx = isNext ? (st.practised ? steps.length-1 : 0) : -1;
+    // a unit added after this learner had already passed stages of the old course
+    const fresh = s.isNew && !st.completed && hadOldProgress;
+    const nodes = steps.map((x,j)=>{
+      const done = st.completed || (st.practised && !x.boss);
+      return {
+        label:x.label, boss:!!x.boss,
+        state: done ? "done" : (j===goIdx ? "go" : "avail"),   // adult system: no locked state
+        practised: x.boss && !st.completed && !!st.practised,
+        flag: j===goIdx ? L("START","从这里","MULA") : "",
+        tag: fresh && j===0 ? L("NEW","新","BARU") : "",
+        onClick: ()=>openStageAt(s.id, x.step)
+      };
+    });
+    const n = nodes.filter(x=>x.state==="done").length;
+    const kicker = i===0 ? L("Start here","从这里开始","Mula di sini") : L(`Stage ${i}`,`第 ${i} 关`,`Peringkat ${i}`);
+    return { kicker:`${kicker} · ${n}/${nodes.length}`, title:trStage(s.title), icon:s.icon, nodes };
+  });
+
   const reviewCount = reviewPoolCount();
-  const reviewCard = reviewCount>0 ? `
-    <div class="card review-card" data-action="startReview">
-      <div class="rv-ic">🔁</div>
-      <div class="rv-meta">
-        <b>${L("Today\u2019s Review","今天的复习","Ulang Kaji Hari Ini")}</b>
-        <span>${L(`${reviewCount} question${reviewCount>1?"s":""}`,`${reviewCount} 题`,`${reviewCount} soalan`)} — ${L("a quick 2-minute warm-up.","两分钟热身。","pemanasan 2 minit.")}</span>
-      </div>
-      <div class="rv-go">▶</div>
-    </div>` : `
-    <div class="card review-card done">
-      <div class="rv-ic">✓</div>
-      <div class="rv-meta">
-        <b>${L("Today\u2019s Review","今天的复习","Ulang Kaji Hari Ini")}</b>
-        <span>${L("All caught up — no review needed right now. Nice work!","全部跟上了 —— 现在不用复习。做得好！","Semua sudah dikejar — tiada ulang kaji sekarang. Syabas!")}</span>
-      </div>
-    </div>`;
   $screen().innerHTML = `
     <div class="hero">
       ${window.TouchNav && !TouchNav.embedded ? `<div style="text-align:left">${TouchNav.html()}</div>` : ""}
@@ -2657,9 +2532,62 @@ function renderMap(){
       <h1>IPA Pronunciation Course</h1>
       <p>${L("Speak clearly. Learn by playing. One sound at a time.","把音发清楚。玩着学。一次一个音。","Sebut dengan jelas. Belajar sambil bermain. Satu bunyi pada satu masa.")}</p>
     </div>
-    <div class="pad" style="padding-bottom:4px">${progressCard}${continueCard}${goalCard}${reviewCard}</div>
-    <div class="path pad" style="padding-top:6px">${nodes}</div>
+    <div class="pad" id="ipaHome"></div>
     <div class="fineprint">${L("Progress saves automatically","进度会自动存起来","Kemajuan disimpan secara automatik")}</div>`;
+  const home = document.getElementById("ipaHome");
+  const root = TouchHome.render(home, {
+    progress:{
+      label:L("Course Progress","课程进度","Kemajuan Kursus"), pct:coursePct, sub:L("Complete","完成","Selesai"),
+      stats:[
+        {v:S.xp, l:L("XP earned","XP 累积","XP dikumpul")},
+        {v:`${doneStages}/${totalStages}`, l:L("stages","关","peringkat")},
+        {v:`🔥 ${S.streak}`, l:L("day streak","天连续","hari berturut")}
+      ]
+    },
+    cont:{
+      icon: allDone ? "🏆" : nextStage.icon,
+      kicker: allDone ? L("Course complete","课程完成","Kursus selesai")
+            : isNew ? L("Start learning","开始学","Mula belajar")
+            : (S.courseDone && nextStage.isNew) ? L("New unit","新单元","Unit baharu")
+            : L("Continue learning","继续学","Sambung belajar"),
+      title: trStage(nextStage.title),
+      sub: allDone
+        ? L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")
+        : isNew
+            ? L("Start with the first stage","从第一关开始","Mulakan dengan peringkat pertama")
+            : (S.courseDone && nextStage.isNew && !S.stages[nextStage.id]?.practised)
+              ? L("Added after you finished the course — your trophy stays.","你完成课程之后才加的新单元 —— 奖杯照样是你的。","Ditambah selepas anda tamatkan kursus — trofi anda kekal.")
+            : S.stages[nextStage.id]?.practised
+              ? L(`Practised — reach ${Math.round(PASS*100)}% to complete it`,`练习过 —— 答对 ${Math.round(PASS*100)}% 就完成`,`Sudah berlatih — capai ${Math.round(PASS*100)}% untuk selesai`)
+              : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti"),
+      go: allDone ? "🎉" : isNew ? L("Start","开始","Mula") : L("Continue","继续","Teruskan"),
+      onClick: allDone ? null : ()=>startStage(nextStage.id)
+    },
+    goal:{
+      pct:goalPct,
+      label:`${L("Daily Goal","每日目标","Matlamat Harian")} · ${S.dailyGoal} XP`,
+      value: S.todayXP>=S.dailyGoal
+        ? L("Done for today — amazing! 🎉","今天的目标达成了 —— 很棒！🎉","Selesai untuk hari ini — hebat! 🎉")
+        : `${S.dailyGoal-S.todayXP} ${L("XP to go today","XP 就达标了","XP lagi hari ini")}`,
+      hint:L("Tap to change goal (20 / 50 / 100)","点一下换目标（20 / 50 / 100）","Ketik untuk tukar matlamat (20 / 50 / 100)"),
+      onClick:cycleGoal            // 20 → 50 → 100, as before
+    },
+    review: reviewCount>0 ? {
+      kicker:L("Today’s Review","今天的复习","Ulang Kaji Hari Ini"),
+      title:L(`${reviewCount} question${reviewCount>1?"s":""}`,`${reviewCount} 题`,`${reviewCount} soalan`),
+      text:L("A quick 2-minute warm-up.","两分钟热身。","Pemanasan 2 minit."),
+      button:L("Start","开始","Mula"),
+      onClick:startReview
+    } : {
+      kicker:L("Today’s Review","今天的复习","Ulang Kaji Hari Ini"),
+      title:L("All caught up","全部跟上了","Semua sudah dikejar"),
+      text:L("No review needed right now. Nice work!","现在不用复习。做得好！","Tiada ulang kaji sekarang. Syabas!")
+    },
+    sections
+  });
+  // the unit bands stick just under the HUD (standalone) or the platform's course bar (HUD hidden, 60px)
+  const hud = document.getElementById("hud");
+  root.style.setProperty("--th-sticky", ((hud && hud.offsetHeight) ? hud.offsetHeight + 4 : 62) + "px");
 }
 
 /* ---------- 10b. STAGE FLOW (Video → Learn → Exercises → Reward) ---------- */
@@ -3979,7 +3907,7 @@ document.addEventListener("click", e=>{
     case "speak": playWord(t.dataset.word, t.dataset.src, t); break;
     case "listen": playWord(t.dataset.word, t.dataset.src, t); break;
     // daily goal
-    case "cycleGoal": { const order=[20,50,100]; S.dailyGoal = order[(order.indexOf(S.dailyGoal)+1)%order.length]; save(); renderHUD(); renderMap(); } break;
+    case "cycleGoal": cycleGoal(); break;
     case "setGoal": S.dailyGoal=+t.dataset.g; save(); renderHUD(); renderProfile(); break;
     case "toggleSound": SOUND=!SOUND; if(SOUND){ac(); sfx("tap");} renderHUD(); break;
     case "pickLang": setLang(t.dataset.lang); break;

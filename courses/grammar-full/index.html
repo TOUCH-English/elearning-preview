@@ -84,61 +84,16 @@ button{font-family:inherit}
 @keyframes ripple{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
 .node:hover .candy{transform:translateY(-3px) scale(1.03)}
 
-/* ---------- HOME (module map) ---------- */
-.hero{padding:6px 2px 14px}
-.hero .eyebrow{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue-bright)}
-.hero h1{font-size:24px;font-weight:800;color:var(--ink);margin-top:5px}
-.hero p{margin:5px 0 0;color:var(--muted);font-size:13px}
-.hero p .zh{display:block;font-size:12px}
-.cta{margin:14px 0 8px;padding:14px;border-radius:var(--r-lg);display:flex;align-items:center;gap:13px;cursor:pointer;
-  background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.7);
-  box-shadow:0 18px 40px -26px rgba(20,33,50,.4),0 2px 6px -3px rgba(20,33,50,.07),inset 0 1px 0 rgba(255,255,255,.8)}
-.cta .candy{width:50px;height:50px}
-.cta .candy svg{width:22px;height:22px}
-.cta .txt{flex:1;min-width:0}
-.cta .txt .k{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-bright)}
-.cta .txt b{display:block;font-family:var(--display);font-weight:700;font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cta .go{flex:none;width:38px;height:38px;border-radius:50%;background:var(--blue-bright);display:grid;place-items:center;box-shadow:0 8px 16px -8px rgba(42,91,215,.7)}
-.cta .go svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4}
-/* daily card: streak + goal + growth tree */
-.daily{display:flex;align-items:center;gap:14px;padding:13px 15px;border-radius:var(--r-lg);margin:12px 0 4px;
-  background:linear-gradient(135deg,rgba(230,245,238,.92),rgba(255,255,255,.92));border:1px solid rgba(255,255,255,.72);
-  box-shadow:0 16px 38px -28px rgba(20,60,44,.4),0 2px 6px -3px rgba(20,33,50,.06),inset 0 1px 0 rgba(255,255,255,.8)}
-.daily .tree{width:60px;height:54px;flex:none}
-.daily .dinfo{flex:1;min-width:0}
-.daily .drow{display:flex;align-items:center;gap:7px;margin-bottom:8px}
-.daily .flame{display:inline-flex;align-items:center;gap:4px;font-family:var(--display);font-weight:800;font-size:17px;color:var(--red-deep)}
-.daily .flame svg{width:16px;height:16px;fill:var(--red);stroke:none}
-.daily .drow small{font-family:var(--display);font-weight:600;font-size:11px;color:var(--muted)}
-.daily .lvl{margin-left:auto;font-family:var(--display);font-weight:700;font-size:10px;color:var(--ac-green);background:var(--ok-tint);padding:4px 9px;border-radius:99px;white-space:nowrap}
-.goalbar{height:8px;border-radius:99px;background:rgba(20,60,44,.1);overflow:hidden}
-.goalbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac-green),var(--ok));transition:width .6s cubic-bezier(.2,.8,.2,1)}
-.goaltxt{font-family:var(--display);font-weight:600;font-size:11px;color:var(--muted);margin-top:6px}
-.goaltxt.done{color:var(--ok)}
 /* celebration toast */
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(18px);z-index:90;
   background:var(--ink);color:#fff;font-family:var(--display);font-weight:600;font-size:13px;padding:12px 18px;border-radius:13px;
   box-shadow:0 16px 34px -12px rgba(14,24,44,.6);opacity:0;transition:.32s;display:flex;align-items:center;gap:9px;pointer-events:none;max-width:90vw}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast svg{width:17px;height:17px;stroke:var(--ac-amber);fill:none;stroke-width:2;flex:none}
-.maphead{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 4px}
-.maphead b{font-family:var(--display);font-weight:700;font-size:13px;color:var(--faint);letter-spacing:.02em}
 .reset{border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--faint);font-family:var(--display);font-weight:600;font-size:10.5px;padding:6px 10px;border-radius:8px;cursor:pointer}
 .reset:active{transform:scale(.97)}
-
-.mods{position:relative;margin-top:8px}
-.mods::before{content:"";position:absolute;left:33px;top:26px;bottom:26px;width:4px;transform:translateX(-50%);
-  background:repeating-linear-gradient(var(--line-strong) 0 7px,transparent 7px 15px);border-radius:4px;z-index:0}
-.station{display:grid;grid-template-columns:66px 1fr;gap:14px;align-items:center;padding:9px 0;cursor:pointer;position:relative;z-index:1}
-.station .candy{width:66px;height:66px}
-.station .info{min-width:0}
-.station .info h3{font-size:15px;color:var(--ink);line-height:1.2}
-.station .info .zh{font-size:11.5px;display:block;margin-top:1px}
-.station .info .mbar{margin-top:7px;height:6px;border-radius:99px;background:var(--line);overflow:hidden;max-width:210px}
-.station .info .mbar i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .5s}
-.station .info small{font-family:var(--display);font-weight:600;font-size:10.5px;color:var(--muted);display:block;margin-top:5px}
-.station .chev{margin-left:auto;color:var(--line-strong)}
-.station .chev svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+/* 首页：共用的 TouchHome（../../shared/course-home.js）。重设进度只在 ?test=1 出现 */
+.testreset{text-align:center;margin-top:18px}
 
 /* ---------- crumb / back ---------- */
 .crumb{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -272,9 +227,6 @@ button{font-family:inherit}
 .langbtn:hover{border-color:var(--blue-bright);background:var(--blue-tint);transform:translateY(-2px)}
 .langbtn small{font-size:11.5px;color:var(--faint);font-weight:500}
 
-/* mistakes card accent */
-.cta.mist .k{color:var(--red-deep)!important}
-.cta.mist .go{background:var(--red)}
 /* review landing */
 .rintro{margin:6px 0 4px;color:var(--muted);font-size:13px}
 .rintro .zh{display:block;font-size:12px}
@@ -292,7 +244,6 @@ button{font-family:inherit}
 .rempty span{font-size:13px}
 .rsrc{font-family:var(--display);font-weight:600;font-size:11px;color:var(--blue-bright);margin-bottom:9px;display:flex;align-items:center;gap:5px}
 .rsrc svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
-footer{text-align:center;color:var(--faint);font-size:11px;padding:14px 0 4px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ===== BM Language Support v1.0 (append-only) ===== */
@@ -300,14 +251,12 @@ footer{text-align:center;color:var(--faint);font-size:11px;padding:14px 0 4px}
 body.lang-en .bm{display:none!important}
 body.lang-zh .bm{display:none!important}
 body.lang-bm .zh{display:none!important}
-.hero p .bm{display:block;font-size:12px}
 .watchnote .bm{display:block;font-size:11.5px}
 .brandtxt .bm{font-size:11px;display:block}
 .rintro .bm{display:block;font-size:12px}
 /* 马来文解释（2026-09-24）：重点卡跟中文模式一样，英文规则句在上、马来文在下 */
 .rulecard .rule .bm{display:block;font-size:12.5px;margin-top:4px;line-height:1.5}
 .rulecard .ex .bm{display:block;font-size:12px;margin-top:3px}
-.station .info .bm{font-size:11.5px;display:block;margin-top:1px}
 .mhead .bm{font-size:12px;display:block}
 
 /* ===== Name Gate v1.0 (append-only) ===== */
@@ -387,24 +336,8 @@ body.lang-bm .zh{display:none!important}
     <!-- HOME : MODULE MAP -->
     <div class="screen on" id="home">
       <a data-te-courses></a>  <!-- 回课程列表，见 shared/nav.js -->
-      <div class="hero">
-        <p class="eyebrow">Grammar Path · 语法路径</p>
-        <h1 id="heroTitle">Learn step by step</h1>
-        <p id="heroSub">One module at a time, one lesson at a time.<span class="zh">一个模块、一课一课往前走。</span></p>
-      </div>
-      <div class="daily" id="dailyCard">
-        <div class="tree" id="growthTree"></div>
-        <div class="dinfo">
-          <div class="drow"><span class="flame" id="streakFlame"></span><small id="streakLbl"></small><span class="lvl" id="growthLvl"></span></div>
-          <div class="goalbar"><i id="goalFill"></i></div>
-          <div class="goaltxt" id="goalTxt"></div>
-        </div>
-      </div>
-      <div class="cta" id="ctaCard" onclick="continueLearning()"></div>
-      <div class="cta mist" id="mistCard" style="display:none" onclick="openReview()"></div>
-      <div class="maphead"><b id="mapLbl">Modules</b><button class="reset" id="resetBtn" onclick="resetProgress()">Reset</button></div>
-      <div class="mods" id="mods"></div>
-      <footer>TOUCH English · Grammar Path · prototype</footer>
+      <!-- 2026-09-24：每个课程的首页都长一样（Marco 选 A），画法在 ../../shared/course-home.js -->
+      <div id="homeMap"></div>
     </div>
 
     <!-- MODULE : LESSON PATH -->
@@ -512,6 +445,7 @@ body.lang-bm .zh{display:none!important}
 <script src="../../shared/storage.js"></script>
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
+<script src="../../shared/course-home.js"></script>
 <script>
 /* 共用存档层，见 ../../shared/storage.js。
    这个课程自己有一个叫 store 的变数，所以共用模组取名 TS 避免撞名。 */
@@ -561,7 +495,6 @@ const ICO={
   alert:'<path d="M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
   refresh:'<path d="M4 12a8 8 0 0 1 13.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.7L4 16"/><path d="M4 20v-4h4"/>'
 };
-const FLAME='<svg viewBox="0 0 24 24"><path d="M12 2c2.5 3.5 5 6 5 9.5A5 5 0 0 1 7 12c0-1 .4-2 1-3 .4 1.2 1.5 1.8 2.2 1.8C9 8 11 5 12 2z"/></svg>';
 ICO.bulb='<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.4 1 2.5h6c0-1.1.3-1.9 1-2.5A6 6 0 0 0 12 3z"/>';
 function candy(cls,fc,inner,size){size=size||66;return `<span class="candy ${cls||''}" style="--fc:${fc}${size!==66?';width:'+size+'px;height:'+size+'px':''}">${inner}</span>`;}
 function ico(name){return `<svg viewBox="0 0 24 24">${ICO[name]}</svg>`;}
@@ -623,14 +556,7 @@ function applyLang(){
   document.body.classList.toggle('lang-zh',lang==='zh');
   document.body.classList.toggle('lang-bm',lang==='bm');
   document.body.classList.toggle('lang-en',lang!=='zh'&&lang!=='bm');
-  const _nm=hasName();
-  document.getElementById('heroTitle').textContent=_nm
-    ? L('Hi, '+_nm+'! Learn step by step', _nm+'，你好！一步一步学语法')
-    : L('Learn step by step','一步一步学语法');
-  document.getElementById('heroSub').innerHTML=L('One module at a time, one lesson at a time.','')+`<span class="zh">一个模块、一课一课往前走。</span><span class="bm">Satu modul demi satu, satu pelajaran demi satu.</span>`;
   fillNameGate();
-  document.getElementById('mapLbl').textContent=L('Modules','模块');
-  document.getElementById('resetBtn').textContent=L('Reset','清除');
   document.getElementById('crumbHome').textContent=L('Modules','模块');
   document.getElementById('vheadTxt').textContent=L('Watch first','先看视频');
   document.getElementById('retryBtn').textContent=L('Try again','再做一次');
@@ -656,6 +582,8 @@ function answeredCount(st){ return (st&&st.answers)?st.answers.filter(a=>a!=null
 function statusOf(num){ const st=store[num]; if(isDone(st)) return 'done'; if(answeredCount(st)>0||(st&&st.practised)) return 'prog'; return 'none'; }
 function modDone(m){ return m.topics.filter(n=>statusOf(n)==='done').length; }
 function totalDone(){ return TOPICS.filter(t=>statusOf(t.num)==='done').length; }
+/* 清掉这台装置上这个课程的全部进度 —— 原型时期测试用。学生首页不出现，只在网址加 ?test=1 时画在地图下面 */
+const TEST_MODE=(function(){ try{ return new URLSearchParams(location.search).get('test')==='1'; }catch(e){ return false; } })();
 function resetProgress(){
   const msg=lang==='zh'?'确定要清除所有学生的学习进度和错题本吗？此操作无法撤销。':'Clear ALL progress and saved mistakes? This cannot be undone.';
   if(confirm(msg)){ store={}; save(); wrongs={}; saveWrong(); meta={goal:meta.goal}; saveMeta(); renderHome(); }
@@ -726,26 +654,8 @@ function recordActivity(){
   refreshDaily();
 }
 function growthStage(done){ return done===0?0:Math.min(6,Math.max(1,Math.round(done/TOPICS.length*6))); }
-function growthSVG(done){
-  const stage=growthStage(done);
-  const leaves=[[26,28,10],[38,27,11],[32,18,12],[20,21,8],[44,20,8],[32,32,12]];
-  const shown=leaves.slice(0,stage).map(l=>`<circle cx="${l[0]}" cy="${l[1]}" r="${l[2]}" fill="var(--ac-green)"/><circle cx="${l[0]-2}" cy="${l[1]-2}" r="${l[2]*.55}" fill="var(--ok)" opacity=".5"/>`).join('');
-  const sprout=stage===0?`<path d="M32 40 q-7 -5 -12 -3 q3 6 12 3z" fill="var(--ac-green)"/><path d="M32 40 q7 -5 12 -3 q-3 6 -12 3z" fill="var(--ac-green)"/>`:'';
-  return `<svg viewBox="0 0 64 56"><ellipse cx="32" cy="50" rx="18" ry="3.5" fill="rgba(20,60,44,.12)"/><rect x="30.3" y="30" width="3.4" height="19" rx="1.7" fill="#9a7350"/>${shown}${sprout}</svg>`;
-}
-function refreshDaily(){
-  ensureDay();
-  const done=totalDone(), stage=growthStage(done);
-  const tr=document.getElementById('growthTree'); if(tr) tr.innerHTML=growthSVG(done);
-  document.getElementById('streakFlame').innerHTML=FLAME+`<b>${meta.streak||0}</b>`;
-  document.getElementById('streakLbl').textContent=lang==='zh'?'天连续':'day streak';
-  document.getElementById('growthLvl').textContent=(lang==='zh'?'成长 Lv ':'Growth Lv ')+stage;
-  const c=meta.todayCount||0, g=meta.goal||20;
-  document.getElementById('goalFill').style.width=Math.min(100,c/g*100)+'%';
-  const gt=document.getElementById('goalTxt');
-  if(c>=g){ gt.className='goaltxt done'; gt.textContent=lang==='zh'?`今日目标达成 ${c}/${g} 题 ✓`:`Daily goal done ${c}/${g} ✓`; }
-  else{ gt.className='goaltxt'; gt.textContent=lang==='zh'?`今日 ${c}/${g} 题`:`Today ${c}/${g} questions`; }
-}
+/* 每日目标与连续天数的数字画在首页（renderHome）；这里只负责跨日归零 */
+function refreshDaily(){ ensureDay(); }
 let _toastTimer=null;
 function celebrate(){
   const t=document.getElementById('toast'); if(!t) return;
@@ -770,56 +680,74 @@ function nextToStudy(){
 function continueLearning(){ const n=nextToStudy(); if(n!==null) openTopic(n); else openTopic(ORDER[0]); }
 
 /* ---- HOME render ---- */
+/* 2026-09-24：首页改用共用的 TouchHome（跟 Pre-Beginner 同一个样子）：课程进度 → 继续学习 →
+   今日目标 → 错题本 → 路径地图（一个模块一条色带、一课一颗圆）。
+   哪一课是下一课、完成与否、点了去哪里，仍然全由这个课程决定（nextToStudy、statusOf、openTopic）。
+   这个课程没有模块测验，所以没有 BOSS；所有课一开始就开放，所以没有锁。 */
+function modTitle(m){ return m.en+(lang==='zh'?' · '+m.zh:(lang==='bm'&&m.ms?' · '+m.ms:'')); }
 function renderHome(){
   refreshHeader();
-  refreshDaily();
-  // CTA
+  ensureDay();
+  const d=totalDone(), N=TOPICS.length;
   const nxt=nextToStudy();
-  const cta=document.getElementById('ctaCard');
+  let cont;
   if(nxt!==null){
     const t=T_BY_NUM[nxt], m=MOD_OF[nxt], resume=statusOf(nxt)==='prog';
-    const k=resume?L('Continue','继续学习'):(totalDone()===0?L('Start here','从这里开始'):L('Up next','接下来'));
-    cta.style.display='flex';
-    cta.innerHTML=`${candy('',m.c,ico(m.ico),50)}
-      <div class="txt"><div class="k">${k}</div><b>${esc(t.title)}</b></div>
-      <div class="go">${ico('arrow')}</div>`;
-    cta.onclick=continueLearning;
+    cont={
+      kicker: resume?L('Continue','继续学习'):(d===0?L('Start here','从这里开始'):L('Up next','接下来')),
+      title: t.title,
+      sub: L('Module','模块')+' '+(MODULES.indexOf(m)+1)+' · '+L('Lesson','第')+' '+(m.topics.indexOf(nxt)+1)+(lang==='zh'?' 课':''),
+      go: L('GO','开始'),
+      onClick: continueLearning
+    };
   }else{
-    cta.style.display='flex';
-    cta.innerHTML=`${candy('done','var(--ok)',ico('check'),50)}
-      <div class="txt"><div class="k">${L('All done','全部完成')}</div><b>${L('Review any module','复习任意模块')}</b></div>
-      <div class="go">${ico('arrow')}</div>`;
-    cta.onclick=()=>openTopic(ORDER[0]);
+    cont={ icon:'🎓', kicker:L('All done','全部完成'), title:L('Review any module','复习任意模块'), go:L('GO','开始'), onClick:()=>openTopic(ORDER[0]) };
   }
-  // mistakes card
-  const total=wrongTotal(), due=dueCount(), mc=document.getElementById('mistCard');
-  if(total>0){
-    mc.style.display='flex';
-    const main = due>0 ? (lang==='zh'?due+' 道到期待复习':due+' due to review')
-                       : (lang==='zh'?'已排期 · 暂无到期':'all scheduled · none due now');
-    mc.innerHTML=`${candy('','var(--red)',ico('alert'),50)}
-      <div class="txt"><div class="k">${L('Mistakes notebook','错题本')}</div><b>${main}</b></div>
-      <div class="go">${ico('arrow')}</div>`;
-  }else{ mc.style.display='none'; }
-  // modules
-  document.getElementById('mods').innerHTML=MODULES.map(m=>{
-    const done=modDone(m), n=m.topics.length, pct=Math.round(done/n*100);
-    const complete=done===n;
-    const cls=complete?'done':(done>0?'':'todo');
-    const fc=complete?'var(--ok)':m.c;
-    const inner=complete?ico('check'):ico(m.ico);
-    return `<div class="station" onclick="openModule('${m.id}')">
-      ${candy(cls,fc,inner,66)}
-      <div class="info">
-        <h3>${esc(m.en)}</h3><span class="zh">${esc(m.zh)}</span><span class="bm">${esc(m.ms||'')}</span>
-        <div class="mbar mBar"><i style="width:${pct}%"></i></div>
-        <small>${done}/${n} ${L('lessons','课')}${complete?' · ✓ '+L('Completed','已完成'):(done>0?' · '+L('In progress','进行中'):'')}</small>
-      </div>
-      <span class="chev">${ico('arrow')}</span>
-    </div>`;
-  }).join('');
-  // fix mbar inner class name
-  document.querySelectorAll('.mBar').forEach(function(b){});
+  const c=meta.todayCount||0, g=meta.goal||20;
+  const goal={
+    pct: Math.min(100,c/g*100),
+    label: L('Daily goal','今日目标'),
+    value: c>=g ? (lang==='zh'?`今日目标达成 ${c}/${g} 题 ✓`:`Done ${c}/${g} questions ✓`) : (lang==='zh'?`今日 ${c}/${g} 题`:`Today ${c}/${g} questions`)
+  };
+  const total=wrongTotal(), due=dueCount();
+  let review;
+  if(total===0){
+    review={ kicker:L('Mistakes notebook','错题本'), title:L('No mistakes to review','暂时没有错题'),
+             text:L('Questions you get wrong are saved here for review.','做错的题会收进这里，之后提醒你复习。') };
+  }else{
+    /* 还没到期：绿色「暂无到期」的样子（ok），但保留按钮 —— 错题本里可以提前复习、清空，没按钮就进不去了 */
+    review={ kicker:L('Mistakes notebook','错题本'),
+             title: due>0 ? (lang==='zh'?due+' 道到期待复习':due+' due to review') : (lang==='zh'?'已排期 · 暂无到期':'All scheduled · none due now'),
+             text: lang==='zh'?`共 ${total} 道`:`${total} saved`,
+             button: due>0?L('Review','复习'):L('Open','打开'), ok: due===0, onClick: openReview };
+  }
+  const sections=MODULES.map((m,mi)=>({
+    kicker: L('Module','模块')+' '+(mi+1)+' · '+modDone(m)+'/'+m.topics.length,
+    title: modTitle(m),
+    nodes: m.topics.map((num,i)=>{
+      const s=statusOf(num), st=store[num];
+      return {
+        label: (i+1)+'. '+T_BY_NUM[num].title,
+        state: s==='done'?'done':(num===nxt?'go':'avail'),
+        practised: s!=='done'&&!!(st&&st.practised),
+        tag: s!=='done'&&st&&st.practised ? L('Practised','已练习','Sudah berlatih') : undefined,
+        flag: num===nxt ? (d===0?L('START HERE','从这里开始'):L('NEXT','下一课')) : undefined,
+        onClick: ()=>openTopic(num,m.id)
+      };
+    })
+  }));
+  let after;
+  if(TEST_MODE){
+    after=document.createElement('div'); after.className='testreset';
+    const b=document.createElement('button'); b.className='reset'; b.textContent=L('Reset progress (test)','清除进度（测试）');
+    b.onclick=resetProgress; after.appendChild(b);
+  }
+  TouchHome.render(document.getElementById('homeMap'), {
+    progress:{ label:L('Course progress','课程进度'), pct:d/N*100,
+      sub:L('One module at a time, one lesson at a time.','一个模块、一课一课往前走。','Satu modul demi satu, satu pelajaran demi satu.'),
+      stats:[ {v:d+'/'+N, l:L('Lessons','课')}, {v:meta.streak||0, l:L('Day streak','天连续')}, {v:'Lv '+growthStage(d), l:L('Growth','成长')} ] },
+    cont: cont, goal: goal, review: review, sections: sections, after: after
+  });
 }
 
 /* ---- MODULE render ---- */

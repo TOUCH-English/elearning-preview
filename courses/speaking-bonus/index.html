@@ -49,25 +49,12 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--font-b);min-hei
   .chip{padding:5px 8px;font-size:12px;gap:3px} .ltog button{padding:5px 6px} }
 
 /* ---------- home ---------- */
+/* 首页的版面（进度卡、继续卡、路线图）由 shared/course-home.js 画，这里只剩问题页用的标题 */
 h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(26px,5.5vw,36px);line-height:1.15}
 .sub{margin-top:8px;color:var(--muted);font-size:15px;font-weight:600;line-height:1.5}
-.bar{height:9px;border-radius:99px;background:var(--brand-soft);overflow:hidden;margin:18px 0 6px}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand-2),var(--brand));border-radius:99px;transition:width .3s ease}
-.barnote{font-size:13px;color:var(--muted);font-weight:700}
-
-.days{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:24px}
-.day{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;
-  padding:13px 14px;cursor:pointer;font:inherit;color:inherit;transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
-.day:hover,.day:focus-visible{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--brand-soft);outline:none}
-.day .n{font-family:var(--font-h);font-weight:600;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--subtle)}
-.day .t{margin-top:5px;font-size:13.5px;line-height:1.4;font-weight:700;color:var(--brand)}
-.day.done{border-color:var(--success);background:var(--success-soft)}
-.day.done .n::after{content:" ✓";color:var(--success);font-weight:800}
-.day.rev{background:var(--gold-soft);border-color:rgba(191,150,72,.35)}
-.day.rev .n{color:var(--gold-deep)}
-.day.rev.done{background:var(--success-soft);border-color:var(--success)}
-.day.prac{border-color:var(--gold);border-style:dashed}
-.day.prac .n::after{content:" · " attr(data-prac);color:var(--gold-deep);text-transform:none;letter-spacing:0}
+/* 路线图上方那一行：怎么练 + 「我的资料」 */
+.sb-info{margin-top:14px;font-size:13px;color:var(--muted);font-weight:700;line-height:1.5}
+.sb-info .link{margin-left:6px}
 
 /* ---------- day view ---------- */
 .back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;font:inherit;font-weight:700;
@@ -140,7 +127,6 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 .ask input{width:100%;font:inherit;font-size:16px;font-weight:700;color:var(--ink);background:var(--canvas);
   border:1px solid var(--line);border-radius:11px;padding:12px 14px}
 .ask input:focus{outline:none;border-color:var(--brand-2);background:var(--surface)}
-.hi{color:var(--gold-deep)}
 .link{background:none;border:0;font:inherit;font-weight:800;font-size:13px;color:var(--brand-2);
   cursor:pointer;padding:0;margin-left:10px;text-decoration:underline}
 .mine{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
@@ -164,6 +150,7 @@ h1{font-family:var(--font-h);font-weight:700;color:var(--brand);font-size:clamp(
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
 <script src="../../shared/record.js"></script>
+<script src="../../shared/course-home.js"></script>
 <script>
 /* DAYS:START */
 const DAYS = [
@@ -6301,34 +6288,109 @@ function renderAsk(isEdit) {
   window.scrollTo(0, 0);
 }
 
-/* ---------- 首页 ---------- */
+/* ---------- 首页 ----------
+   ✅ Marco 2026-09-24：每个课程都用同一个首页 —— 课程进度、一张「继续」卡、
+   路线图（一个单元一条色带、一天一颗圆、复习日当 BOSS 放最後）。版面在
+   shared/course-home.js；这里只决定内容：哪几天是一个单元、下一天是哪天。
+
+   单元 = 到复习日为止（DAY 7／13／20 本来就是复习日，当该单元的 BOSS）。
+   21–30 没有复习日，按主题切成「简报与面试」（21–26）和「日常情境」（27–30），
+   这两个单元没有 BOSS。每一天都一直开着（跟以前的格子一样，不锁）。
+
+   SHORT 是圆圈底下的短标题（圆圈宽 116px，DAY 的完整标题太长）。完整标题照旧
+   从 DAYS（Sheet）来，显示在「继续」卡和那一天的页面上。Sheet 改了某一天的主题，
+   这里的短标题要跟着改 —— 没有对应的就退回完整标题。 */
+const UNITS = [
+  { from: 1,  to: 7,  icon: "👋", t: { en: "You and your daily life", zh: "介绍自己和日常生活", ms: "Diri anda & kehidupan harian" } },
+  { from: 8,  to: 13, icon: "🙋", t: { en: "Asking and explaining", zh: "提问和解释", ms: "Bertanya & menerangkan" } },
+  { from: 14, to: 20, icon: "💬", t: { en: "Opinions, past and future", zh: "表达意见、过去和未来", ms: "Pendapat, masa lalu & masa depan" } },
+  { from: 21, to: 26, icon: "🎤", t: { en: "Presentations and interviews", zh: "简报和面试", ms: "Pembentangan & temu duga" } },
+  { from: 27, to: 30, icon: "🗺️", t: { en: "Everyday situations", zh: "日常生活情境", ms: "Situasi harian" } }
+];
+const SHORT = {
+  1: "Introduce yourself", 2: "Daily routine", 3: "What you like", 4: "What you don't like",
+  5: "What you want", 6: "What you need", 7: "Your introduction",
+  8: "Simple questions", 9: "Yes / No questions", 10: "Giving reasons", 11: "Giving examples",
+  12: "Connectors", 13: "Review 8–12",
+  14: "Your opinion", 15: "Explaining", 16: "Opinion + example", 17: "Your past",
+  18: "Right now", 19: "Your future", 20: "Review 14–19",
+  21: "Starting a talk", 22: "Main points", 23: "Explaining ideas", 24: "Longer answers",
+  25: "Short paragraphs", 26: "Interview answers",
+  27: "Adjectives", 28: "Directions", 29: "Appointments", 30: "Reservations"
+};
+
 function renderHome() {
   rec.stopAll();
   redraw = renderHome;
   if (!S.asked) return renderAsk(false);
   const n = Object.keys(S.done).length;
-  const pct = DAYS.length ? Math.round((n / DAYS.length) * 100) : 0;
+  const total = DAYS.length;
+  const pct = total ? Math.round((n / total) * 100) : 0;
+  /* 下一天 = 第一个还没完成的（练习过但没及格的也算没完成）。跟完成页的「Next: Day …」同一个意思 */
+  const nx = DAYS.find((d) => !S.done[d.day]) || null;
+  const unitOf = (day) => UNITS.findIndex((u) => day >= u.from && day <= u.to);
+  const started = n > 0 || Object.keys(S.practised).length > 0;
+
   app().innerHTML = `${topBar()}
     ${window.TouchNav ? TouchNav.html() : ""}
-    <h1>Speaking Bonus${S.profile && S.profile.name ? `<span class="hi">, ${esc(ownValues(S.profile).name || S.profile.name)}</span>` : ""}</h1>
-    <p class="sub">${esc(L_("homeSub"))}</p>
-    <div class="bar"><i style="width:${pct}%"></i></div>
-    <div class="barnote">${n} of ${DAYS.length} days complete · ${pct}%
-      <button class="link" id="edit">${esc(L_(S.profile ? "myInfo" : "addInfo"))}</button></div>
-    <div class="days" id="days"></div>`;
+    <div id="homemap"></div>`;
 
-  $("days").innerHTML = DAYS.map((d) => {
-    const cls = ["day", S.done[d.day] ? "done" : (d.day in S.practised ? "prac" : ""), d.review ? "rev" : ""]
-      .filter(Boolean).join(" ");
-    return `<button class="${cls}" data-d="${d.day}">
-      <span class="n"${S.practised && d.day in S.practised ? ` data-prac="${esc(L_("pracTag"))}"` : ""}>${d.review ? "Review · " : ""}Day ${d.day}</span>
-      <span class="t">${esc(d.title)}</span>
-    </button>`;
-  }).join("");
+  /* 怎么练 + 「我的资料」：放在卡片底下、路线图上面 */
+  const info = document.createElement("p");
+  info.className = "sb-info";
+  info.innerHTML = `${esc(L_("homeSub"))}<button class="link" id="edit">${esc(L_(S.profile ? "myInfo" : "addInfo"))}</button>`;
+  info.querySelector("#edit").onclick = () => renderAsk(true);
 
-  $("edit").onclick = () => renderAsk(true);
-  $("days").querySelectorAll(".day").forEach((b) => {
-    b.onclick = () => openDay(parseInt(b.dataset.d, 10));
+  let cont;
+  if (nx) {
+    const ui = unitOf(nx.day);
+    cont = {
+      icon: nx.review ? "👑" : (UNITS[ui] ? UNITS[ui].icon : "🎤"),
+      kicker: started ? "RESUME" : "START",
+      title: nx.title,
+      sub: `${nx.review ? "Review · " : ""}Day ${nx.day}${ui >= 0 ? ` · Unit ${ui + 1}` : ""}`,
+      onClick: () => openDay(nx.day)
+    };
+  } else {
+    cont = { icon: "🏆", kicker: "★", title: L_("courseDoneT"), sub: L_("courseDone"), go: "🎉" };
+  }
+
+  TouchHome.render($("homemap"), {
+    progress: {
+      label: "Course Progress",
+      pct,
+      sub: `Speaking Bonus · ${total} days`,
+      stats: [
+        { v: `${n}/${total}`, l: "Days" },
+        { v: S.xp, l: "XP" },
+        { v: Object.keys(S.recorded).length, l: "Recordings" }
+      ]
+    },
+    cont,
+    before: info,
+    sections: UNITS.map((u, ui) => {
+      const days = DAYS.filter((d) => d.day >= u.from && d.day <= u.to);
+      const dn = days.filter((d) => S.done[d.day]).length;
+      return {
+        kicker: `Unit ${ui + 1} · Days ${u.from}–${u.to} · ${dn}/${days.length}`,
+        title: tx(u.t),
+        icon: u.icon,
+        nodes: days.map((d) => {
+          const done = !!S.done[d.day];
+          const prac = !done && d.day in S.practised;
+          const isNext = nx && nx.day === d.day;
+          return {
+            label: `Day ${d.day} · ${SHORT[d.day] || d.title}`,
+            state: done ? "done" : isNext ? "go" : "avail",
+            boss: !!d.review,
+            practised: prac,
+            tag: prac ? L_("pracTag") : undefined,
+            flag: isNext ? "START HERE" : undefined,
+            onClick: () => openDay(d.day)
+          };
+        })
+      };
+    })
   });
   window.scrollTo(0, 0);
 }
