@@ -120,6 +120,9 @@
     ".th-node.avail:active .th-coin,.th-node.locked:active .th-coin{box-shadow:0 2px 0 #D5DBE5,inset 0 0 0 1.5px #fff}",
     ".th-node.locked .th-coin svg{width:22px;height:22px}",
     ".th-node.go::before{content:'';position:absolute;left:-11px;right:-11px;top:-11px;height:88px;border-radius:50%;border:7px solid color-mix(in srgb,var(--c) 28%,#fff);pointer-events:none}",
+    // …and a wave that keeps leaving it, so the lesson to do next is alive on the page
+    // (Marco 2026-09-24: 「外面的圈圈，它可不可以有一点动态感？」)
+    ".th-node.go::after{content:'';position:absolute;left:-11px;right:-11px;top:-11px;height:88px;border-radius:50%;border:5px solid var(--c);pointer-events:none;animation:th-wave 1.8s cubic-bezier(.25,.6,.35,1) infinite}",
     ".th-node.done.boss .th-coin{--c:#E2B23B}",
     ".th-pr{position:absolute;right:-4px;top:-4px;width:24px;height:24px;border-radius:50%;background:#fff;color:color-mix(in srgb,var(--c) 70%,#000);display:grid;place-items:center;font-size:13px;font-weight:900;box-shadow:0 2px 6px rgba(20,33,50,.2);z-index:2}",
     ".th-tag{position:absolute;left:50%;top:-14px;transform:translateX(-50%);white-space:nowrap;background:#fff;color:color-mix(in srgb,var(--c) 75%,#000);font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;box-shadow:0 2px 6px rgba(20,33,50,.16);z-index:2}",
@@ -157,10 +160,11 @@
     ".th-tip{margin:0 16px 10px;padding:11px 13px;border-radius:14px;background:#F5F8FC;font-size:14px;line-height:1.55;color:#33415C}",
     ".th-tip small{display:block;margin-top:4px;font-size:13px;color:#6B7688}",
     "@keyframes th-in{from{opacity:0;transform:scale(.6) translateY(10px)}to{opacity:1;transform:none}}",
+    "@keyframes th-wave{0%{transform:scale(.96);opacity:.85}80%,100%{transform:scale(1.4);opacity:0}}",
     "@keyframes th-bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-5px)}}",
     "@keyframes th-pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}",
     "@keyframes th-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}",
-    "@media (prefers-reduced-motion:reduce){.th-node,.th-bub,.th-pop,.th-sheet{animation:none}.th-coin{transition:none}}",
+    "@media (prefers-reduced-motion:reduce){.th-node,.th-bub,.th-pop,.th-sheet,.th-node.go::after{animation:none}.th-coin{transition:none}}",
   ].join("\n");
 
   function injectCSS() {
