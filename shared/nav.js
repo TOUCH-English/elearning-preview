@@ -216,6 +216,7 @@
       "</div>";
     d.body.insertBefore(bar, d.body.firstChild);
     d.getElementById("te-clang").addEventListener("change", function (e) {
+      /* setLang 在平台里本身就会送 /api/learn/language；这里再送一次是为了等它回来才重新载入 */
       var v = e.target.value, P = global.TouchProfile, S = global.TouchStore;
       if (P) P.setLang(v);
       var done = function () {
