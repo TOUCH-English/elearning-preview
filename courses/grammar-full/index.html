@@ -44,7 +44,7 @@ button{font-family:inherit}
 /* ---------- PHONE FRAME ---------- */
 .stage{position:relative;z-index:1;display:flex;justify-content:center;padding:26px 14px 60px}
 .phone{position:relative;width:100%;max-width:452px;min-height:88vh;background:var(--bg);
-  border-radius:34px;border:1px solid rgba(255,255,255,.8);overflow:hidden;display:flex;flex-direction:column;
+  border-radius:34px;border:1px solid rgba(255,255,255,.8);overflow:hidden;overflow:clip;display:flex;flex-direction:column;
   box-shadow:0 40px 90px -40px rgba(14,24,44,.5),0 8px 20px -10px rgba(20,33,50,.18),inset 0 1px 0 rgba(255,255,255,.7)}
 
 /* header inside phone */
@@ -94,6 +94,17 @@ button{font-family:inherit}
 .reset:active{transform:scale(.97)}
 /* 首页：共用的 TouchHome（../../shared/course-home.js）。重设进度只在 ?test=1 出现 */
 .testreset{text-align:center;margin-top:18px}
+/* 路线图上方的一行小字：错题本（没有到期的题时，顶上不出复习钮）、全部完成 */
+/* 单元色带黏在顶栏下面。.phone 用 overflow:clip 而不是 hidden：hidden 会让它变成捲动容器，
+   里面的 sticky（顶栏、色带）就黏不住；clip 一样裁掉圆角外的东西，但不捲动。
+   --gp-head 是顶栏实际的高度（renderHome 量的：中文／BM 的品牌字多一行）。
+   在平台里顶栏藏掉，换成平台的课程栏（60px，shared/nav.js） */
+#homeMap .th{--th-sticky:var(--gp-head,83px)}
+html.te-platform #homeMap .th{--th-sticky:calc(env(safe-area-inset-top) + 60px)}
+/* 色带往上捲走时要从顶栏底下过，不能盖在顶栏上面（色带的 z-index 是 20，跟顶栏一样） */
+.phone > .phead{z-index:40}
+.homenote{margin:6px 2px 0;text-align:center;font-size:12.5px;font-weight:600;color:var(--muted)}
+.homenote button{border:0;background:none;padding:4px 2px;font:inherit;color:var(--blue-bright);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 
 /* ---------- crumb / back ---------- */
 .crumb{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -446,6 +457,9 @@ body.lang-bm .zh{display:none!important}
 <script src="../../shared/profile.js"></script>
 <script src="../../shared/nav.js"></script>
 <script src="../../shared/course-home.js"></script>
+<!-- 发音：首页 Guide 里例句的喇叭（course-home.js 调 TouchVoice） -->
+<script src="../../shared/voice-config.js"></script>
+<script src="../../shared/voice.js"></script>
 <script>
 /* 共用存档层，见 ../../shared/storage.js。
    这个课程自己有一个叫 store 的变数，所以共用模组取名 TS 避免撞名。 */
@@ -653,7 +667,6 @@ function recordActivity(){
   if(meta.todayCount===meta.goal && meta.celebratedDate!==t){ meta.celebratedDate=t; saveMeta(); celebrate(); }
   refreshDaily();
 }
-function growthStage(done){ return done===0?0:Math.min(6,Math.max(1,Math.round(done/TOPICS.length*6))); }
 /* 每日目标与连续天数的数字画在首页（renderHome）；这里只负责跨日归零 */
 function refreshDaily(){ ensureDay(); }
 let _toastTimer=null;
@@ -677,61 +690,80 @@ function nextToStudy(){
   for(const num of ORDER){ const s=statusOf(num); if(s==='prog'&&firstProg===null) firstProg=num; if(s==='none'&&firstNone===null) firstNone=num; }
   return firstProg!==null?firstProg:(firstNone!==null?firstNone:null);
 }
-function continueLearning(){ const n=nextToStudy(); if(n!==null) openTopic(n); else openTopic(ORDER[0]); }
 
 /* ---- HOME render ---- */
-/* 2026-09-24：首页改用共用的 TouchHome（跟 Pre-Beginner 同一个样子）：课程进度 → 继续学习 →
-   今日目标 → 错题本 → 路径地图（一个模块一条色带、一课一颗圆）。
+/* 首页 = 共用的 TouchHome（../../shared/course-home.js，七个课程同一个样子）：顶上一排数字
+   （进度 · 今日目标 · 连续天数 · 到期错题），下面就是路径 —— 一个模块一条色带、一课一颗圆币，
+   点圆币跳出卡片（课名 + 开始）。
    哪一课是下一课、完成与否、点了去哪里，仍然全由这个课程决定（nextToStudy、statusOf、openTopic）。
-   这个课程没有模块测验，所以没有 BOSS；所有课一开始就开放，所以没有锁。 */
+   这个课程没有模块测验，所以没有 BOSS；所有课一开始就开放，所以没有锁。
+   每一课都是「影片 + 重点 + 练习」，看不出哪一课是纯讲解，所以圆币一律是星星。 */
 function modTitle(m){ return m.en+(lang==='zh'?' · '+m.zh:(lang==='bm'&&m.ms?' · '+m.ms:'')); }
+/* 模块的 Guide（共用首页的指南页），只用课程里已经有的内容，不另外写：
+     phrases = 每一课重点卡的例句（card.ex），下面一行是中文／马来文模式下同一张卡的
+               说明（exZh／exMs —— 有的是翻译，有的是「quickly 是副词」这种解说，照原样）；
+               英文模式不加
+     tips    = 每一课重点卡的规则（card.en／zh／ms，跟着学生选的语言），前面是课名
+   发音走 shared/voice.js：有录好的 mp3 就播，没有就用浏览器语音整句念（fallbackMaxWords 0）。 */
+function modGuide(m){
+  const cards=m.topics.map(num=>T_BY_NUM[num]).filter(t=>t&&t.card);
+  return {
+    phrases: cards.filter(t=>t.card.ex).map(t=>({
+      en: t.card.ex,
+      tr: lang==='zh' ? (t.card.exZh||undefined) : (lang==='bm' ? (t.card.exMs||undefined) : undefined),
+      say: ()=>{ if(window.TouchVoice) TouchVoice.say(t.card.ex,{fallbackMaxWords:0}); }
+    })),
+    tips: cards.map(t=>{ const r=L(t.card.en,t.card.zh||t.card.en,t.card.ms||t.card.en); return r ? t.title+(lang==='zh'?'：':' — ')+r : ''; }).filter(Boolean)
+  };
+}
+/* 连续天数：上一次做题是今天或昨天才算数，更早就是断了（meta.streak 要等下一次做题才会归零） */
+function shownStreak(){
+  if(!meta.lastDate) return 0;
+  return (meta.lastDate===dayKey(Date.now())||meta.lastDate===dayKey(Date.now()-DAY)) ? (meta.streak||0) : 0;
+}
 function renderHome(){
   refreshHeader();
   ensureDay();
   const d=totalDone(), N=TOPICS.length;
   const nxt=nextToStudy();
-  let cont;
-  if(nxt!==null){
-    const t=T_BY_NUM[nxt], m=MOD_OF[nxt], resume=statusOf(nxt)==='prog';
-    cont={
-      kicker: resume?L('Continue','继续学习'):(d===0?L('Start here','从这里开始'):L('Up next','接下来')),
-      title: t.title,
-      sub: L('Module','模块')+' '+(MODULES.indexOf(m)+1)+' · '+L('Lesson','第')+' '+(m.topics.indexOf(nxt)+1)+(lang==='zh'?' 课':''),
-      go: L('GO','开始'),
-      onClick: continueLearning
-    };
-  }else{
-    cont={ icon:'🎓', kicker:L('All done','全部完成'), title:L('Review any module','复习任意模块'), go:L('GO','开始'), onClick:()=>openTopic(ORDER[0]) };
-  }
   const c=meta.todayCount||0, g=meta.goal||20;
   const goal={
     pct: Math.min(100,c/g*100),
-    label: L('Daily goal','今日目标'),
-    value: c>=g ? (lang==='zh'?`今日目标达成 ${c}/${g} 题 ✓`:`Done ${c}/${g} questions ✓`) : (lang==='zh'?`今日 ${c}/${g} 题`:`Today ${c}/${g} questions`)
+    label: L('Daily goal','今日目标','Matlamat harian'),
+    value: lang==='zh'?`今日 ${c}/${g} 题`:(lang==='bm'?`Hari ini ${c}/${g} soalan`:`Today ${c}/${g} questions`),
+    short: c+'/'+g
   };
   const total=wrongTotal(), due=dueCount();
-  let review;
-  if(total===0){
-    review={ kicker:L('Mistakes notebook','错题本'), title:L('No mistakes to review','暂时没有错题'),
-             text:L('Questions you get wrong are saved here for review.','做错的题会收进这里，之后提醒你复习。') };
-  }else{
-    /* 还没到期：绿色「暂无到期」的样子（ok），但保留按钮 —— 错题本里可以提前复习、清空，没按钮就进不去了 */
-    review={ kicker:L('Mistakes notebook','错题本'),
-             title: due>0 ? (lang==='zh'?due+' 道到期待复习':due+' due to review') : (lang==='zh'?'已排期 · 暂无到期':'All scheduled · none due now'),
-             text: lang==='zh'?`共 ${total} 道`:`${total} saved`,
-             button: due>0?L('Review','复习'):L('Open','打开'), ok: due===0, onClick: openReview };
+  /* 有到期的错题：顶上一个 ↻ 钮。没有到期但错题本里有题：顶上没有钮，
+     所以在路径上方放一行「错题本」的连结 —— 错题本可以提前复习、清空，不能进不去 */
+  const review = due>0 ? {
+    title: L(`Mistakes notebook · ${due} due to review`,`错题本 · ${due} 道到期待复习`,`Buku kesilapan · ${due} perlu diulang kaji`),
+    count: due, onClick: openReview
+  } : null;
+  const notes=[];
+  if(nxt===null) notes.push(esc(L('🎓 All done — open any lesson to practise again.','🎓 全部完成 —— 点任何一课都可以再练。','🎓 Semua selesai — buka mana-mana pelajaran untuk berlatih lagi.')));
+  if(total>0 && due===0) notes.push(`${esc(L('Nothing due now.','暂时没有到期的错题。','Tiada yang perlu diulang kaji sekarang.'))} <button type="button" data-open="review">${esc(L(`Mistakes notebook (${total})`,`错题本（${total} 道）`,`Buku kesilapan (${total})`))}</button>`);
+  let before;
+  if(notes.length){
+    before=document.createElement('div');
+    before.innerHTML=notes.map(n=>`<p class="homenote">${n}</p>`).join('');
+    const ob=before.querySelector('[data-open="review"]'); if(ob) ob.onclick=openReview;
   }
   const sections=MODULES.map((m,mi)=>({
-    kicker: L('Module','模块')+' '+(mi+1)+' · '+modDone(m)+'/'+m.topics.length,
+    kicker: L('Module','模块','Modul')+' '+(mi+1)+' · '+modDone(m)+'/'+m.topics.length,
     title: modTitle(m),
+    guide: modGuide(m),
     nodes: m.topics.map((num,i)=>{
-      const s=statusOf(num), st=store[num];
+      const s=statusOf(num), st=store[num], n=m.topics.length;
       return {
-        label: (i+1)+'. '+T_BY_NUM[num].title,
+        label: T_BY_NUM[num].title,
+        sub: lang==='zh' ? `模块 ${mi+1} · 第 ${i+1} 课，共 ${n} 课` : (lang==='bm' ? `Modul ${mi+1} · Pelajaran ${i+1} daripada ${n}` : `Module ${mi+1} · Lesson ${i+1} of ${n}`),
+        icon: 'star',
         state: s==='done'?'done':(num===nxt?'go':'avail'),
         practised: s!=='done'&&!!(st&&st.practised),
         tag: s!=='done'&&st&&st.practised ? L('Practised','已练习','Sudah berlatih') : undefined,
-        flag: num===nxt ? (d===0?L('START HERE','从这里开始'):L('NEXT','下一课')) : undefined,
+        flag: num===nxt ? (d===0?L('START','开始','MULA'):(s==='prog'?L('CONTINUE','继续','SAMBUNG'):L('NEXT','下一课','SETERUSNYA'))) : undefined,
+        go: num===nxt&&s==='prog' ? L('CONTINUE','继续','SAMBUNG') : undefined,
         onClick: ()=>openTopic(num,m.id)
       };
     })
@@ -743,16 +775,21 @@ function renderHome(){
     b.onclick=resetProgress; after.appendChild(b);
   }
   TouchHome.render(document.getElementById('homeMap'), {
-    progress:{ label:L('Course progress','课程进度'), pct:d/N*100,
-      sub:L('One module at a time, one lesson at a time.','一个模块、一课一课往前走。','Satu modul demi satu, satu pelajaran demi satu.'),
-      stats:[ {v:d+'/'+N, l:L('Lessons','课')}, {v:meta.streak||0, l:L('Day streak','天连续')}, {v:'Lv '+growthStage(d), l:L('Growth','成长')} ] },
-    cont: cont, goal: goal, review: review, sections: sections, after: after
+    progress:{ label:L('Course progress','课程进度','Kemajuan kursus')+' · '+d+'/'+N, pct:d/N*100 },
+    goal: goal, streak: shownStreak(), review: review,
+    labels:{
+      start:L('START','开始','MULA'), again:L('PRACTISE AGAIN','再练一次','BERLATIH LAGI'),
+      guide:L('Guide','指南','Panduan'), back:L('Back','返回','Kembali'),
+      keyPhrases:L('Key sentences','重点句','Ayat utama'), tips:L('Tips','小提醒','Petua')
+    },
+    sections: sections, before: before, after: after
   });
+  const ph=document.querySelector('.phone > .phead');
+  if(ph&&ph.offsetHeight) document.getElementById('homeMap').style.setProperty('--gp-head',Math.ceil(ph.offsetHeight)+'px');
 }
 
 /* ---- MODULE render ---- */
 let curMod=null;
-function openModule(id){ curMod=MODULES.find(m=>m.id===id); renderModule(id); showScreen('module'); }
 function renderModule(id){
   const m=MODULES.find(x=>x.id===id); curMod=m;
   document.getElementById('mIcon').style.setProperty('--fc',m.c);

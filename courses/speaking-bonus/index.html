@@ -6165,7 +6165,22 @@ const L = {
                 en: "{n} days are still unfinished — you can find them on the course page." },
   lastDayLeft1:{ zh: "还有 1 天没完成 —— 回到课程首页就看得到。",
                  ms: "Masih ada 1 hari belum selesai — lihat di halaman utama kursus.",
-                 en: "1 day is still unfinished — you can find it on the course page." }
+                 en: "1 day is still unfinished — you can find it on the course page." },
+
+  /* 首页（shared/course-home.js）上的字：单元色带、点圆圈跳出的卡片、Guide */
+  hProgress: { zh: "课程进度", ms: "Kemajuan kursus", en: "Course progress" },
+  hUnit:     { zh: "第 {u} 单元 · 第 {a}–{b} 天 · {d}/{n}", ms: "Unit {u} · Hari {a}–{b} · {d}/{n}",
+               en: "Unit {u} · Days {a}–{b} · {d}/{n}" },
+  hNode:     { zh: "第 {u} 单元 · {i}/{n}", ms: "Unit {u} · {i} daripada {n}", en: "Unit {u} · {i} of {n}" },
+  hStart:    { zh: "开始", ms: "MULA", en: "START" },
+  hAgain:    { zh: "再练一次", ms: "BERLATIH LAGI", en: "PRACTISE AGAIN" },
+  hGuide:    { zh: "指南", ms: "Panduan", en: "Guide" },
+  hBack:     { zh: "返回", ms: "Kembali", en: "Back" },
+  hPhrases:  { zh: "重点句子", ms: "Ayat penting", en: "Key sentences" },
+  hTips:     { zh: "小提醒", ms: "Tip", en: "Tips" },
+  hIntro:    { zh: "第 {a}–{b} 天的句型。把后面的资料换成你自己的，再说出来。",
+               ms: "Corak ayat dari Hari {a}–{b}. Tukar maklumat di belakang kepada maklumat anda, kemudian sebut.",
+               en: "The sentence patterns from Days {a}–{b}. Change the information at the end to your own, then say it." }
 };
 const fmt = (str, o) => String(str).replace(/\{(\w+)\}/g, (_, k) => (k in o ? o[k] : ""));
 /* 从 DAYS 来的三语物件（{en,zh,ms}）或纯字串都吃 */
@@ -6224,13 +6239,14 @@ const earnOnce = (key, n) => {
   S.earned[key] = true; addXP(n);
 };
 
-/* ---------- 顶栏 ---------- */
-function topBar() {
+/* ---------- 顶栏 ----------
+   首页不放 XP／完成数两颗 chip：course-home.js 的顶排已经有进度 % 和 ⚡XP，放两次是重复 */
+function topBar(home) {
   return `<div class="top">
     <img class="logo" src="../../shared/assets/brand/touch-logo.png" alt="TOUCH English">
     <span class="chips">
-      <span class="chip">◆ <b id="xp">${S.xp}</b> XP</span>
-      <span class="chip">✓ <b>${Object.keys(S.done).length}</b>/${DAYS.length}</span>
+      ${home ? "" : `<span class="chip">◆ <b id="xp">${S.xp}</b> XP</span>
+      <span class="chip">✓ <b>${Object.keys(S.done).length}</b>/${DAYS.length}</span>`}
       ${SP ? `<span class="ltog">${SP.LANGS.map((l) =>
         `<button data-lang="${l}"${SP.effective() === l ? ' class="on"' : ""}>${
           l === "zh" ? "中文" : l === "ms" ? "BM" : "EN"}</button>`).join("")}</span>` : ""}
@@ -6289,35 +6305,86 @@ function renderAsk(isEdit) {
 }
 
 /* ---------- 首页 ----------
-   ✅ Marco 2026-09-24：每个课程都用同一个首页 —— 课程进度、一张「继续」卡、
-   路线图（一个单元一条色带、一天一颗圆、复习日当 BOSS 放最後）。版面在
-   shared/course-home.js；这里只决定内容：哪几天是一个单元、下一天是哪天。
+   ✅ Marco 2026-09-24：每个课程都用同一个首页，版面在 shared/course-home.js（Duolingo 式：
+   路线图在最上面、一天一颗没有字的圆，点了跳出卡片才有标题和 START、每个单元一个 Guide）。
+   这里只决定内容：哪几天是一个单元、下一天是哪天、卡片和 Guide 上写什么。
 
-   单元 = 到复习日为止（DAY 7／13／20 本来就是复习日，当该单元的 BOSS）。
+   单元 = 到复习日为止（DAY 7／13／20 本来就是复习日，当该单元的 BOSS，奖杯图示）。
    21–30 没有复习日，按主题切成「简报与面试」（21–26）和「日常情境」（27–30），
    这两个单元没有 BOSS。每一天都一直开着（跟以前的格子一样，不锁）。
+   一般的天是麦克风图示 —— 这是口说课。
 
-   SHORT 是圆圈底下的短标题（圆圈宽 116px，DAY 的完整标题太长）。完整标题照旧
-   从 DAYS（Sheet）来，显示在「继续」卡和那一天的页面上。Sheet 改了某一天的主题，
-   这里的短标题要跟着改 —— 没有对应的就退回完整标题。 */
+   卡片标题 = DAYS（Sheet）的完整标题：圆圈底下不再放字，卡片宽，放得下。 */
 const UNITS = [
-  { from: 1,  to: 7,  icon: "👋", t: { en: "You and your daily life", zh: "介绍自己和日常生活", ms: "Diri anda & kehidupan harian" } },
-  { from: 8,  to: 13, icon: "🙋", t: { en: "Asking and explaining", zh: "提问和解释", ms: "Bertanya & menerangkan" } },
-  { from: 14, to: 20, icon: "💬", t: { en: "Opinions, past and future", zh: "表达意见、过去和未来", ms: "Pendapat, masa lalu & masa depan" } },
-  { from: 21, to: 26, icon: "🎤", t: { en: "Presentations and interviews", zh: "简报和面试", ms: "Pembentangan & temu duga" } },
-  { from: 27, to: 30, icon: "🗺️", t: { en: "Everyday situations", zh: "日常生活情境", ms: "Situasi harian" } }
+  { from: 1,  to: 7,  t: { en: "You and your daily life", zh: "介绍自己和日常生活", ms: "Diri anda & kehidupan harian" } },
+  { from: 8,  to: 13, t: { en: "Asking and explaining", zh: "提问和解释", ms: "Bertanya & menerangkan" } },
+  { from: 14, to: 20, t: { en: "Opinions, past and future", zh: "表达意见、过去和未来", ms: "Pendapat, masa lalu & masa depan" } },
+  { from: 21, to: 26, t: { en: "Presentations and interviews", zh: "简报和面试", ms: "Pembentangan & temu duga" } },
+  { from: 27, to: 30, t: { en: "Everyday situations", zh: "日常生活情境", ms: "Situasi harian" } }
 ];
-const SHORT = {
-  1: "Introduce yourself", 2: "Daily routine", 3: "What you like", 4: "What you don't like",
-  5: "What you want", 6: "What you need", 7: "Your introduction",
-  8: "Simple questions", 9: "Yes / No questions", 10: "Giving reasons", 11: "Giving examples",
-  12: "Connectors", 13: "Review 8–12",
-  14: "Your opinion", 15: "Explaining", 16: "Opinion + example", 17: "Your past",
-  18: "Right now", 19: "Your future", 20: "Review 14–19",
-  21: "Starting a talk", 22: "Main points", 23: "Explaining ideas", 24: "Longer answers",
-  25: "Short paragraphs", 26: "Interview answers",
-  27: "Adjectives", 28: "Directions", 29: "Appointments", 30: "Reservations"
-};
+
+/* ---------- 每个单元的 Guide ----------
+   全部从 DAYS 本身取，不另外写内容 —— Sheet 改了，Guide 跟着改。
+   · 重点句子：这个单元每一天（复习日除外）的句型，各取第一个例句（没有例句就用
+     「说」那一步的示范句）；小字是句型 ＋ 那一天的说明（有学生语言的翻译就用翻译，
+     第 13–20、27–30 天没有说明，就只有句型）。超过 10 句时每一天先取一句、再轮第二句，
+     让每一天都有份。例句跟句型卡一样换成学生自己的资料（me）。
+   · 小提醒：复习日的说明（不跟上面重复的）、那一天的公式（formula）、只有字表的
+     句型（第 27 天的形容词），最多 4 条；再加常见错误（✗ → ✓），每一天轮流，最多 4 条。
+   没有自己的发音：课程还没有音档（STATE §1i 第 ⑤ 步），所以不传 say。 */
+const G_MAX = 10, TIP_MAX = 4;
+/* 句型卡上的说明，拿掉「✗ … → ✓ …」那一行（那一行放小提醒） */
+function noteOf(d, i) {
+  const st = (d.steps || []).find((s) => s.k === "patterns" && s.item === i);
+  const raw = st ? tx(st.descT || st.desc) : (d.items[i].desc || "");
+  return String(raw || "").split("\n").map((l) => l.trim()).filter((l) => l && !/^✗/.test(l)).join(" ");
+}
+/* 轮流取：每一组先取第 0 个，再取第 1 个……取满 max 为止，结果照原来的顺序 */
+function roundRobin(groups, max) {
+  const pick = [];
+  for (let r = 0; pick.length < max && groups.some((g) => g.length > r); r++)
+    groups.forEach((g, gi) => { if (g.length > r && pick.length < max) pick.push([gi, r]); });
+  return pick.sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(([gi, r]) => groups[gi][r]);
+}
+function unitGuide(u) {
+  const days = DAYS.filter((d) => d.day >= u.from && d.day <= u.to);
+  const lessons = days.filter((d) => !d.review);
+  const perDay = lessons.map((d) => {
+    const out = [];
+    (d.items || []).forEach((it, i) => {
+      const sp = (d.steps || []).find((s) => s.k === "speak" && s.item === i);
+      const en = (it.examples && it.examples[0]) || (sp && sp.model);
+      if (!en) return;
+      const note = noteOf(d, i);
+      out.push({ en: me(en), tr: it.head + (note ? " — " + note : "") });
+    });
+    /* 句型没有例句的一天（第 27 天）：用那一天「说」的示范句，小字是公式 */
+    if (!out.length) (d.steps || []).filter((s) => s.k === "speak" && s.model)
+      .forEach((s) => out.push({ en: me(s.model), tr: d.formula || "" }));
+    return out;
+  });
+  const phrases = roundRobin(perDay, G_MAX);
+  const shown = phrases.map((p) => p.tr).join("\n");
+
+  const notes = [];
+  days.filter((d) => d.review).forEach((d) => (d.items || []).forEach((it, i) => {
+    const n = noteOf(d, i);
+    if (n && !shown.includes(n)) notes.push(n);
+  }));
+  lessons.forEach((d) => {
+    if (d.formula && !shown.includes(d.formula) && !(d.items || []).some((it) => it.head === d.formula))
+      notes.push(`Day ${d.day} · ${d.formula}`);
+    (d.items || []).forEach((it) => {
+      if (it.words && it.words.length && !(it.examples && it.examples.length)) notes.push(`${it.head}: ${it.words.join(", ")}`);
+    });
+  });
+  const mistakes = roundRobin(lessons.map((d) => (d.items || []).map((it) => it.mistake).filter(Boolean)), TIP_MAX);
+  return {
+    intro: fmt(L_("hIntro"), { a: u.from, b: u.to }),
+    phrases,
+    tips: notes.slice(0, TIP_MAX).concat(mistakes)
+  };
+}
 
 function renderHome() {
   rec.stopAll();
@@ -6328,64 +6395,40 @@ function renderHome() {
   const pct = total ? Math.round((n / total) * 100) : 0;
   /* 下一天 = 第一个还没完成的（练习过但没及格的也算没完成）。跟完成页的「Next: Day …」同一个意思 */
   const nx = DAYS.find((d) => !S.done[d.day]) || null;
-  const unitOf = (day) => UNITS.findIndex((u) => day >= u.from && day <= u.to);
-  const started = n > 0 || Object.keys(S.practised).length > 0;
 
-  app().innerHTML = `${topBar()}
+  app().innerHTML = `${topBar(true)}
     ${window.TouchNav ? TouchNav.html() : ""}
     <div id="homemap"></div>`;
 
-  /* 怎么练 + 「我的资料」：放在卡片底下、路线图上面 */
+  /* 怎么练 + 「我的资料」：放在顶排底下、路线图上面；30 天都完成了再加一句恭喜 */
   const info = document.createElement("p");
   info.className = "sb-info";
-  info.innerHTML = `${esc(L_("homeSub"))}<button class="link" id="edit">${esc(L_(S.profile ? "myInfo" : "addInfo"))}</button>`;
+  info.innerHTML = `${nx ? "" : `${esc(L_("courseDone"))}<br>`}${esc(L_("homeSub"))}<button class="link" id="edit">${esc(L_(S.profile ? "myInfo" : "addInfo"))}</button>`;
   info.querySelector("#edit").onclick = () => renderAsk(true);
 
-  let cont;
-  if (nx) {
-    const ui = unitOf(nx.day);
-    cont = {
-      icon: nx.review ? "👑" : (UNITS[ui] ? UNITS[ui].icon : "🎤"),
-      kicker: started ? "RESUME" : "START",
-      title: nx.title,
-      sub: `${nx.review ? "Review · " : ""}Day ${nx.day}${ui >= 0 ? ` · Unit ${ui + 1}` : ""}`,
-      onClick: () => openDay(nx.day)
-    };
-  } else {
-    cont = { icon: "🏆", kicker: "★", title: L_("courseDoneT"), sub: L_("courseDone"), go: "🎉" };
-  }
-
   TouchHome.render($("homemap"), {
-    progress: {
-      label: "Course Progress",
-      pct,
-      sub: `Speaking Bonus · ${total} days`,
-      stats: [
-        { v: `${n}/${total}`, l: "Days" },
-        { v: S.xp, l: "XP" },
-        { v: Object.keys(S.recorded).length, l: "Recordings" }
-      ]
-    },
-    cont,
+    progress: { label: L_("hProgress"), pct },
+    xp: S.xp,
+    labels: { start: L_("hStart"), again: L_("hAgain"), guide: L_("hGuide"), back: L_("hBack"),
+              keyPhrases: L_("hPhrases"), tips: L_("hTips") },
     before: info,
     sections: UNITS.map((u, ui) => {
       const days = DAYS.filter((d) => d.day >= u.from && d.day <= u.to);
       const dn = days.filter((d) => S.done[d.day]).length;
       return {
-        kicker: `Unit ${ui + 1} · Days ${u.from}–${u.to} · ${dn}/${days.length}`,
+        kicker: fmt(L_("hUnit"), { u: ui + 1, a: u.from, b: u.to, d: dn, n: days.length }),
         title: tx(u.t),
-        icon: u.icon,
-        nodes: days.map((d) => {
+        guide: unitGuide(u),
+        nodes: days.map((d, di) => {
           const done = !!S.done[d.day];
           const prac = !done && d.day in S.practised;
-          const isNext = nx && nx.day === d.day;
           return {
-            label: `Day ${d.day} · ${SHORT[d.day] || d.title}`,
-            state: done ? "done" : isNext ? "go" : "avail",
+            label: `Day ${d.day} · ${d.title}`,
+            sub: fmt(L_("hNode"), { u: ui + 1, i: di + 1, n: days.length }) + (prac ? ` · ${L_("pracTag")}` : ""),
+            state: done ? "done" : nx && nx.day === d.day ? "go" : "avail",
+            icon: d.review ? "trophy" : "mic",
             boss: !!d.review,
             practised: prac,
-            tag: prac ? L_("pracTag") : undefined,
-            flag: isNext ? "START HERE" : undefined,
             onClick: () => openDay(d.day)
           };
         })

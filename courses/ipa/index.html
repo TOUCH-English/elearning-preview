@@ -2464,19 +2464,59 @@ function renderNav(){
 // only decides IPA's content — which stage is next, what a tap opens — and hands
 // the layout translated strings.
 //
-// Band = a stage, in the course's display order. Disc = a step of that stage as
+// Band = a stage, in the course's display order. Coin = a step of that stage as
 // the stage flow runs it (Watch → Learn → Exercises); the exercises are the
-// stage's test, so they are the BOSS disc. Watch appears only when the stage has
+// stage's test, so they are the BOSS coin. Watch appears only when the stage has
 // a video in the current language (the same test startStage() uses). Progress is
 // saved per stage, not per step, so a step's state is read from the stage:
 // completed → every step done; practised (a run below the pass mark) → Watch and
 // Learn done, the exercises still to pass.
+// The coin's icon says the kind of step. Say it is not a coin: its speaking
+// items are slotted inside the Exercises run (withSayIt), not a step of their own.
 function stageSteps(s){
   const steps = [];
-  if(s.video && ytId(videoUrl(s.video.key))) steps.push({step:"video", label:L("Watch","看影片","Tonton")});
-  if(s.learn) steps.push({step:"learn", label:L("Learn","学","Belajar")});
-  steps.push({step:"quiz", label:L("Exercises","练习","Latihan"), boss:true});
-  return steps.map((x,i)=>Object.assign(x, {label:`${i+1}. ${x.label}`}));
+  if(s.video && ytId(videoUrl(s.video.key))) steps.push({step:"video", icon:"play", label:L("Watch","看影片","Tonton")});
+  if(s.learn) steps.push({step:"learn", icon:"book", label:L("Learn","学","Belajar")});
+  steps.push({step:"quiz", icon:"trophy", label:L("Exercises","练习","Latihan"), boss:true});
+  return steps;
+}
+// The unit's Guide (the shared layout's guidebook sheet), built only from what
+// the stage already teaches — nothing written for it:
+//   phrases = the Learn page's sound grid (symbol + example word), a few from
+//             each group in turn up to 10, the line under each being the
+//             symbol and its short description (SOUND_DESC, the wording the
+//             exercise feedback uses); a stage with no grid (Word Stress) uses
+//             its Say it words and their IPA instead
+//   tips    = the Learn page's note and rule cards, or the mindset bullets for
+//             Welcome, then the Say it mouth instructions, 5 at most
+// Sound goes through playWord(), the same call as the Learn page's pills.
+const GUIDE_PHRASES = 10, GUIDE_TIPS = 5;
+const plainText = h => String(h||"").replace(/<br\s*\/?>/gi," · ").replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+function stageGuide(s){
+  const LN = s.learn || {};
+  let phrases = [];
+  if(LN.groups){
+    const lists = LN.groups.map(g=>g.items.slice());
+    while(phrases.length<GUIDE_PHRASES && lists.some(l=>l.length)){
+      for(const l of lists){ if(l.length && phrases.length<GUIDE_PHRASES) phrases.push(l.shift()); }
+    }
+    phrases = phrases.map(([sym, word])=>{
+      // SOUND_DESC ends with its own example "(ship)"; the word is already the headline
+      const d = soundDesc(sym).replace(/\s*[（(][^()（）]*[)）]\s*$/, "");
+      return { en:word, tr:`/${sym}/${d ? " · "+d : ""}`, say:()=>playWord(word, "", null, sym) };
+    });
+  } else {
+    phrases = (s.say||[]).filter(p=>p.w.length && s.id!=="s0").slice(0, GUIDE_PHRASES).map(p=>({
+      en:p.w.join(" · "), tr:p.ipa.join(" · "), say:()=>{ sfx("tap"); Audio$.speakSeq(p.tts || p.w); }
+    }));
+  }
+  let tips = [];
+  if(LN.bullets) tips.push(...LN.bullets.map(b=>plainText(trLearn(b[1]))));
+  if(LN.note) tips.push(plainText(tl(LN.note)));
+  if(LN.cards) tips.push(...LN.cards.map(c=>`${plainText(tl(c.title))}: ${plainText(tl(c.html))}`));
+  if(s.id!=="s0") tips.push(...(s.say||[]).map(p=>tx(p.tip)));
+  tips = tips.filter(Boolean).slice(0, GUIDE_TIPS);
+  return { phrases, tips };
 }
 // open a stage at one of its steps; "video" (or the first step) is the ordinary entry
 function openStageAt(id, step){
@@ -2485,7 +2525,7 @@ function openStageAt(id, step){
   if(step==="learn" && session.step==="video"){ session.step="learn"; render(); window.scrollTo(0,0); }
   else if(step==="quiz" && session.step!=="quiz"){ session.step="quiz"; session.qi=0; S.combo=0; renderHUD(); render(); window.scrollTo(0,0); }
 }
-// daily goal: tap the home card to step 20 → 50 → 100 → 20
+// daily goal: tap the ⚡ in the home's top row to step 20 → 50 → 100 → 20
 function cycleGoal(){ const order=[20,50,100]; S.dailyGoal = order[(order.indexOf(S.dailyGoal)+1)%order.length]; save(); renderHUD(); renderMap(); }
 function renderMap(){
   const hadOldProgress = ["s1","s2","s3","s4"].some(id=>S.stages[id]?.completed);
@@ -2498,7 +2538,6 @@ function renderMap(){
   const nextStage = COURSE.find(s=>isUnlocked(s.id) && !S.stages[s.id]?.completed)
                  || COURSE.find(s=>!S.stages[s.id]?.completed) || COURSE[COURSE.length-1];
   const allDone = doneStages===totalStages;
-  const isNew = !Object.keys(S.stages).length;          // never finished a round of anything
 
   const sections = COURSE.map((s,i)=>{
     const st = S.stages[s.id]||{};
@@ -2508,20 +2547,27 @@ function renderMap(){
     const goIdx = isNext ? (st.practised ? steps.length-1 : 0) : -1;
     // a unit added after this learner had already passed stages of the old course
     const fresh = s.isNew && !st.completed && hadOldProgress;
+    const where = i===0 ? L("Start here","从这里开始","Mula di sini") : L(`Stage ${i}`,`第 ${i} 关`,`Peringkat ${i}`);
     const nodes = steps.map((x,j)=>{
       const done = st.completed || (st.practised && !x.boss);
+      const practised = x.boss && !st.completed && !!st.practised;
+      // the popover line; it also carries what the old continue card used to say
+      let sub = `${where} · ${L(`Step ${j+1} of ${steps.length}`,`第 ${j+1} 步，共 ${steps.length} 步`,`Langkah ${j+1} daripada ${steps.length}`)}`;
+      if(practised) sub += ` · ${L(`Practised — reach ${Math.round(PASS*100)}% to complete it`,`练习过 —— 答对 ${Math.round(PASS*100)}% 就完成`,`Sudah berlatih — capai ${Math.round(PASS*100)}% untuk selesai`)}`;
+      else if(j===goIdx && S.courseDone && s.isNew) sub += ` · ${L("Added after you finished the course — your trophy stays.","你完成课程之后才加的新单元 —— 奖杯照样是你的。","Ditambah selepas anda tamatkan kursus — trofi anda kekal.")}`;
       return {
-        label:x.label, boss:!!x.boss,
+        label:x.label, sub, icon:x.icon, boss:!!x.boss,
         state: done ? "done" : (j===goIdx ? "go" : "avail"),   // adult system: no locked state
-        practised: x.boss && !st.completed && !!st.practised,
+        practised,
         flag: j===goIdx ? L("START","从这里","MULA") : "",
         tag: fresh && j===0 ? L("NEW","新","BARU") : "",
         onClick: ()=>openStageAt(s.id, x.step)
       };
     });
     const n = nodes.filter(x=>x.state==="done").length;
-    const kicker = i===0 ? L("Start here","从这里开始","Mula di sini") : L(`Stage ${i}`,`第 ${i} 关`,`Peringkat ${i}`);
-    return { kicker:`${kicker} · ${n}/${nodes.length}`, title:trStage(s.title), icon:s.icon, nodes };
+    const g = stageGuide(s);
+    return { kicker:`${where} · ${n}/${nodes.length}`, title:trStage(s.title), nodes,
+             guide:(g.phrases.length || g.tips.length) ? g : undefined };
   });
 
   const reviewCount = reviewPoolCount();
@@ -2532,58 +2578,31 @@ function renderMap(){
       <h1>IPA Pronunciation Course</h1>
       <p>${L("Speak clearly. Learn by playing. One sound at a time.","把音发清楚。玩着学。一次一个音。","Sebut dengan jelas. Belajar sambil bermain. Satu bunyi pada satu masa.")}</p>
     </div>
-    <div class="pad" id="ipaHome"></div>
-    <div class="fineprint">${L("Progress saves automatically","进度会自动存起来","Kemajuan disimpan secara automatik")}</div>`;
+    <div class="pad" id="ipaHome"></div>`;
   const home = document.getElementById("ipaHome");
   const root = TouchHome.render(home, {
-    progress:{
-      label:L("Course Progress","课程进度","Kemajuan Kursus"), pct:coursePct, sub:L("Complete","完成","Selesai"),
-      stats:[
-        {v:S.xp, l:L("XP earned","XP 累积","XP dikumpul")},
-        {v:`${doneStages}/${totalStages}`, l:L("stages","关","peringkat")},
-        {v:`🔥 ${S.streak}`, l:L("day streak","天连续","hari berturut")}
-      ]
-    },
-    cont:{
-      icon: allDone ? "🏆" : nextStage.icon,
-      kicker: allDone ? L("Course complete","课程完成","Kursus selesai")
-            : isNew ? L("Start learning","开始学","Mula belajar")
-            : (S.courseDone && nextStage.isNew) ? L("New unit","新单元","Unit baharu")
-            : L("Continue learning","继续学","Sambung belajar"),
-      title: trStage(nextStage.title),
-      sub: allDone
-        ? L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")
-        : isNew
-            ? L("Start with the first stage","从第一关开始","Mulakan dengan peringkat pertama")
-            : (S.courseDone && nextStage.isNew && !S.stages[nextStage.id]?.practised)
-              ? L("Added after you finished the course — your trophy stays.","你完成课程之后才加的新单元 —— 奖杯照样是你的。","Ditambah selepas anda tamatkan kursus — trofi anda kekal.")
-            : S.stages[nextStage.id]?.practised
-              ? L(`Practised — reach ${Math.round(PASS*100)}% to complete it`,`练习过 —— 答对 ${Math.round(PASS*100)}% 就完成`,`Sudah berlatih — capai ${Math.round(PASS*100)}% untuk selesai`)
-              : L("Pick up where you left off","从上次停的地方继续","Sambung dari tempat anda berhenti"),
-      go: allDone ? "🎉" : isNew ? L("Start","开始","Mula") : L("Continue","继续","Teruskan"),
-      onClick: allDone ? null : ()=>startStage(nextStage.id)
-    },
+    progress:{ label:`${L("Course Progress","课程进度","Kemajuan Kursus")} · ${doneStages}/${totalStages}`, pct:coursePct },
+    streak:S.streak,
     goal:{
       pct:goalPct,
       label:`${L("Daily Goal","每日目标","Matlamat Harian")} · ${S.dailyGoal} XP`,
-      value: S.todayXP>=S.dailyGoal
-        ? L("Done for today — amazing! 🎉","今天的目标达成了 —— 很棒！🎉","Selesai untuk hari ini — hebat! 🎉")
-        : `${S.dailyGoal-S.todayXP} ${L("XP to go today","XP 就达标了","XP lagi hari ini")}`,
-      hint:L("Tap to change goal (20 / 50 / 100)","点一下换目标（20 / 50 / 100）","Ketik untuk tukar matlamat (20 / 50 / 100)"),
+      value:`${S.todayXP}/${S.dailyGoal} XP`,
       onClick:cycleGoal            // 20 → 50 → 100, as before
     },
+    // the ↻ button shows only when there is something to review
     review: reviewCount>0 ? {
-      kicker:L("Today’s Review","今天的复习","Ulang Kaji Hari Ini"),
-      title:L(`${reviewCount} question${reviewCount>1?"s":""}`,`${reviewCount} 题`,`${reviewCount} soalan`),
-      text:L("A quick 2-minute warm-up.","两分钟热身。","Pemanasan 2 minit."),
-      button:L("Start","开始","Mula"),
+      title:L(`Today’s Review · ${reviewCount} question${reviewCount>1?"s":""}`,`今天的复习 · ${reviewCount} 题`,`Ulang Kaji Hari Ini · ${reviewCount} soalan`),
+      count:reviewCount,
       onClick:startReview
-    } : {
-      kicker:L("Today’s Review","今天的复习","Ulang Kaji Hari Ini"),
-      title:L("All caught up","全部跟上了","Semua sudah dikejar"),
-      text:L("No review needed right now. Nice work!","现在不用复习。做得好！","Tiada ulang kaji sekarang. Syabas!")
+    } : null,
+    labels:{
+      start:L("START","开始","MULA"), again:L("PRACTISE AGAIN","再练一次","BERLATIH LAGI"),
+      guide:L("Guide","指南","Panduan"), back:L("Back","返回","Kembali"),
+      keyPhrases:L("Key sounds","重点音","Bunyi utama"), tips:L("Tips","小提醒","Petua")
     },
-    sections
+    sections,
+    after:`${allDone ? `<div class="fineprint">${L("You finished every stage — replay anytime.","每一关都过了 —— 想重玩随时可以。","Anda tamatkan semua peringkat — main semula bila-bila masa.")}</div>` : ""}
+      <div class="fineprint">${L("Progress saves automatically","进度会自动存起来","Kemajuan disimpan secara automatik")}</div>`
   });
   // the unit bands stick just under the HUD (standalone) or the platform's course bar (HUD hidden, 60px)
   const hud = document.getElementById("hud");
