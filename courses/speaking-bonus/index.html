@@ -4387,7 +4387,9 @@ const ASK = [
 function renderAsk(isEdit) {
   const p = S.profile || {};
   redraw = () => renderAsk(isEdit);
+  /* 首次进来的问题页也放「回课程」记号 —— 在平台里课程栏靠它出现，学生才有路回去 */
   app().innerHTML = `${topBar()}
+    ${window.TouchNav ? TouchNav.html() : ""}
     <h1>${esc(L_(isEdit ? "askTitleEdit" : "askTitleNew"))}</h1>
     <p class="sub">${L_(isEdit ? "askSubEdit" : "askSubNew")}</p>
     <div class="card">

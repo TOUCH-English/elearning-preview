@@ -70,7 +70,7 @@
 
   /* 在平台里：平台管「人」，课程只管「课」（Marco 2026-09-24 选 A，docs/decisions.md）。
      · 名字一律用帐号上的 —— 称呼（nickname），没有就用注册名字；课程里不再问、也不能改
-     · 解释语言：顾问设的是预设；学生自己选过（这个共用的 profile）就用学生的
+     · 解释语言：平台的 students.language 为准（顾问设、学生在课程栏可改，都写到那里）
      · 课程读语言要先读这里、不读自己存的那份，否则七个课程又会各说各话
      <html> 挂上 te-platform，课程的 CSS 用它藏掉自己的 Profile、底部导航。 */
   var who = global.TouchStore && global.TouchStore.student;
@@ -80,7 +80,9 @@
        全名常常很长、英文加中文，「My name is ___」练的是学生平常怎么介绍自己 */
     var called = String(who.nickname || who.name || "").trim();
     if (called && String(store.get("name", "") || "").trim() !== called) store.set("name", called);
-    if (LANGS.indexOf(who.lang) >= 0 && LANGS.indexOf(store.get("lang", null)) < 0) store.set("lang", who.lang);
+    /* 语言以平台为准（students.language）：学生在课程栏换语言会写回平台（nav.js），
+       顾问改的也在这里；平台还没有值时才用这里存过的 */
+    if (LANGS.indexOf(who.lang) >= 0 && store.get("lang", null) !== who.lang) store.set("lang", who.lang);
     try { global.document.documentElement.classList.add("te-platform"); } catch (e) {}
   }
 
