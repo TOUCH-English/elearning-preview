@@ -48,11 +48,16 @@
 
   // the same word, near enough: exact, or one letter off for words of four letters or more,
   // and the usual contractions either way round
-  var SAME = { "i'm": "i am", "it's": "it is", "don't": "do not", "doesn't": "does not", "can't": "cannot", "what's": "what is", "i'd": "i would", "i've": "i have", "that's": "that is", "he's": "he is", "she's": "she is", "we're": "we are", "they're": "they are", "you're": "you are", "isn't": "is not", "aren't": "are not" };
+  var SAME = { "i'm": "i am", "it's": "it is", "don't": "do not", "doesn't": "does not", "can't": "cannot", "what's": "what is", "i'd": "i would", "i've": "i have", "that's": "that is", "he's": "he is", "she's": "she is", "we're": "we are", "they're": "they are", "you're": "you are", "isn't": "is not", "aren't": "are not",
+    "name's": "name is", "there's": "there is", "here's": "here is", "who's": "who is", "where's": "where is", "how's": "how is", "let's": "let us" };
+  /* The people in the course sentences. Recognisers spell names freely ("Siti" comes back
+     as "city", "Kumar" as "Kuma"), so, like the learner's own name, a cast name is never
+     marked — it is not an English word the learner can say wrong. */
+  var CAST = ["siti", "kumar", "mei", "ling", "tan", "ali", "amy"];
   function near(a, b) { return a === b || (a.length >= 4 && lev(a, b) <= 1); }
 
   function check(target, heard) {
-    var names = ((global.TouchVoice && global.TouchVoice.names) || []).map(function (n) { return norm(n); }).join(" ").split(" ").filter(Boolean);
+    var names = ((global.TouchVoice && global.TouchVoice.names) || []).map(function (n) { return norm(n); }).join(" ").split(" ").filter(Boolean).concat(CAST);
     var tw = String(target || "").split(/\s+/).filter(function (w) { return /[A-Za-z0-9]/.test(w); });
     var best = null;
     (heard && heard.length ? heard : [""]).forEach(function (h) {
@@ -61,12 +66,25 @@
       var res = tw.map(function (raw) {
         var w = norm(raw);
         var parts = (SAME[w] || w).split(" ");
-        if (!w || parts.every(function (p) { return names.indexOf(p) >= 0; })) return { w: raw, ok: true };
+        if (!w) return { w: raw, ok: true };
+        // a name: marked right if heard, or if SOME word was said in its place (resolved below)
+        if (parts.every(function (p) { return names.indexOf(p) >= 0; })) return { w: raw, ok: null, name: parts };
         var ok = parts.every(function (p) {
           for (var i = 0; i < hw.length; i++) if (!used[i] && near(p, hw[i])) { used[i] = true; return true; }
           return false;
         });
         return { w: raw, ok: ok };
+      });
+      /* Names are spelled freely by recognisers ("Siti" → "city"), so a name is right when it
+         was heard OR when any other word was left over to stand in its place — but not when
+         nothing was said there at all ("hello" alone for "Hello, Siti."). */
+      res.forEach(function (r) {
+        if (r.ok !== null) return;
+        var i, hit = -1;
+        for (i = 0; i < hw.length && hit < 0; i++) if (!used[i] && r.name.some(function (p) { return near(p, hw[i]); })) hit = i;
+        for (i = 0; i < hw.length && hit < 0; i++) if (!used[i]) hit = i;
+        if (hit >= 0) used[hit] = true;
+        r.ok = hit >= 0; delete r.name;
       });
       var n = res.filter(function (r) { return r.ok; }).length;
       if (!best || n > best.ok) best = { words: res, ok: n, total: res.length };
