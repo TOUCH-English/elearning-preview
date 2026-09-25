@@ -49,48 +49,82 @@
   // the same word, near enough: exact, or one letter off for words of four letters or more,
   // and the usual contractions either way round
   var SAME = { "i'm": "i am", "it's": "it is", "don't": "do not", "doesn't": "does not", "can't": "cannot", "what's": "what is", "i'd": "i would", "i've": "i have", "that's": "that is", "he's": "he is", "she's": "she is", "we're": "we are", "they're": "they are", "you're": "you are", "isn't": "is not", "aren't": "are not",
+    "i'll": "i will", "we'll": "we will", "you'll": "you will", "he'll": "he will", "she'll": "she will", "it'll": "it will", "they'll": "they will", "won't": "will not", "we've": "we have", "you've": "you have", "didn't": "did not", "wasn't": "was not", "couldn't": "could not", "shouldn't": "should not",
     "name's": "name is", "there's": "there is", "here's": "here is", "who's": "who is", "where's": "where is", "how's": "how is", "let's": "let us" };
   /* The people in the course sentences. Recognisers spell names freely ("Siti" comes back
      as "city", "Kumar" as "Kuma"), so, like the learner's own name, a cast name is never
      marked — it is not an English word the learner can say wrong. */
   var CAST = ["siti", "kumar", "mei", "ling", "tan", "ali", "amy"];
-  function near(a, b) { return a === b || (a.length >= 4 && lev(a, b) <= 1); }
+  /* Near enough to count as the same word: exact, or — for words of five letters or more —
+     one letter off, which covers accent and recogniser spelling. But never a difference
+     of a grammar ending: "visit" for "visited", "work" for "works", "like" for "liked" are
+     the very mistakes a lesson teaches, so they must not pass as "the same word"
+     (walkthrough 2026-09-25: "I visit my parents" was praised in the past-tense lesson). */
+  var ENDS = ["s", "es", "d", "ed", "ing"];
+  function twinOf(long, short) {        // long = short + a grammar ending (incl. like→liked, live→living, study→studied)
+    return ENDS.some(function (e) { return long === short + e; }) ||
+      (/e$/.test(short) && (long === short.slice(0, -1) + "ing" || long === short.slice(0, -1) + "ed")) ||
+      (/y$/.test(short) && (long === short.slice(0, -1) + "ies" || long === short.slice(0, -1) + "ied"));
+  }
+  function grammarTwin(a, b) { return a !== b && (twinOf(a, b) || twinOf(b, a)); }
+  function near(a, b) { return a === b || (a.length >= 5 && !grammarTwin(a, b) && lev(a, b) <= 1); }
 
+  /* The small words that carry the grammar — leave one out and the sentence is wrong
+     ("I good", "I twenty-eight years old", "I from Ipoh and I work…"). Every one of them in
+     the model must be heard. Articles are not in the list: a missing "a"/"the" is the one
+     slip a long, otherwise right sentence may keep. */
+  var CRITICAL = ["am", "is", "are", "was", "were", "be", "been", "do", "does", "did", "have", "has", "had",
+    "can", "could", "will", "would", "should", "not", "never", "and", "but", "because", "so", "or", "then", "to",
+    "i", "you", "he", "she", "it", "we", "they", "my", "your", "his", "her", "our", "their"];
+
+  /* Which words of the model came through, IN ORDER (the longest ordered match between the
+     model and what was heard): "I come from Kulai and I live in Kuantan" for "…from
+     Kuantan… in Kulai" is not the same sentence, even with every word present. A name
+     matches any one word said in its place (recognisers spell names freely). Passes when
+     every grammar word is there, no word was replaced by a grammar twin, and at most one
+     other word is missing (none, for a sentence of five words or fewer). */
   function check(target, heard) {
     var names = ((global.TouchVoice && global.TouchVoice.names) || []).map(function (n) { return norm(n); }).join(" ").split(" ").filter(Boolean).concat(CAST);
     var tw = String(target || "").split(/\s+/).filter(function (w) { return /[A-Za-z0-9]/.test(w); });
     var best = null;
     (heard && heard.length ? heard : [""]).forEach(function (h) {
       var hw = words(Object.keys(SAME).reduce(function (s, k) { return s.replace(new RegExp("\\b" + k + "\\b", "g"), SAME[k]); }, norm(h)).replace(/\bmister\b/g, "mr").replace(/\bmissus\b|\bmisses\b/g, "mrs"));
-      var used = [];
-      var res = tw.map(function (raw) {
-        var w = norm(raw);
+      // the model as single words, each remembering which displayed word it belongs to
+      var tv = [];
+      tw.forEach(function (raw, ri) {
+        var w = norm(raw); if (!w) return;
         var parts = (SAME[w] || w).split(" ");
-        if (!w) return { w: raw, ok: true };
-        // a name: marked right if heard, or if SOME word was said in its place (resolved below)
-        if (parts.every(function (p) { return names.indexOf(p) >= 0; })) return { w: raw, ok: null, name: parts };
-        var ok = parts.every(function (p) {
-          for (var i = 0; i < hw.length; i++) if (!used[i] && near(p, hw[i])) { used[i] = true; return true; }
-          return false;
-        });
+        var isName = parts.every(function (p) { return names.indexOf(p) >= 0; });
+        parts.forEach(function (p) { tv.push({ p: p, ri: ri, name: isName }); });
+      });
+      var n = tv.length, m = hw.length, i, j;
+      var eq = function (a, b) { return near(a.p, b) || (a.name && !!b); };
+      var L = []; for (i = 0; i <= n; i++) { L[i] = []; for (j = 0; j <= m; j++) L[i][j] = 0; }
+      for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
+        L[i][j] = eq(tv[i], hw[j]) ? 1 + L[i + 1][j + 1] : Math.max(L[i + 1][j], L[i][j + 1]);
+      var hit = [], usedH = [];
+      for (i = 0, j = 0; i < n && j < m;) {
+        if (eq(tv[i], hw[j]) && L[i][j] === 1 + L[i + 1][j + 1]) { hit[i] = true; usedH[j] = true; i++; j++; }
+        else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++;
+      }
+      var leftover = hw.filter(function (_, k) { return !usedH[k]; });
+      var miss = [], why = "";
+      tv.forEach(function (t, k) {
+        if (hit[k]) return;
+        miss.push(t.p);
+        if (leftover.some(function (x) { return grammarTwin(t.p, x); })) why = why || "form:" + t.p;
+        else if (CRITICAL.indexOf(t.p) >= 0) why = why || "small:" + t.p;
+      });
+      var res = tw.map(function (raw, ri) {
+        var mine = tv.filter(function (t) { return t.ri === ri; });
+        var ok = !mine.length || mine.every(function (t) { return hit[tv.indexOf(t)]; });
         return { w: raw, ok: ok };
       });
-      /* Names are spelled freely by recognisers ("Siti" → "city"), so a name is right when it
-         was heard OR when any other word was left over to stand in its place — but not when
-         nothing was said there at all ("hello" alone for "Hello, Siti."). */
-      res.forEach(function (r) {
-        if (r.ok !== null) return;
-        var i, hit = -1;
-        for (i = 0; i < hw.length && hit < 0; i++) if (!used[i] && r.name.some(function (p) { return near(p, hw[i]); })) hit = i;
-        for (i = 0; i < hw.length && hit < 0; i++) if (!used[i]) hit = i;
-        if (hit >= 0) used[hit] = true;
-        r.ok = hit >= 0; delete r.name;
-      });
-      var n = res.filter(function (r) { return r.ok; }).length;
-      if (!best || n > best.ok) best = { words: res, ok: n, total: res.length };
+      var okN = n - miss.length;
+      var allowed = n <= 5 ? 0 : 1;
+      var cand = { words: res, ok: okN, total: n, miss: miss, why: why, pass: !why && miss.length <= allowed };
+      if (!best || (cand.pass && !best.pass) || (cand.pass === best.pass && okN > best.ok)) best = cand;
     });
-    // passes when at most one word in five did not come through
-    best.pass = best.total === 0 || best.ok / best.total >= 0.8;
     return best;
   }
 
@@ -130,12 +164,12 @@
      first and did not help; the real cause was <audio> playing between the tries, which
      shared/voice.js now avoids on iPhone.) R is the latest one. */
   var R = null, active = false, waiters = [];
-  function recogniser() {
+  function recogniser(long) {
     R = new Rec();
     R.lang = "en-US";
     R.interimResults = true;
-    R.maxAlternatives = 5;
-    R.continuous = false;
+    R.maxAlternatives = long ? 1 : 5;
+    R.continuous = !!long;
     return R;
   }
   function whenIdle() {
@@ -164,7 +198,11 @@
       if (!Rec) return reject(new Error("unavailable"));
       if (current) { try { current = null; } catch (e) {} }
       var go = function () {
-        var r = recogniser();
+        /* opt.long: several sentences in one go (a Boss mission). The phone keeps listening
+           through pauses until the learner taps again (or maxMs), and what was heard is
+           joined into one text instead of being offered as alternatives. */
+        var long = !!opt.long, parts = [];
+        var r = recogniser(long);
         current = r;
         var finals = [], interim = "", done = false, started = false, settle = null;
         var mr = null, stream = null, chunks = [], wantRec = !!opt.record && canRecord();
@@ -180,7 +218,8 @@
           if (current === r) current = null;
           finisher = null; killer = null;
           audioFor("auto");
-          var got = finals.length ? finals : (interim ? [interim] : []);
+          var got = long ? ((parts.join(" ") + " " + interim).trim() ? [(parts.filter(Boolean).join(" ") + (interim ? " " + interim : "")).trim()] : [])
+            : finals.length ? finals : (interim ? [interim] : []);
           mark(err ? "error:" + err.message : "done:" + got.length);
           if (err && !got.length) reject(err); else resolve(got);
         };
@@ -196,13 +235,15 @@
           var live = "", anyFinal = false;
           for (var i = e.resultIndex; i < e.results.length; i++) {
             var res = e.results[i];
+            if (res.isFinal && long) { parts[i] = res[0].transcript; interim = ""; continue; }
             if (res.isFinal) {
               anyFinal = true;
               for (var j = 0; j < res.length; j++) if (finals.indexOf(res[j].transcript) < 0) finals.push(res[j].transcript);
             } else live += res[0].transcript;
           }
           interim = live || interim;
-          if (opt.onHear) opt.onHear(finals[0] || interim);
+          if (long) interim = live;
+          if (opt.onHear) opt.onHear(long ? (parts.filter(Boolean).join(" ") + " " + interim).trim() : (finals[0] || interim));
           if (anyFinal) { clearTimeout(settle); settle = setTimeout(function () { try { r.stop(); } catch (x) {} finish(); }, 350); }
         };
         r.onerror = function (e) { mark("err:" + (e && e.error) + (e && e.message ? "(" + e.message + ")" : "")); finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …

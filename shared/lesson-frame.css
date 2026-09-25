@@ -111,3 +111,16 @@ body.embedded .player{padding-bottom:40px}
 .opt.wrong,.opt.sel.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:none;color:var(--bad-d)}
 .opt.right,.opt.sel.right{border-color:var(--success);background:var(--success-soft);box-shadow:none;color:var(--success-d)}
 .redoline{display:flex;align-items:center;gap:8px;background:var(--success-soft);border:1px solid #C2E2D4;color:var(--success-d);border-radius:14px;padding:12px 14px;font-weight:800;font-size:14px;margin-top:18px;text-align:left}
+
+/* Level 2 (2026-09-25): heard before read, the formula card, the English cue */
+.dline .covered{filter:blur(5px);cursor:pointer;user-select:none;transition:filter .2s}
+.skillcard{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:var(--brand-soft,#EAF0FB);text-align:left}
+.skillcard .skh{font-weight:800;font-size:15px;color:var(--brand-dd,#0E2A5C)}
+.skillcard .sktag{font-weight:600;font-size:11.5px;color:var(--subtle,#6B7A90);margin-left:6px}
+.skillcard .sksteps{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:8px 0 6px}
+.skillcard .skstep{background:#fff;border-radius:99px;padding:3px 10px;font-weight:700;font-size:13px;color:var(--brand-dd,#0E2A5C)}
+.skillcard .skarr{color:var(--subtle,#6B7A90);font-size:12px}
+.skillcard .skline{font-size:13.5px;color:var(--ink,#1B2A44);line-height:1.5}
+.cmgrid .cq{flex-direction:column;gap:4px}
+.cmgrid .cqt{display:block;font-size:13px;font-weight:600;line-height:1.35;text-align:left}
+.cuezh{margin-top:6px;font-size:14px;color:var(--subtle,#6B7A90)}

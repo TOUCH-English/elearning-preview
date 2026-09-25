@@ -19,9 +19,9 @@
 
 /* ---------- UI strings ---------- */
 const UI = {
- zh:{continue:"Continue",check:"Check",start:"Start",resume:"Resume",startLesson:"Start Lesson",correct:"Correct!",wrong:"Not quite",answerIs:"Correct answer:",vocab:"Vocabulary",patterns:"Sentence Patterns",fill:"Fill in the Blank",sub:"Substitution",order:"Word Order",trans:"Translation",mcq:"Multiple Choice",dialog:"Dialogue",boss:"BOSS CHALLENGE",lessonDone:"Lesson Complete!",bossDone:"Boss Defeated!",resSub:"Lesson complete. Next lesson unlocked.",accuracy:"Accuracy",locked:"Locked",done:"Done",go:"In progress",new:"Start",lesson:"Lesson",lessonU:"",module:"Module",bonus:"Completion bonus",bossBonus:"Boss bonus",heroNew:"Start your English journey here.",heroCont:"Continue where you left off.",allDone:"Congratulations! You finished the whole Pre-Beginner Level! 🎉",step:"Step",sceneLbl:"Scene",alsoCorrect:"也可以这样说：",practised:"已练习",practisedTitle:"已练习，还没过关",needPass:"答对 {p}% 才算过关（这次 {a}%）。这一课先记为「已练习」，随时可以再做一次！",needPassDone:"答对 {p}% 才算过关（这次 {a}%）。你之前已经过关，进度不会受影响。",retryLesson:"↻ 再做一次这一课",you:"You",changeLang:"Change explanation language?",menuTitle:"Menu",cancel:"Close",saveLocal:"Save to Device",quitYes:"Quit",quitNo:"Keep Learning",soundOn:"🔊 Sound on",soundOff:"🔇 Sound off",reviewLbl:"Today's Review",reviewN:"{n} questions to review",reviewNow:"Review",allCaught:"All caught up 🎉",noReview:"No review needed right now.",reviewDone:"Review Complete!",clearedMsg:"{c} cleared · {r} still to review.",reviewAgain:"Keep Reviewing",mistakes:"Mistakes to Review",praise:["Correct!","Excellent!","Great job!","Perfect!","Keep it up!"],combo:"Combo",nextUp:"Next",backHome:"Home",dailyGoal:"Daily Goal",goalDone:"🎉 Daily goal reached!",courseProg:"Course Progress",streakMile:"🔥 {n} days in a row! Amazing!",navHome:"Map",navProfile:"Profile",achTitle:"Achievements",statLessons:"Lessons",statStreak:"Day Streak",student:"Touch Student",editName:"Edit name",saveName:"Save",cpSub:"Pre-Beginner Level",startFlag:"START HERE",toNext:"{n} XP to Lv {lv}",xtGrowth:"成长树",xtNext:"再得 {n} XP 长成{name}",xtMax:"已长成大树，了不起！🌳",listen:"Listening Match",meaningIs:"Meaning:",nlTag:"Next Level",nlLocked:"Locked · {n}/25 lessons",nlSoon:"Coming soon 🎉",obTitle:"Welcome! 👋",obSkip:"Skip",speakTitle:"Speak Up",record:"Record",stopBtn:"Stop",play:"Play",tryAgain:"Try Again",speakSay:"Say this sentence:",recState:"Recording…",getReady:"Get ready…",speakNow:"Speak now!",saving:"Saving…",offTitle:"Recommended learning path",offGo:"Continue",offBack:"Go Back",vocabSub:"先认读这些单词，再继续。",tapSpk:"点喇叭按钮听单词发音；点选词块时也会自动朗读。",patternsSub:"___ 是可替换的位置。",fillSub:"选出正确的词。",subSub:"点选一个词，替换进句型。",subBuilt:"很好！你造了这个句子：",orderSub:"点击单词，排出正确顺序。",transSub:"把句子翻译成英文（点词组句）。",mcqSub:"选出最合适的答案。",dialogSub:"点词组句，完成你的台词。",bossSub:"无提示！靠自己完成对话。",reviewFrom:"来自你之前做错的题目，答对后会从这里移除。",quit:"退出本关？本关进度不会保存。",menuSub:"切换解释语言，或把进度保存到本设备（进度也会自动保存）。",saved:"✓ 已保存到本设备（刷新后会恢复）",savedMem:"已保存到本次会话（此浏览器不支持本地存储）",listenSub:"点喇叭听发音，再点对应的英文单词，把它们配对。",nlDesc:"进入 Level 1 后，你会学习更多日常交流表达。从“跟着说”，慢慢进入“自己说简单句子”。",nlToastLocked:"完成全部 25 关即可解锁 Level 1。继续加油！",nlToastSoon:"🎉 你已完成 Pre-Beginner！Level 1 正在制作中，敬请期待。",obSub:"我们要怎么称呼你？你的名字会出现在练习里（例如 My name is …），之后也可以在 Profile 里修改。",obHello:"你好，{name}！",listenMuted:"声音已关闭，本听力练习已跳过。想练听力可在右上角打开声音。",speakSub:"先开口说，再听听自己的声音；想重来就再录一次。不评分、不上传，录音只保存在你自己的设备里。",speakDenied:"无法使用麦克风（可能未授权）。没关系，点 Continue 继续，不影响通关。",speakSaved:"✓ 已录好，保存在本机。点 Play 听听自己的发音！",speakSavedHint:"找到你上次的录音了，点 Play 可以回听，或再录一次。",speakWaitHint:"按 Record 后先别说话——看到 “Speak now” 再开始说，录音会更完整。",hearModel:"▶ 先听一次示范",hearHint:"学生开口前一定要先听过：听 → 自己念 → 播自己的 → 再听示范对照。",offSub:"按顺序学习效果最好，下面是建议的路线：",offFree:"你可以自由探索这一关 😊 慢慢学，没问题。"},
- ms:{continue:"Continue",check:"Check",start:"Start",resume:"Resume",startLesson:"Start Lesson",correct:"Correct!",wrong:"Not quite",answerIs:"Correct answer:",vocab:"Vocabulary",patterns:"Sentence Patterns",fill:"Fill in the Blank",sub:"Substitution",order:"Word Order",trans:"Translation",mcq:"Multiple Choice",dialog:"Dialogue",boss:"BOSS CHALLENGE",lessonDone:"Lesson Complete!",bossDone:"Boss Defeated!",resSub:"Lesson complete. Next lesson unlocked.",accuracy:"Accuracy",locked:"Locked",done:"Done",go:"In progress",new:"Start",lesson:"Lesson",lessonU:"",module:"Module",bonus:"Completion bonus",bossBonus:"Boss bonus",heroNew:"Start your English journey here.",heroCont:"Continue where you left off.",allDone:"Congratulations! You finished the whole Pre-Beginner Level! 🎉",step:"Step",sceneLbl:"Scene",alsoCorrect:"Boleh juga dikatakan:",practised:"Sudah berlatih",practisedTitle:"Sudah berlatih — belum lulus",needPass:"Anda perlu {p}% betul untuk lulus (kali ini {a}%). Pelajaran ini ditanda 'Sudah berlatih' — cuba lagi bila-bila masa!",needPassDone:"Anda perlu {p}% betul untuk lulus (kali ini {a}%). Anda sudah lulus sebelum ini, jadi kemajuan anda kekal.",retryLesson:"↻ Ulang pelajaran ini",you:"You",changeLang:"Change explanation language?",menuTitle:"Menu",cancel:"Close",saveLocal:"Save to Device",quitYes:"Quit",quitNo:"Keep Learning",soundOn:"🔊 Sound on",soundOff:"🔇 Sound off",reviewLbl:"Today's Review",reviewN:"{n} questions to review",reviewNow:"Review",allCaught:"All caught up 🎉",noReview:"No review needed right now.",reviewDone:"Review Complete!",clearedMsg:"{c} cleared · {r} still to review.",reviewAgain:"Keep Reviewing",mistakes:"Mistakes to Review",praise:["Correct!","Excellent!","Great job!","Perfect!","Keep it up!"],combo:"Combo",nextUp:"Next",backHome:"Home",dailyGoal:"Daily Goal",goalDone:"🎉 Daily goal reached!",courseProg:"Course Progress",streakMile:"🔥 {n} days in a row! Amazing!",navHome:"Map",navProfile:"Profile",achTitle:"Achievements",statLessons:"Lessons",statStreak:"Day Streak",student:"Touch Student",editName:"Edit name",saveName:"Save",cpSub:"Pre-Beginner Level",startFlag:"START HERE",toNext:"{n} XP to Lv {lv}",xtGrowth:"Pokok",xtNext:"{n} XP lagi untuk menjadi {name}",xtMax:"Sudah jadi pokok besar — hebat! 🌳",listen:"Listening Match",meaningIs:"Meaning:",nlTag:"Next Level",nlLocked:"Locked · {n}/25 lessons",nlSoon:"Coming soon 🎉",obTitle:"Welcome! 👋",obSkip:"Skip",speakTitle:"Speak Up",record:"Record",stopBtn:"Stop",play:"Play",tryAgain:"Try Again",speakSay:"Say this sentence:",recState:"Recording…",getReady:"Get ready…",speakNow:"Speak now!",saving:"Saving…",offTitle:"Recommended learning path",offGo:"Continue",offBack:"Go Back",vocabSub:"Baca dan ingat perkataan ini dahulu.",tapSpk:"Tekan butang pembesar suara untuk dengar sebutan; perkataan juga dibaca apabila ditekan.",patternsSub:"___ ialah slot yang boleh diganti.",fillSub:"Pilih perkataan yang betul.",subSub:"Tekan satu perkataan untuk diganti ke dalam pola.",subBuilt:"Bagus! Anda membina ayat ini:",orderSub:"Tekan perkataan mengikut susunan yang betul.",transSub:"Terjemah ke Bahasa Inggeris (tekan perkataan).",mcqSub:"Pilih jawapan yang paling sesuai.",dialogSub:"Tekan perkataan untuk melengkapkan dialog anda.",bossSub:"Tiada petunjuk! Lengkapkan dialog sendiri.",reviewFrom:"Daripada jawapan yang anda silap; jawab betul untuk mengeluarkannya.",quit:"Keluar? Kemajuan pelajaran ini tidak disimpan.",menuSub:"Tukar bahasa penerangan atau simpan kemajuan ke peranti ini (kemajuan juga disimpan secara automatik).",saved:"✓ Disimpan ke peranti ini (kekal selepas muat semula)",savedMem:"Disimpan untuk sesi ini sahaja (pelayar tidak menyokong storan)",listenSub:"Tekan pembesar suara untuk dengar, kemudian tekan perkataan Inggeris yang sepadan.",nlDesc:"Dalam Level 1, anda akan belajar komunikasi harian yang mudah. Anda akan mula daripada ikut sebut kepada membina ayat mudah sendiri.",nlToastLocked:"Tamatkan semua 25 pelajaran untuk membuka Level 1. Teruskan!",nlToastSoon:"🎉 Anda telah tamat Pre-Beginner! Level 1 sedang dibina.",obSub:"Apa nama anda? Nama anda akan muncul dalam latihan (cth. My name is …). Anda boleh menukarnya di Profile bila-bila masa.",obHello:"Hai, {name}!",listenMuted:"Bunyi dimatikan, latihan mendengar ini dilangkau. Hidupkan bunyi di penjuru atas untuk mencubanya.",speakSub:"Cakap dahulu, kemudian dengar suara anda sendiri; rakam semula jika mahu. Tiada markah, tiada muat naik — rakaman disimpan dalam peranti anda sahaja.",speakDenied:"Mikrofon tidak dapat digunakan (mungkin tiada kebenaran). Tidak mengapa, tekan Continue untuk teruskan.",speakSaved:"✓ Rakaman disimpan dalam peranti ini. Tekan Play untuk dengar sebutan anda!",speakSavedHint:"Rakaman lepas anda dijumpai. Tekan Play untuk dengar, atau rakam semula.",speakWaitHint:"Selepas tekan Record, tunggu dahulu — mula bercakap hanya apabila “Speak now” muncul supaya rakaman lengkap.",hearModel:"▶ Dengar contoh dulu",hearHint:"Dengar dahulu, kemudian cakap, main semula, dan bandingkan dengan contoh.",offSub:"Belajar mengikut urutan paling berkesan. Ini laluan yang dicadangkan:",offFree:"Anda masih boleh meneroka pelajaran ini 😊 Belajar perlahan-lahan, tiada masalah."},
- en:{continue:"Continue",check:"Check",start:"Start",resume:"Resume",startLesson:"Start Lesson",correct:"Correct!",wrong:"Not quite",answerIs:"Correct answer:",vocab:"Vocabulary",patterns:"Sentence Patterns",fill:"Fill in the Blank",sub:"Substitution",order:"Word Order",trans:"Translation",mcq:"Multiple Choice",dialog:"Dialogue",boss:"BOSS CHALLENGE",lessonDone:"Lesson Complete!",bossDone:"Boss Defeated!",resSub:"Lesson complete. Next lesson unlocked.",accuracy:"Accuracy",locked:"Locked",done:"Done",go:"In progress",new:"Start",lesson:"Lesson",lessonU:"",module:"Module",bonus:"Completion bonus",bossBonus:"Boss bonus",heroNew:"Start your English journey here.",heroCont:"Continue where you left off.",allDone:"Congratulations! You finished the whole Pre-Beginner Level! 🎉",step:"Step",sceneLbl:"Scene",alsoCorrect:"Also correct:",practised:"Practised",practisedTitle:"Practised — not passed yet",needPass:"You need {p}% correct to pass (this time: {a}%). This lesson is marked 'Practised' — try it again any time!",needPassDone:"You need {p}% correct to pass (this time: {a}%). You passed this lesson before, so your progress is kept.",retryLesson:"↻ Try this lesson again",you:"You",changeLang:"Change explanation language?",menuTitle:"Menu",cancel:"Close",saveLocal:"Save to Device",quitYes:"Quit",quitNo:"Keep Learning",soundOn:"🔊 Sound on",soundOff:"🔇 Sound off",reviewLbl:"Today's Review",reviewN:"{n} questions to review",reviewNow:"Review",allCaught:"All caught up 🎉",noReview:"No review needed right now.",reviewDone:"Review Complete!",clearedMsg:"{c} cleared · {r} still to review.",reviewAgain:"Keep Reviewing",mistakes:"Mistakes to Review",praise:["Correct!","Excellent!","Great job!","Perfect!","Keep it up!"],combo:"Combo",nextUp:"Next",backHome:"Home",dailyGoal:"Daily Goal",goalDone:"🎉 Daily goal reached!",courseProg:"Course Progress",streakMile:"🔥 {n} days in a row! Amazing!",navHome:"Map",navProfile:"Profile",achTitle:"Achievements",statLessons:"Lessons",statStreak:"Day Streak",student:"Touch Student",editName:"Edit name",saveName:"Save",cpSub:"Pre-Beginner Level",startFlag:"START HERE",toNext:"{n} XP to Lv {lv}",xtGrowth:"Growth Tree",xtNext:"{n} XP to grow into {name}",xtMax:"Fully grown — amazing! 🌳",listen:"Listening Match",meaningIs:"Meaning:",nlTag:"Next Level",nlLocked:"Locked · {n}/25 lessons",nlSoon:"Coming soon 🎉",obTitle:"Welcome! 👋",obSkip:"Skip",speakTitle:"Speak Up",record:"Record",stopBtn:"Stop",play:"Play",tryAgain:"Try Again",speakSay:"Say this sentence:",recState:"Recording…",getReady:"Get ready…",speakNow:"Speak now!",saving:"Saving…",offTitle:"Recommended learning path",offGo:"Continue",offBack:"Go Back",vocabSub:"Read and remember these words first.",tapSpk:"Tap the speaker button to hear the word; words are also spoken when you tap them.",patternsSub:"___ is a slot you can replace.",fillSub:"Choose the correct word.",subSub:"Tap one word to put into the pattern.",subBuilt:"Good! You made this sentence:",orderSub:"Tap the words in the correct order.",transSub:"Translate into English (tap the words).",mcqSub:"Choose the best answer.",dialogSub:"Tap the words to finish your line.",bossSub:"No hints! Finish the dialogue by yourself.",reviewFrom:"From answers you missed; answer correctly to clear them.",quit:"Quit this lesson? Progress will not be saved.",menuSub:"Change the explanation language or save progress to this device (progress also saves automatically).",saved:"✓ Saved to this device (kept after refresh)",savedMem:"Saved for this session only (browser storage unavailable)",listenSub:"Tap a speaker to listen, then tap the matching English word.",nlDesc:"In Level 1, you will learn simple daily communication. You will move from repeating to making simple sentences.",nlToastLocked:"Complete all 25 lessons to unlock Level 1. Keep going!",nlToastSoon:"🎉 You finished Pre-Beginner! Level 1 is coming soon.",obSub:"What should we call you? Your name will appear inside the exercises (e.g. My name is …). You can change it in Profile anytime.",obHello:"Hello, {name}!",listenMuted:"Sound is off, so this listening exercise is skipped. Turn sound on (top right) to try it.",speakSub:"Speak first. Listen to yourself. Try again if you want. No score, no upload — your recording stays on your own device.",speakDenied:"Microphone unavailable (permission may be blocked). No problem — tap Continue to move on.",speakSaved:"✓ Recorded and saved on this device. Tap Play to hear yourself!",speakSavedHint:"Found your last recording. Tap Play to listen, or record again.",speakWaitHint:"Wait for “Speak now” before speaking — your recording will be complete.",hearModel:"▶ Hear it first",hearHint:"Listen first, then say it, play yourself back, and compare with the model.",offSub:"Learning in order works best. Here is the recommended path:",offFree:"You can still explore this lesson 😊 Learn at your own pace."}
+ zh:{continue:"Continue",check:"Check",start:"Start",resume:"Resume",startLesson:"Start Lesson",correct:"Correct!",wrong:"Not quite",answerIs:"Correct answer:",vocab:"Vocabulary",patterns:"Sentence Patterns",fill:"Fill in the Blank",sub:"Substitution",order:"Word Order",trans:"Translation",mcq:"Multiple Choice",dialog:"Dialogue",boss:"BOSS CHALLENGE",lessonDone:"Lesson Complete!",bossDone:"Boss Defeated!",resSub:"Lesson complete. Next lesson unlocked.",accuracy:"Accuracy",locked:"Locked",done:"Done",go:"In progress",new:"Start",lesson:"Lesson",lessonU:"",module:"Module",bonus:"Completion bonus",bossBonus:"Boss bonus",heroNew:"Start your English journey here.",heroCont:"Continue where you left off.",allDone:"Congratulations! You finished the whole Pre-Beginner Level! 🎉",step:"Step",sceneLbl:"Scene",alsoCorrect:"也可以这样说：",practised:"已练习",practisedTitle:"已练习，还没过关",needPass:"答对 {p}% 才算过关（这次 {a}%）。这一课先记为「已练习」，随时可以再做一次！",needPassDone:"答对 {p}% 才算过关（这次 {a}%）。你之前已经过关，进度不会受影响。",retryLesson:"↻ 再做一次这一课",you:"You",changeLang:"Change explanation language?",menuTitle:"Menu",cancel:"Close",saveLocal:"Save to Device",quitYes:"Quit",quitNo:"Keep Learning",soundOn:"🔊 Sound on",soundOff:"🔇 Sound off",reviewLbl:"Today's Review",reviewN:"{n} questions to review",reviewNow:"Review",allCaught:"All caught up 🎉",noReview:"No review needed right now.",reviewDone:"Review Complete!",clearedMsg:"{c} cleared · {r} still to review.",reviewAgain:"Keep Reviewing",mistakes:"Mistakes to Review",praise:["Correct!","Excellent!","Great job!","Perfect!","Keep it up!"],combo:"Combo",nextUp:"Next",backHome:"Home",dailyGoal:"Daily Goal",goalDone:"🎉 Daily goal reached!",courseProg:"Course Progress",streakMile:"🔥 {n} days in a row! Amazing!",navHome:"Map",navProfile:"Profile",achTitle:"Achievements",statLessons:"Lessons",statStreak:"Day Streak",student:"Touch Student",editName:"Edit name",saveName:"Save",cpSub:"Pre-Beginner Level",startFlag:"START HERE",toNext:"{n} XP to Lv {lv}",xtGrowth:"成长树",xtNext:"再得 {n} XP 长成{name}",xtMax:"已长成大树，了不起！🌳",listen:"Listening Match",meaningIs:"Meaning:",nlTag:"Next Level",nlLocked:"Locked · {n}/25 lessons",nlSoon:"Coming soon 🎉",obTitle:"Welcome! 👋",obSkip:"Skip",speakTitle:"Speak Up",record:"Record",stopBtn:"Stop",play:"Play",tryAgain:"Try Again",speakSay:"Say this sentence:",recState:"Recording…",getReady:"Get ready…",speakNow:"Speak now!",saving:"Saving…",offTitle:"Recommended learning path",offGo:"Continue",offBack:"Go Back",vocabSub:"先认读这些单词，再继续。",tapSpk:"点喇叭按钮听单词发音；点选词块时也会自动朗读。",patternsSub:"___ 是可替换的位置。",fillSub:"选出正确的词。",subSub:"点选一个词或词组，放进句型。",subBuilt:"很好！你造了这个句子：",orderSub:"点击单词，排出正确顺序。",transSub:"把句子翻译成英文（点词组句）。",mcqSub:"选出最合适的答案。",dialogSub:"点词组句，完成你的台词。",bossSub:"无提示！靠自己完成对话。",reviewFrom:"来自你之前做错的题目，答对后会从这里移除。",quit:"退出本关？本关进度不会保存。",menuSub:"切换解释语言，或把进度保存到本设备（进度也会自动保存）。",saved:"✓ 已保存到本设备（刷新后会恢复）",savedMem:"已保存到本次会话（此浏览器不支持本地存储）",listenSub:"点喇叭听发音，再点对应的英文单词，把它们配对。",nlDesc:"进入 Level 1 后，你会学习更多日常交流表达。从“跟着说”，慢慢进入“自己说简单句子”。",nlToastLocked:"完成全部 25 关即可解锁 Level 1。继续加油！",nlToastSoon:"🎉 你已完成 Pre-Beginner！Level 1 正在制作中，敬请期待。",obSub:"我们要怎么称呼你？你的名字会出现在练习里（例如 My name is …），之后也可以在 Profile 里修改。",obHello:"你好，{name}！",listenMuted:"声音已关闭，本听力练习已跳过。想练听力可在右上角打开声音。",speakSub:"先开口说，再听听自己的声音；想重来就再录一次。不评分、不上传，录音只保存在你自己的设备里。",speakDenied:"无法使用麦克风（可能未授权）。没关系，点 Continue 继续，不影响通关。",speakSaved:"✓ 已录好，保存在本机。点 Play 听听自己的发音！",speakSavedHint:"找到你上次的录音了，点 Play 可以回听，或再录一次。",speakWaitHint:"按 Record 后先别说话——看到 “Speak now” 再开始说，录音会更完整。",hearModel:"▶ 先听一次示范",hearHint:"学生开口前一定要先听过：听 → 自己念 → 播自己的 → 再听示范对照。",offSub:"按顺序学习效果最好，下面是建议的路线：",offFree:"你可以自由探索这一关 😊 慢慢学，没问题。"},
+ ms:{continue:"Continue",check:"Check",start:"Start",resume:"Resume",startLesson:"Start Lesson",correct:"Correct!",wrong:"Not quite",answerIs:"Correct answer:",vocab:"Vocabulary",patterns:"Sentence Patterns",fill:"Fill in the Blank",sub:"Substitution",order:"Word Order",trans:"Translation",mcq:"Multiple Choice",dialog:"Dialogue",boss:"BOSS CHALLENGE",lessonDone:"Lesson Complete!",bossDone:"Boss Defeated!",resSub:"Lesson complete. Next lesson unlocked.",accuracy:"Accuracy",locked:"Locked",done:"Done",go:"In progress",new:"Start",lesson:"Lesson",lessonU:"",module:"Module",bonus:"Completion bonus",bossBonus:"Boss bonus",heroNew:"Start your English journey here.",heroCont:"Continue where you left off.",allDone:"Congratulations! You finished the whole Pre-Beginner Level! 🎉",step:"Step",sceneLbl:"Scene",alsoCorrect:"Boleh juga dikatakan:",practised:"Sudah berlatih",practisedTitle:"Sudah berlatih — belum lulus",needPass:"Anda perlu {p}% betul untuk lulus (kali ini {a}%). Pelajaran ini ditanda 'Sudah berlatih' — cuba lagi bila-bila masa!",needPassDone:"Anda perlu {p}% betul untuk lulus (kali ini {a}%). Anda sudah lulus sebelum ini, jadi kemajuan anda kekal.",retryLesson:"↻ Ulang pelajaran ini",you:"You",changeLang:"Change explanation language?",menuTitle:"Menu",cancel:"Close",saveLocal:"Save to Device",quitYes:"Quit",quitNo:"Keep Learning",soundOn:"🔊 Sound on",soundOff:"🔇 Sound off",reviewLbl:"Today's Review",reviewN:"{n} questions to review",reviewNow:"Review",allCaught:"All caught up 🎉",noReview:"No review needed right now.",reviewDone:"Review Complete!",clearedMsg:"{c} cleared · {r} still to review.",reviewAgain:"Keep Reviewing",mistakes:"Mistakes to Review",praise:["Correct!","Excellent!","Great job!","Perfect!","Keep it up!"],combo:"Combo",nextUp:"Next",backHome:"Home",dailyGoal:"Daily Goal",goalDone:"🎉 Daily goal reached!",courseProg:"Course Progress",streakMile:"🔥 {n} days in a row! Amazing!",navHome:"Map",navProfile:"Profile",achTitle:"Achievements",statLessons:"Lessons",statStreak:"Day Streak",student:"Touch Student",editName:"Edit name",saveName:"Save",cpSub:"Pre-Beginner Level",startFlag:"START HERE",toNext:"{n} XP to Lv {lv}",xtGrowth:"Pokok",xtNext:"{n} XP lagi untuk menjadi {name}",xtMax:"Sudah jadi pokok besar — hebat! 🌳",listen:"Listening Match",meaningIs:"Meaning:",nlTag:"Next Level",nlLocked:"Locked · {n}/25 lessons",nlSoon:"Coming soon 🎉",obTitle:"Welcome! 👋",obSkip:"Skip",speakTitle:"Speak Up",record:"Record",stopBtn:"Stop",play:"Play",tryAgain:"Try Again",speakSay:"Say this sentence:",recState:"Recording…",getReady:"Get ready…",speakNow:"Speak now!",saving:"Saving…",offTitle:"Recommended learning path",offGo:"Continue",offBack:"Go Back",vocabSub:"Baca dan ingat perkataan ini dahulu.",tapSpk:"Tekan butang pembesar suara untuk dengar sebutan; perkataan juga dibaca apabila ditekan.",patternsSub:"___ ialah slot yang boleh diganti.",fillSub:"Pilih perkataan yang betul.",subSub:"Tekan satu perkataan atau frasa untuk dimasukkan ke dalam pola.",subBuilt:"Bagus! Anda membina ayat ini:",orderSub:"Tekan perkataan mengikut susunan yang betul.",transSub:"Terjemah ke Bahasa Inggeris (tekan perkataan).",mcqSub:"Pilih jawapan yang paling sesuai.",dialogSub:"Tekan perkataan untuk melengkapkan dialog anda.",bossSub:"Tiada petunjuk! Lengkapkan dialog sendiri.",reviewFrom:"Daripada jawapan yang anda silap; jawab betul untuk mengeluarkannya.",quit:"Keluar? Kemajuan pelajaran ini tidak disimpan.",menuSub:"Tukar bahasa penerangan atau simpan kemajuan ke peranti ini (kemajuan juga disimpan secara automatik).",saved:"✓ Disimpan ke peranti ini (kekal selepas muat semula)",savedMem:"Disimpan untuk sesi ini sahaja (pelayar tidak menyokong storan)",listenSub:"Tekan pembesar suara untuk dengar, kemudian tekan perkataan Inggeris yang sepadan.",nlDesc:"Dalam Level 1, anda akan belajar komunikasi harian yang mudah. Anda akan mula daripada ikut sebut kepada membina ayat mudah sendiri.",nlToastLocked:"Tamatkan semua 25 pelajaran untuk membuka Level 1. Teruskan!",nlToastSoon:"🎉 Anda telah tamat Pre-Beginner! Level 1 sedang dibina.",obSub:"Apa nama anda? Nama anda akan muncul dalam latihan (cth. My name is …). Anda boleh menukarnya di Profile bila-bila masa.",obHello:"Hai, {name}!",listenMuted:"Bunyi dimatikan, latihan mendengar ini dilangkau. Hidupkan bunyi di penjuru atas untuk mencubanya.",speakSub:"Cakap dahulu, kemudian dengar suara anda sendiri; rakam semula jika mahu. Tiada markah, tiada muat naik — rakaman disimpan dalam peranti anda sahaja.",speakDenied:"Mikrofon tidak dapat digunakan (mungkin tiada kebenaran). Tidak mengapa, tekan Continue untuk teruskan.",speakSaved:"✓ Rakaman disimpan dalam peranti ini. Tekan Play untuk dengar sebutan anda!",speakSavedHint:"Rakaman lepas anda dijumpai. Tekan Play untuk dengar, atau rakam semula.",speakWaitHint:"Selepas tekan Record, tunggu dahulu — mula bercakap hanya apabila “Speak now” muncul supaya rakaman lengkap.",hearModel:"▶ Dengar contoh dulu",hearHint:"Dengar dahulu, kemudian cakap, main semula, dan bandingkan dengan contoh.",offSub:"Belajar mengikut urutan paling berkesan. Ini laluan yang dicadangkan:",offFree:"Anda masih boleh meneroka pelajaran ini 😊 Belajar perlahan-lahan, tiada masalah."},
+ en:{continue:"Continue",check:"Check",start:"Start",resume:"Resume",startLesson:"Start Lesson",correct:"Correct!",wrong:"Not quite",answerIs:"Correct answer:",vocab:"Vocabulary",patterns:"Sentence Patterns",fill:"Fill in the Blank",sub:"Substitution",order:"Word Order",trans:"Translation",mcq:"Multiple Choice",dialog:"Dialogue",boss:"BOSS CHALLENGE",lessonDone:"Lesson Complete!",bossDone:"Boss Defeated!",resSub:"Lesson complete. Next lesson unlocked.",accuracy:"Accuracy",locked:"Locked",done:"Done",go:"In progress",new:"Start",lesson:"Lesson",lessonU:"",module:"Module",bonus:"Completion bonus",bossBonus:"Boss bonus",heroNew:"Start your English journey here.",heroCont:"Continue where you left off.",allDone:"Congratulations! You finished the whole Pre-Beginner Level! 🎉",step:"Step",sceneLbl:"Scene",alsoCorrect:"Also correct:",practised:"Practised",practisedTitle:"Practised — not passed yet",needPass:"You need {p}% correct to pass (this time: {a}%). This lesson is marked 'Practised' — try it again any time!",needPassDone:"You need {p}% correct to pass (this time: {a}%). You passed this lesson before, so your progress is kept.",retryLesson:"↻ Try this lesson again",you:"You",changeLang:"Change explanation language?",menuTitle:"Menu",cancel:"Close",saveLocal:"Save to Device",quitYes:"Quit",quitNo:"Keep Learning",soundOn:"🔊 Sound on",soundOff:"🔇 Sound off",reviewLbl:"Today's Review",reviewN:"{n} questions to review",reviewNow:"Review",allCaught:"All caught up 🎉",noReview:"No review needed right now.",reviewDone:"Review Complete!",clearedMsg:"{c} cleared · {r} still to review.",reviewAgain:"Keep Reviewing",mistakes:"Mistakes to Review",praise:["Correct!","Excellent!","Great job!","Perfect!","Keep it up!"],combo:"Combo",nextUp:"Next",backHome:"Home",dailyGoal:"Daily Goal",goalDone:"🎉 Daily goal reached!",courseProg:"Course Progress",streakMile:"🔥 {n} days in a row! Amazing!",navHome:"Map",navProfile:"Profile",achTitle:"Achievements",statLessons:"Lessons",statStreak:"Day Streak",student:"Touch Student",editName:"Edit name",saveName:"Save",cpSub:"Pre-Beginner Level",startFlag:"START HERE",toNext:"{n} XP to Lv {lv}",xtGrowth:"Growth Tree",xtNext:"{n} XP to grow into {name}",xtMax:"Fully grown — amazing! 🌳",listen:"Listening Match",meaningIs:"Meaning:",nlTag:"Next Level",nlLocked:"Locked · {n}/25 lessons",nlSoon:"Coming soon 🎉",obTitle:"Welcome! 👋",obSkip:"Skip",speakTitle:"Speak Up",record:"Record",stopBtn:"Stop",play:"Play",tryAgain:"Try Again",speakSay:"Say this sentence:",recState:"Recording…",getReady:"Get ready…",speakNow:"Speak now!",saving:"Saving…",offTitle:"Recommended learning path",offGo:"Continue",offBack:"Go Back",vocabSub:"Read and remember these words first.",tapSpk:"Tap the speaker button to hear the word; words are also spoken when you tap them.",patternsSub:"___ is a slot you can replace.",fillSub:"Choose the correct word.",subSub:"Tap a word or phrase to put into the pattern.",subBuilt:"Good! You made this sentence:",orderSub:"Tap the words in the correct order.",transSub:"Translate into English (tap the words).",mcqSub:"Choose the best answer.",dialogSub:"Tap the words to finish your line.",bossSub:"No hints! Finish the dialogue by yourself.",reviewFrom:"From answers you missed; answer correctly to clear them.",quit:"Quit this lesson? Progress will not be saved.",menuSub:"Change the explanation language or save progress to this device (progress also saves automatically).",saved:"✓ Saved to this device (kept after refresh)",savedMem:"Saved for this session only (browser storage unavailable)",listenSub:"Tap a speaker to listen, then tap the matching English word.",nlDesc:"In Level 1, you will learn simple daily communication. You will move from repeating to making simple sentences.",nlToastLocked:"Complete all 25 lessons to unlock Level 1. Keep going!",nlToastSoon:"🎉 You finished Pre-Beginner! Level 1 is coming soon.",obSub:"What should we call you? Your name will appear inside the exercises (e.g. My name is …). You can change it in Profile anytime.",obHello:"Hello, {name}!",listenMuted:"Sound is off, so this listening exercise is skipped. Turn sound on (top right) to try it.",speakSub:"Speak first. Listen to yourself. Try again if you want. No score, no upload — your recording stays on your own device.",speakDenied:"Microphone unavailable (permission may be blocked). No problem — tap Continue to move on.",speakSaved:"✓ Recorded and saved on this device. Tap Play to hear yourself!",speakSavedHint:"Found your last recording. Tap Play to listen, or record again.",speakWaitHint:"Wait for “Speak now” before speaking — your recording will be complete.",hearModel:"▶ Hear it first",hearHint:"Listen first, then say it, play yourself back, and compare with the model.",offSub:"Learning in order works best. Here is the recommended path:",offFree:"You can still explore this lesson 😊 Learn at your own pace."}
 };
 /* Words for the redesigned lesson (2026-09-25), merged into UI so T() finds them. */
 const UI_LESSON = {
@@ -52,15 +52,43 @@ Object.keys(UI_LESSON).forEach(k=>Object.assign(UI[k], UI_LESSON[k]));
 const UI_L1 = {
  zh:{gistK:"先听一段对话",gistSub:"没有字，只用听的。听完回答下面的问题。",gistPlay:"▶ 播放对话",gistStop:"■ 停止",
   loK:"只听不看",loSub:"听这一句（没有字），然后回答。",loWas:"刚才那一句是：",
-  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",dlgSay:"这一句用说的：按麦克风，把它说出来。"},
+  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
+  missionK:"Boss 任务：连说几句",missionSub:"按麦克风，一口气说完；说完再按一下。",missionModel:"看示范",missionHide:"收起示范",missionRetry:"再说完整一点——把上面要求的每一样都说到。",missionNeed:"至少说 {n} 个英文单词",missionGaps:"还缺：{g}。",missionShort:"你说了 {n} 个英文单词，至少要 {m} 个。",
+  whySmall:"少了一个小字：{w}。英文句子里这种字不能省，再说一次。",whyForm:"注意词尾：这里要说 {w}。再说一次。",whyMissing:"红色的字漏掉了或没听清楚，再说一次。",
+  skippedN:"这一课你跳过了 {n} 个开口／听力练习——方便的时候再做一次。",missionGood:"任务完成！说得很完整。",missionS1:"先看上面的要求，想好要说的每一样",
+  resumeQ:"上次这一课做到第 {n} 步，要接着做吗？",resumeYes:"接着做",resumeNo:"重新开始",
+  roleNote:"练习对话：句子里的年龄、地方照题目说就好，不一定是你自己的情况。",gistEase:"听不懂也没关系，先猜猜看——等一下会学到这些字。"},
  ms:{gistK:"Dengar perbualan dahulu",gistSub:"Tiada teks — dengar sahaja, kemudian jawab soalan di bawah.",gistPlay:"▶ Main perbualan",gistStop:"■ Berhenti",
   loK:"Dengar sahaja",loSub:"Dengar ayat ini (tiada teks), kemudian jawab.",loWas:"Ayat tadi ialah:",
-  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap."},
+  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
+  missionK:"Misi Boss: cakap beberapa ayat",missionSub:"Tekan mikrofon dan cakap semuanya; tekan sekali lagi bila selesai.",missionModel:"Lihat contoh",missionHide:"Tutup contoh",missionRetry:"Cakap dengan lebih lengkap — sebut setiap perkara yang diminta.",missionNeed:"Sekurang-kurangnya {n} perkataan Inggeris",missionGaps:"Masih kurang: {g}.",missionShort:"Anda sebut {n} perkataan Inggeris; perlu sekurang-kurangnya {m}.",
+  whySmall:"Kurang satu perkataan kecil: {w}. Dalam ayat Inggeris perkataan ini tidak boleh ditinggalkan. Cuba lagi.",whyForm:"Perhatikan hujung perkataan: sebut {w}. Cuba lagi.",whyMissing:"Perkataan merah tertinggal atau kurang jelas. Cuba lagi.",
+  skippedN:"Anda melangkau {n} latihan bercakap/mendengar dalam pelajaran ini — cuba lagi bila sesuai.",missionGood:"Misi selesai! Lengkap sekali.",missionS1:"Baca tugasan di atas dan fikir setiap perkara yang perlu disebut",
+  resumeQ:"Kali lepas anda berhenti di langkah {n} pelajaran ini. Sambung?",resumeYes:"Sambung",resumeNo:"Mula semula",
+  roleNote:"Dialog latihan: umur dan tempat dalam ayat ikut soalan sahaja, bukan semestinya tentang anda.",gistEase:"Tak faham pun tak apa — teka dahulu. Perkataan ini akan diajar sekejap lagi."},
  en:{gistK:"Listen to the conversation first",gistSub:"No text — just listen, then answer the question below.",gistPlay:"▶ Play the conversation",gistStop:"■ Stop",
   loK:"Listen only",loSub:"Listen to this sentence (no text), then answer.",loWas:"The sentence was:",
-  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",dlgSay:"Say this line: tap the mic and speak."}
+  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
+  missionK:"Boss mission: say a few sentences",missionSub:"Tap the mic and say it all; tap again when you finish.",missionModel:"See an example",missionHide:"Hide the example",missionRetry:"Say a bit more — cover everything the task asks for.",missionNeed:"At least {n} English words",missionGaps:"Still missing: {g}.",missionShort:"You said {n} English words; at least {m} are needed.",
+  whySmall:"A small word is missing: {w}. English sentences need it — say it again.",whyForm:"Check the ending: say {w} here. Try again.",whyMissing:"The red words were missing or unclear. Say it again.",
+  skippedN:"You skipped {n} speaking/listening steps in this lesson — try them when you can.",missionGood:"Mission complete! Very full answer.",missionS1:"Read the task above and plan each thing you need to say",
+  resumeQ:"Last time you stopped at step {n} of this lesson. Carry on?",resumeYes:"Carry on",resumeNo:"Start again",
+  roleNote:"Practice dialogue: the ages and places are part of the exercise, not necessarily about you.",gistEase:"It's fine not to understand yet — have a guess. You'll learn these words next."}
 };
 Object.keys(UI_L1).forEach(k=>Object.assign(UI[k], UI_L1[k]));
+/* Level 2 screens (2026-09-25) */
+const UI_L2 = {
+ zh:{convoK:"先听，再回应",convoSub:"点 🔊 听对方说什么，再点最合适的回应，把它们配对。",lsK:"听一听，选答案",lsSub:"听这一句（先不看字），然后回答。",lsShow:"看文字",
+  planK:"先想一想",planSub:"开口前先想 15 秒：你要说什么？为什么？可以举什么例子？",planGo:"我准备好了",planWait:"再想 {n} 秒…",
+  cueZh:"看中文",skillUse:"这一课用的公式",sorderSub:"把句子排成最清楚的顺序。",unitLocked:"先通过上一个单元的 Boss（答对 {pass}%），这个单元就会打开。"},
+ ms:{convoK:"Dengar, kemudian balas",convoSub:"Tekan 🔊 untuk dengar, kemudian pilih balasan yang paling sesuai.",lsK:"Dengar dan pilih",lsSub:"Dengar ayat ini (tanpa teks dahulu), kemudian jawab.",lsShow:"Lihat teks",
+  planK:"Fikir dahulu",planSub:"Fikir 15 saat sebelum bercakap: apa anda nak cakap? Kenapa? Apa contohnya?",planGo:"Saya sudah sedia",planWait:"{n} saat lagi…",
+  cueZh:"Lihat terjemahan",skillUse:"Formula pelajaran ini",sorderSub:"Susun ayat dalam urutan yang paling jelas.",unitLocked:"Lulus Boss unit sebelum ini ({pass}% betul) untuk membuka unit ini."},
+ en:{convoK:"Listen, then reply",convoSub:"Tap 🔊 to hear each line, then tap the best reply to match it.",lsK:"Listen and choose",lsSub:"Listen to this (no text yet), then answer.",lsShow:"Show the text",
+  planK:"Think first",planSub:"Take 15 seconds before you speak: what will you say? Why? What example can you give?",planGo:"I'm ready",planWait:"{n} more seconds…",
+  cueZh:"Show my language",skillUse:"This lesson's formula",sorderSub:"Put the sentences in the clearest order.",unitLocked:"Pass the Boss of the unit before (at least {pass}% correct) to open this unit."}
+};
+Object.keys(UI_L2).forEach(k=>Object.assign(UI[k], UI_L2[k]));
 /* The words around the exercises in the learner's own language (walkthrough 2026-09-25:
    a zh beginner met "Fill in the Blank", "Check", "Lesson Complete!", "Accuracy"… in
    English on every screen). The English being learned stays English; only the frame
@@ -68,7 +96,7 @@ Object.keys(UI_L1).forEach(k=>Object.assign(UI[k], UI_L1[k]));
 const UI_LOCAL = {
  zh:{continue:"继续",check:"检查",start:"开始",resume:"继续",startLesson:"开始这一课",correct:"答对了！",wrong:"不太对",answerIs:"正确答案：",
   vocab:"单词",patterns:"句型",fill:"填空",sub:"换词造句",order:"排句子",trans:"翻译",mcq:"选择题",dialog:"对话",boss:"Boss 挑战",
-  lessonDone:"这一课完成了！",bossDone:"打败 Boss 了！",resSub:"这一课完成，下一课已经打开。",accuracy:"正确率",locked:"未开放",done:"已完成",go:"进行中",new:"开始",
+  lessonDone:"这一课完成了！",bossDone:"打败 Boss 了！",resSub:"下一课已经打开。",accuracy:"正确率",locked:"未开放",done:"已完成",go:"进行中",new:"开始",
   lesson:"第",lessonU:"课",module:"单元",bonus:"完成奖励",bossBonus:"Boss 奖励",heroNew:"从这里开始学英文。",heroCont:"从上次停下的地方继续。",
   allDone:"恭喜！你完成了整个 Pre-Beginner！🎉",step:"步骤",sceneLbl:"场景",you:"你",changeLang:"要换解释语言吗？",menuTitle:"选单",cancel:"关闭",
   saveLocal:"保存到这台手机",quitYes:"退出",quitNo:"继续学习",soundOn:"🔊 声音已打开",soundOff:"🔇 声音已关闭",
@@ -85,14 +113,14 @@ const UI_LOCAL = {
   obSub:"我们要怎么称呼你？你的名字会出现在练习里（例如 My name is …），之后也可以在「我的」里修改。"},
  ms:{continue:"Teruskan",check:"Semak",start:"Mula",resume:"Sambung",startLesson:"Mula pelajaran",correct:"Betul!",wrong:"Belum tepat",answerIs:"Jawapan betul:",
   vocab:"Perkataan",patterns:"Pola ayat",fill:"Isi tempat kosong",sub:"Tukar perkataan",order:"Susun ayat",trans:"Terjemah",mcq:"Pilih jawapan",dialog:"Dialog",boss:"Cabaran Boss",
-  lessonDone:"Pelajaran selesai!",bossDone:"Boss dikalahkan!",resSub:"Pelajaran selesai. Pelajaran seterusnya sudah dibuka.",accuracy:"Ketepatan",locked:"Berkunci",done:"Selesai",go:"Sedang belajar",new:"Mula",
+  lessonDone:"Pelajaran selesai!",bossDone:"Boss dikalahkan!",resSub:"Pelajaran seterusnya sudah dibuka.",accuracy:"Ketepatan",locked:"Berkunci",done:"Selesai",go:"Sedang belajar",new:"Mula",
   lesson:"Pelajaran",module:"Unit",bonus:"Bonus selesai",bossBonus:"Bonus Boss",heroNew:"Mula belajar Bahasa Inggeris di sini.",heroCont:"Sambung dari tempat anda berhenti.",
   allDone:"Tahniah! Anda sudah tamat Pre-Beginner! 🎉",step:"Langkah",sceneLbl:"Situasi",you:"Anda",changeLang:"Tukar bahasa penerangan?",menuTitle:"Menu",cancel:"Tutup",
   saveLocal:"Simpan dalam telefon ini",quitYes:"Keluar",quitNo:"Terus belajar",soundOn:"🔊 Bunyi dihidupkan",soundOff:"🔇 Bunyi dimatikan",
   reviewLbl:"Ulang kaji hari ini",reviewN:"{n} soalan untuk diulang kaji",reviewNow:"Ulang kaji",allCaught:"Semua sudah diulang kaji 🎉",noReview:"Tiada ulang kaji buat masa ini.",reviewDone:"Ulang kaji selesai!",
   clearedMsg:"{c} lulus · {r} lagi untuk diulang kaji.",reviewAgain:"Teruskan ulang kaji",mistakes:"Kesilapan untuk diulang kaji",praise:["Betul!","Hebat!","Bagus!","Sempurna!","Teruskan!"],
   combo:"Berturut",nextUp:"Seterusnya",backHome:"Laman utama",dailyGoal:"Sasaran harian",goalDone:"🎉 Sasaran hari ini tercapai!",courseProg:"Kemajuan kursus",streakMile:"🔥 {n} hari berturut-turut! Hebat!",
-  navHome:"Peta",navProfile:"Saya",achTitle:"Pencapaian",statLessons:"Pelajaran",statStreak:"Hari berturut",student:"Pelajar Touch",editName:"Tukar nama",saveName:"Simpan",
+  navHome:"Peta",navProfile:"Saya",achTitle:"Pencapaian",statLessons:"Pelajaran",statStreak:"Hari berturut-turut",student:"Pelajar Touch",editName:"Tukar nama",saveName:"Simpan",
   cpSub:"Kursus Pre-Beginner",startFlag:"MULA DI SINI",toNext:"{n} XP lagi ke Lv {lv}",listen:"Padankan bunyi",meaningIs:"Maksud:",
   nlTag:"Tahap seterusnya",nlLocked:"Berkunci · {n}/25 pelajaran",nlSoon:"Akan datang 🎉",obTitle:"Selamat datang! 👋",obSkip:"Langkau",
   speakTitle:"Bercakap",record:"Rakam",stopBtn:"Berhenti",play:"Main",tryAgain:"Rakam semula",speakSay:"Sebut ayat ini:",recState:"Merakam…",getReady:"Bersedia…",speakNow:"Cakap sekarang!",saving:"Menyimpan…",
@@ -156,7 +184,7 @@ function speak(txt, btn, slow, mustHear){
     而机械音维持原本的规矩：只念 3 个字以内的短词。
     mustHear: a line the learner has to hear to answer (the other person's question in
     自己说说看) falls back to the phone's voice at any length — silence there is worse. */
- if(globalThis.TouchVoice){ TouchVoice.say(txt, {btn:btn, slow:!!slow, fallbackMaxWords: mustHear ? 40 : 3}); return; }
+ if(globalThis.TouchVoice){ TouchVoice.say(txt, {btn:btn, slow:!!slow, fallbackMaxWords: (mustHear || (typeof CONF!=="undefined" && CONF.flow!=="pb")) ? 40 : 3}); return; }
  if(!TTS) return;
  let s = String(txt).replace(/[.,!?'"]/g," ").replace(/\s+/g," ").trim();
  if(!s || s.split(" ").length>3) return;            // words only — never sentences
@@ -339,7 +367,8 @@ function trackAnswer(ok, ref, qText, ansText, expl, given, question){
   if(P.mode==="lesson"){
    P.redoKeys = P.redoKeys || {};
    const k = refKey(ref);
-   if(!P.redoKeys[k]){ const s = resolveRef(ref); if(s){ P.redoKeys[k] = 1; s.redo = true; P.steps.push(s); } }
+   /* at most five: a learner who missed half the lesson should not face twelve more screens */
+   if(!P.redoKeys[k] && Object.keys(P.redoKeys).length < 5){ const s = resolveRef(ref); if(s){ P.redoKeys[k] = 1; s.redo = true; P.steps.push(s); } }
   }
  }
 }
@@ -355,7 +384,13 @@ function lessonPractised(mi,li){ return !!S.practised[COURSE[mi].id+"-"+li]; }
 function lessonDone(mi,li){ return !!S.done[COURSE[mi].id+"-"+li]; }
 function moduleDoneCount(mi){ let c=0; for(let i=0;i<COURSE[mi].lessons.length;i++) if(lessonDone(mi,i)) c++; return c; }
 // Guided Freedom: modules & non-boss lessons are always open; only the Boss waits for module mastery.
-function moduleUnlocked(mi){ return true; }
+/* CONF.gateUnits (Level 2, Marco 2026-09-25): a unit opens only when the Boss of the unit
+   before it has been passed (70%). Everything else stays open inside an open unit. */
+function moduleUnlocked(mi){
+ if(!(typeof CONF!=="undefined" && CONF.gateUnits) || mi===0) return true;
+ const prev = COURSE[mi-1], bi = prev.lessons.findIndex(x=>x.boss);
+ return bi<0 || lessonDone(mi-1, bi);
+}
 function bossUnlocked(mi){
  const ls = COURSE[mi].lessons;
  for(let i=0;i<ls.length;i++){ if(!ls[i].boss && !lessonDone(mi,i)) return false; }
@@ -363,6 +398,7 @@ function bossUnlocked(mi){
 }
 function lessonUnlocked(mi,li){
  if(TESTMODE) return true;                                  // 测试模式：全部开放，boss 也能直接进
+ if(!moduleUnlocked(mi)) return false;
  return COURSE[mi].lessons[li].boss ? bossUnlocked(mi) : true;
 }
 // the single best "next step" to recommend (first unfinished lesson the learner can take)
@@ -602,7 +638,7 @@ function renderHome(){
 }
 
 /* ---------- review session ---------- */
-const KMAP = {fill:"f", mcq:"m", order:"o", trans:"tr"};
+const KMAP = {fill:"f", mcq:"m", order:"o", trans:"tr", ls:"ls"};
 function resolveRef(r){
  const lesson = COURSE[r.m] && COURSE[r.m].lessons[r.l];
  if(!lesson) return null;
@@ -684,6 +720,22 @@ let P = null; // {mi,li,steps,idx,xp,right,total}
    another lesson's question — an assumption, recorded here).
    Boss lessons keep their whole exercise set, interleaved, in the same frame.
 ============================================================================= */
+/* the lesson's formula (OREO / PPF / Story Builder / Conversation Loop) as a small card */
+function skillCardHTML(l){
+ const K = (typeof CONF!=="undefined" && CONF.skills) || null;
+ const sk = K && l && l.skill && K[l.skill];
+ if(!sk) return "";
+ const steps = (sk.steps||[]).map(x=>`<span class="skstep">${esc(x)}</span>`).join('<span class="skarr">→</span>');
+ return `<div class="skillcard"><div class="skh">${esc(sk.icon||"")} ${esc(sk.name)} <span class="sktag">${esc(T().skillUse)}</span></div>${steps ? `<div class="sksteps">${steps}</div>` : ""}<div class="skline">${esc(tri(sk.line))}</div></div>`;
+}
+/* What went wrong in a spoken sentence, in the learner's language (walkthrough 2026-09-25:
+   "I a little tired" was told 「红色的字没听清楚」 — blaming the voice for a missing word). */
+function whyText(why, hidden){
+ const t = T(), w = String(why||"").split(":")[1] || "";
+ if(/^small:/.test(why)) return fmt(t.whySmall, {w});
+ if(/^form:/.test(why)) return fmt(t.whyForm, {w});
+ return hidden ? t.stransRetry : t.whyMissing;
+}
 function ex0(){ return (P && lessonExtra(P.mi, P.li)) || {}; }
 function lessonExtra(mi,li){ const c = COURSE[mi]; return (c && typeof LESSON_EXTRA!=="undefined" && LESSON_EXTRA[c.id+"-"+li]) || null; }
 function sayable(s){ return px(s).replace(/\s+([.,!?;:])/g,"$1").replace(/\s+/g," ").trim(); }
@@ -716,8 +768,10 @@ function repeatSentences(l, ex){
  return out.slice(0,2);
 }
 function patternFor(l, s){
- const low = s.toLowerCase();
- return (l.p || []).find(p=>{ const pre = sayable(p.t.split("___")[0]).replace(/[.,!?]+$/,"").toLowerCase(); return pre && low.startsWith(pre); }) || null;
+ const low = " "+spNorm(s)+" ";
+ // every fixed part of the pattern must be in the sentence, not only its first words
+ return (l.p || []).find(p=>{ const parts = px(p.t).split("___").map(x=>spNorm(x)).filter(Boolean);
+  return parts.length && parts.every(x=>low.includes(" "+x+" ")); }) || null;
 }
 /* Level 1 and up: LESSON_EXTRA.own may be a LIST — answer the character, then ask them
    something (ask:true, judged on the question the learner asks). */
@@ -773,6 +827,7 @@ function reviewPicks(mi, li, want){
    and two SAY IT YOURSELF — answer the character, then ask them something.
    Spoken steps give XP and never count toward the 70% (Marco 2026-09-25, 3B). */
 function buildL1(mi, li){
+ let pend = [];
  const l = COURSE[mi].lessons[li];
  const ex = lessonExtra(mi, li);
  const steps = [{kind:"goal"}];
@@ -785,15 +840,19 @@ function buildL1(mi, li){
   blocks.forEach((n,b)=>{
    const idx = Array.from({length:n}, (_,i)=>at+i); at += n;
    steps.push({kind:"meet", idx, last: b===blocks.length-1});
-   if(TTS) steps.push({kind:"hearpick", idx, last: b===blocks.length-1});
+   // Level 1 learners know many of these words (student test 2026-09-25): one listening check per two blocks
+   pend = pend.concat(idx);
+   if(TTS && (b%2===1 || b===blocks.length-1)){ steps.push({kind:"hearpick", idx: pend, last: b===blocks.length-1}); pend = []; }
   });
   repeatSentences(l, ex).forEach((s,i)=>steps.push({kind:"repeat", say:s, n:i, first:i===0}));
  }
  reviewPicks(mi, li, 3).forEach(s=>steps.push(s));
  const pick = f=>{ const a = l[f]||[]; if(!a.length) return null; const n = Math.floor(Math.random()*a.length); return {it:a[n], n}; };
  if(boss){
+  /* two of each kind, dealt in turn (walkthrough 2026-09-25: the whole bank made a 39-screen
+     Boss of the same five drills; the dialogue and the mission are the real test) */
   const ORDER = [["fill","f"],["order","o"],["mcq","m"],["subst","s"],["trans","tr"]];
-  const decks = ORDER.map(([k,f])=>shuffle((l[f]||[]).map((it,n)=>({kind:k,it,n}))));
+  const decks = ORDER.map(([k,f])=>shuffle((l[f]||[]).map((it,n)=>({kind:k,it,n}))).slice(0,2));
   for(let r=0; decks.some(d=>d.length); r++) decks.forEach(d=>{ const s = d.shift(); if(s) steps.push(s); });
  } else {
   const trs = shuffle((l.tr||[]).map((it,n)=>({it,n})));
@@ -804,12 +863,62 @@ function buildL1(mi, li){
   if(trs[1]) steps.push(Object.assign({kind: speech ? "strans" : "trans"}, trs[1]));
   ((ex && ex.listen) || []).slice(0,1).forEach((it,n)=>{ if(TTS) steps.push({kind:"listenonly", it, n}); });
  }
- steps.push({kind:"dialog", speakLast: !boss && speech});
+ steps.push({kind:"dialog", speakLast: speech});
  if(!boss) ownsFor(l, ex).forEach(o=>{ if(o.line) steps.push(Object.assign({kind:"own"}, o)); });
+ if(boss && speech && ex && ex.mission) steps.push({kind:"mission"});
+ return steps;
+}
+/* LEVEL 2 (research 2026-09-25, STATE §1i): CONVEY. The conversation is HEARD first (lines
+   heard, replies matched); words in blocks of up to 4; one 跟着说; four review items; one each
+   of fill, sentence order, best-response choice; two translations SAID from an English
+   situation cue; a heard-only question; the dialogue with the other person heard before
+   read; then a 15-second planning card and SAY IT YOURSELF in 2–3 turns with one person.
+   The Boss has no hints and must reach 70% to open the next unit (CONF.gateUnits). */
+function buildL2(mi, li){
+ const l = COURSE[mi].lessons[li];
+ const ex = lessonExtra(mi, li);
+ const steps = [{kind:"goal"}];
+ const boss = !!l.boss;
+ const speech = !!(window.TouchSpeech && TouchSpeech.available);
+ if(!boss && l.cm && l.cm.pairs && TTS) steps.push({kind:"convo"});
+ if(!boss){
+  let at = 0;
+  const n = l.w.length, k = Math.ceil(n/4), blocks = Array.from({length:k}, (_,i)=>Math.floor(n/k) + (i < n%k ? 1 : 0));
+  blocks.forEach((c,b)=>{
+   const idx = Array.from({length:c}, (_,i)=>at+i); at += c;
+   steps.push({kind:"meet", idx, last: b===blocks.length-1});
+   if(TTS) steps.push({kind:"hearpick", idx, last: b===blocks.length-1});
+  });
+  repeatSentences(l, ex).slice(0,1).forEach((s,i)=>steps.push({kind:"repeat", say:s, n:i, first:i===0}));
+ }
+ reviewPicks(mi, li, 4).forEach(s=>steps.push(s));
+ if(boss){
+  const ORDER = [["fill","f"],["order","o"],["mcq","m"],["ls","ls"],["subst","s"],["trans","tr"]];
+  const decks = ORDER.map(([k,f])=>shuffle((l[f]||[]).map((it,n)=>({kind:k,it,n}))).slice(0,2));
+  for(let r=0; decks.some(d=>d.length); r++) decks.forEach(d=>{ const s = d.shift(); if(s) steps.push(s); });
+ } else {
+  const pick = f=>{ const a = l[f]||[]; if(!a.length) return null; const n = Math.floor(Math.random()*a.length); return {it:a[n], n}; };
+  const trs = shuffle((l.tr||[]).map((it,n)=>({it,n})));
+  { const x = pick("f"); if(x) steps.push(Object.assign({kind:"fill"}, x)); }
+  { const x = pick("o"); if(x) steps.push(Object.assign({kind:"order"}, x)); }
+  if(trs[0]) steps.push(Object.assign({kind: speech ? "strans" : "trans"}, trs[0]));
+  { const x = pick("m"); if(x) steps.push(Object.assign({kind:"mcq"}, x)); }
+  { const x = pick("ls"); if(x && TTS) steps.push(Object.assign({kind:"ls"}, x)); }
+  { const x = pick("s"); if(x) steps.push(Object.assign({kind:"subst"}, x)); }
+  if(trs[1]) steps.push(Object.assign({kind: speech ? "strans" : "trans"}, trs[1]));
+ }
+ steps.push({kind:"dialog", speakLast: speech});
+ if(!boss){
+  const owns = ownsFor(l, ex).filter(o=>o.line);
+  if(owns.length && speech) steps.push({kind:"plan", who: owns[0].who, prompt: owns[0].prompt});
+  owns.forEach(o=>steps.push(Object.assign({kind:"own"}, o)));
+ }
+ if(boss && speech && ex && ex.mission) steps.push({kind:"mission"});
  return steps;
 }
 function buildLessonSteps(mi, li){
  if(typeof CONF!=="undefined" && CONF.flow==="l1") return buildL1(mi, li);
+ if(typeof CONF!=="undefined" && CONF.flow==="l2") return buildL2(mi, li);
  const l = COURSE[mi].lessons[li];
  const ex = lessonExtra(mi, li);
  const steps = [{kind:"goal"}];
@@ -838,14 +947,27 @@ function buildLessonSteps(mi, li){
  if(own.line) steps.push(Object.assign({kind:"own"}, own));
  return steps;
 }
+/* A lesson left half-way (the app closed, the phone locked) can be picked up again for a day
+   (student test 2026-09-25: a reload at step 12 of 23 went back to the map with the XP gone). */
+function saveRun(){ try{ if(P && P.mode==="lesson") store.set("run", {at:Date.now(), P}); }catch(e){} }
 function startLesson(mi,li){
+ const run = store.get("run", null);
+ if(run && run.P && run.P.mi===mi && run.P.li===li && run.P.idx>1 && run.P.idx<run.P.steps.length && Date.now()-run.at < 864e5){
+  const t = T();
+  askConfirm(fmt(t.resumeQ, {n: Math.min(run.P.idx+1, run.P.base || run.P.steps.length)}), t.resumeYes, t.resumeNo, ()=>{
+   P = run.P; $("combochip").classList.add("hidden"); show("scr-play"); renderStep();
+  }, false);
+  const no = document.getElementById("mNo");
+  if(no) no.onclick = ()=>{ closeOvl(); store.set("run", null); startLesson(mi, li); };
+  return;
+ }
  const steps = buildLessonSteps(mi, li);
  P = {mi,li,steps,idx:0,xp:0,right:0,total:0,wrongs:[],combo:0,mode:"lesson",redoKeys:{}};
  $("combochip").classList.add("hidden");
  show("scr-play");
  renderStep();
 }
-$("quitbtn").onclick = ()=>{ askConfirm(T().quit, T().quitYes, T().quitNo, ()=>{ P=null; hideFeedback(); killRec(); renderHome(); }, true); };
+$("quitbtn").onclick = ()=>{ askConfirm(T().quit, T().quitYes, T().quitNo, ()=>{ try{ store.set("run", null); }catch(e){} P=null; hideFeedback(); killRec(); renderHome(); }, true); };
 
 /* The finish line stays where it was (walkthrough 2026-09-25: every mistake added a redo
    step, so "10/16" became "12/18" and the bar shrank — worst for whoever is struggling).
@@ -897,13 +1019,13 @@ function showFeedback(ok, opts){
  $("fbmeaning").style.display = opts.meaning ? "" : "none";
  /* 学生用另一种正确说法答对（alt）：照样算对，再给他看标准答案当参考 */
  const corrTxt = ok ? (opts.also ? t.alsoCorrect+" "+opts.also : "") : (opts.correct || "");
- $("fbcorr").textContent = corrTxt;
+ $("fbcorr").textContent = px(corrTxt);
  $("fbcorr").style.display = corrTxt ? "" : "none";
  /* a wrong answer's right sentence can be heard, on purpose (English only) */
  const sayCorr = !ok && corrTxt && /[A-Za-z]/.test(corrTxt) && !/[\u3400-\u9fff]/.test(corrTxt) ? corrTxt.replace(/\s+([.,!?;:])/g,"$1").trim() : "";
  if(sayCorr){ $("fbcorr").setAttribute("data-say", sayCorr); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = "🔊 "+corrTxt; }
  else { $("fbcorr").removeAttribute("data-say"); $("fbcorr").removeAttribute("role"); }
- $("fbexpl").textContent = opts.expl || "";
+ $("fbexpl").textContent = px(opts.expl || "");
  $("fbexpl").style.display = opts.expl ? "" : "none";
  const pooled = !ok && P && P.last && P.last.pooled;
  $("fbnotel").textContent = t.fbPooled;
@@ -1093,7 +1215,8 @@ if(TESTMODE){
 
 function nextStep(){
  P.idx++;
- if(P.idx>=P.steps.length) return finishLesson();
+ if(P.idx>=P.steps.length){ try{ store.set("run", null); }catch(e){} return finishLesson(); }
+ saveRun();
  renderStep();
 }
 let STEP_TAG = "";   // "复习 · 第 n 课" / "再练一次" on the step being drawn (renderStep sets it)
@@ -1123,7 +1246,7 @@ if(PREVIEW){ const sk = document.getElementById("pskip"); if(sk){ sk.classList.r
    Her pose follows the kind of step, then turns to celebrate / think when the
    answer is checked. The pose change is the animation (see coach.js). */
 let COACH = null;
-const COACH_POSE = { gist:"listen", listenonly:"listen", strans:"talk", vocab:"talk", listen:"listen", ls:"listen", convo:"listen", patterns:["point",true], subst:["point",true], dialog:"talk", speak:"talk",
+const COACH_POSE = { convo:"listen", plan:"think", mission:"talk", gist:"listen", listenonly:"listen", strans:"talk", vocab:"talk", listen:"listen", ls:"listen", convo:"listen", patterns:["point",true], subst:["point",true], dialog:"talk", speak:"talk",
  goal:"wave", meet:"talk", hearpick:"listen", repeat:"talk", own:"talk" };
 const COACH_H = { goal:170, own:150 };
 function coachStep(){
@@ -1184,6 +1307,18 @@ function greetFits(line, n){
  if(got) return got===want;
  return /\b(hello|hi)\b/.test(n);
 }
+/* Keys and mission phrases match the IDEA, not one fixed wording (student test 2026-09-25:
+   "I'm working in a warehouse" failed "i work in"; "When do you wake up?" failed as "not a
+   question"). Both sides are reduced to word stems with am/is/are dropped before an -ing
+   form, so "i am working in" meets "i work in". Grammar is judged elsewhere (the spoken
+   repeat and translation); here what counts is saying the thing. */
+function lemma(t){
+ return " "+String(t).replace(/\b(am|is|are)\s+(\w+ing)\b/g, "$2").split(/\s+/).filter(Boolean)
+  .map(w=>w.length>4 ? w.replace(/(ing|ed|es|s)$/, "") : w).join(" ")+" ";
+}
+function lemmaHit(hay, key){ const k = spNorm(px(key)); return hay.includes(" "+k+" ") || lemma(hay.trim()).includes(lemma(k)); }
+const QWORD = /^(where|when|what|which|who|whose|why|how|do|does|did|are|is|was|were|can|could|would|will|have|has)\b/;
+const STOPW = new Set("i you he she it we they a an the do does did is are am was were to in at on of for and but my your his her our what where when which who how can could would will have has please".split(" "));
 function ownHit(h, keys, line, ask){
  const n = spNorm(h);
  if(!n) return false;
@@ -1195,11 +1330,17 @@ function ownHit(h, keys, line, ask){
  if(!ask && GREET.test(L) && !/\?\s*$/.test(String(line||"")) && GREET.test(n)) return greetFits(L, n);
  const hay = " "+n+" ";
  const name = spNorm(S.name || PRACTICE_NAME);
+ const content = [...new Set((keys||[]).flatMap(k=>spNorm(px(k)).split(" ")).filter(w=>w && !STOPW.has(w)))];
+ const shares = content.some(c=>lemma(n).includes(lemma(c)));
+ // an "ask them" turn: any real question about the right thing
+ if(ask && QWORD.test(n) && n.split(" ").length>=3 && shares) return true;
+ // an answer: a sentence of four words or more that talks about the right thing
+ if(!ask && n.split(" ").length>=4 && shares && !(L && (" "+L+" ").includes(" "+n+" "))) return true;
  return (keys||[]).some(k=>{
   // the learner's own name is spelled freely by recognisers: match the words around it
   const nk = spNorm(px(k));
   const frags = (name ? (" "+nk+" ").split(" "+name+" ") : [nk]).map(x=>x.trim()).filter(Boolean);
-  return frags.length>0 && frags.every(f=>hay.includes(" "+f+" "));
+  return frags.length>0 && frags.every(f=>hay.includes(" "+f+" ") || lemma(n).includes(lemma(f)));
  });
 }
 
@@ -1244,7 +1385,16 @@ function mountSpeech(host, o){
   <ol class="spsteps" id="spsteps"><li>${esc(o.s1 || SPK_TXT().s1)}</li><li>${esc(SPK_TXT().s2)}</li><li>${esc(SPK_TXT().s3)}</li></ol>
   <button class="linkbtn" id="later" type="button">${esc(t.spLater)}</button>`;
  const msg = (s, cls)=>{ const m = $("spmsg"); if(m){ m.textContent = s; m.className = "spmsg"+(cls?" "+cls:""); } };
- $("later").onclick = ()=>{ allow(); if(go) go.click(); };
+ /* Skipping still shows how it is said, when the step has one sentence to say (student test
+    2026-09-25: the spoken translation moved on with no answer at all); the lesson's end
+    says how many speaking steps were skipped. */
+ $("later").onclick = ()=>{
+  if(o.reveal && !$("laterans")){
+   host.insertAdjacentHTML("beforeend", `<div class="spres" id="laterans"><div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">🔊 ${esc(px(o.reveal))}</b></div></div>`);
+   $("later").remove(); allow(); if(P) P.skipped = (P.skipped||0)+1; return;
+  }
+  if(P) P.skipped = (P.skipped||0)+1; allow(); if(go) go.click();
+ };
  $("mic").onclick = async ()=>{
   /* A second tap while listening stops it now and keeps what was heard (Marco 2026-09-25 on
      his iPhone: 「关麦…一直关不到」). "Speak now" shows only once the phone is really taking
@@ -1273,7 +1423,7 @@ function mountSpeech(host, o){
      dialogs: speech recognition and the microphone) — then it waits much longer. */
   const watchdog = setTimeout(()=>{ if(!started){ err = err || "no-start"; TouchSpeech.stop(); } }, MIC_OK ? 4000 : 20000);
   try{
-   heard = await TouchSpeech.listen({maxMs: 9000, record: true, log: x=>trail.push(x), onRecorded: b=>{ mine = b; addMine(); },
+   heard = await TouchSpeech.listen({maxMs: o.long ? 60000 : 9000, long: !!o.long, record: true, log: x=>trail.push(x), onRecorded: b=>{ mine = b; addMine(); },
     onStart: ()=>{ started = true; MIC_OK = true; mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
     onHear: txt=>{ if(hd) hd.textContent = "“"+txt+"”"; }});
   }catch(e){ err = err || String((e && e.message) || e || "error"); }
@@ -1327,7 +1477,8 @@ function mountSpeech(host, o){
    allow(); if(COACH) COACH.pose("celebrate");
   } else {
    const reveal = (o.reveal && tries>=2) ? `<div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">🔊 ${esc(o.reveal)}</b></div>` : "";
-   card("no", "✗ "+esc(o.retry || X.red), said+reveal+(more ? `<div class="spb">${esc(more)}</div>` : ""));
+   const retry = typeof o.retry==="function" ? o.retry(heard) : o.retry;
+   card("no", "✗ "+esc(retry || X.red), said+reveal+(more ? `<div class="spb">${esc(more)}</div>` : ""));
    if(tries>=2) allow(); if(COACH) COACH.pose("think");
   }
  };
@@ -1431,17 +1582,140 @@ function renderStep(){
  P.last = null;
  STEP_TAG = st.redo ? `<span class="steptag redo">↻ ${esc(t.redoTag)}</span>`
   : (st.rv && st.ref) ? `<span class="steptag">${esc(reviewTagText(st.ref))}</span>` : "";
- const gl = w=> S.lang==="ms" ? w[2] : (S.lang==="zh" ? w[1] : w[1]+" · "+w[2]);
+ // Simple English learners get a simple English meaning when the word has one (w[4]; student test 2026-09-25)
+ const gl = w=> S.lang==="ms" ? w[2] : (S.lang==="zh" ? w[1] : (w[4] || w[1]+" · "+w[2]));
  const still = ()=> P && P.steps[P.idx]===st;          // for delayed audio: still on this screen?
 
+ /* Sound off: a step that can only be answered by ear is not asked (student test 2026-09-25:
+    Priya, in a quiet office, had to guess and was marked wrong for what she never heard). */
+ if(["gist","listenonly","convo","ls"].includes(st.kind) && !S.sound){
+  box.innerHTML = stepShell(stepNum, esc(st.kind==="gist" ? t.gistK : st.kind==="convo" ? t.convoK : st.kind==="ls" ? t.lsK : t.loK), t.listenMuted,
+   `<div class="scenebox">🔇 ${esc(t.listenMuted)}</div>`, `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
+  $("go").onclick = ()=>{ P.skipped = (P.skipped||0)+1; nextStep(); };
+  return;
+ }
+ /* LEVEL 2 · the conversation heard first: each line is a speaker button, the replies are
+    text; match them (practice: +5 XP, not counted). A matched line shows its words. */
+ if(st.kind==="convo"){
+  const cand = l.cm.pairs.slice(0,4), idxs = cand.map((_,i)=>i);
+  const qOrder = shuffle(idxs.slice()), rOrder = shuffle(idxs.slice());
+  const WAVE = '<span class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>';
+  const inner = `<div class="pairgrid cmgrid">`+ qOrder.map((qi,row)=>{ const ri = rOrder[row];
+    return `<button class="pa cq" data-i="${qi}">${SPK_ON_SVG}${WAVE}<span class="cqt hidden">${esc(px(cand[qi][0]))}</span></button>`+
+           `<button class="pw cr" data-i="${ri}">${esc(px(cand[ri][1]))}</button>`; }).join("")+`</div>`;
+  box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.convoK), t.convoSub, inner,
+   `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
+  let selQ=null, selR=null, pairs=0;
+  const tryPair = ()=>{
+   if(selQ===null||selR===null) return;
+   const q=box.querySelector(`.cq[data-i="${selQ}"]`), r=box.querySelector(`.cr[data-i="${selR}"]`);
+   if(selQ===selR){
+    q.classList.remove("sel"); r.classList.remove("sel"); q.classList.add("paired"); r.classList.add("paired");
+    q.querySelector(".cqt").classList.remove("hidden");
+    if(++pairs===cand.length){ if(!st.paid){ st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); } $("go").disabled=false; }
+   } else { r.classList.add("shake"); setTimeout(()=>r.classList.remove("shake","sel"), 420); q.classList.remove("sel"); }
+   selQ=null; selR=null;
+  };
+  box.querySelectorAll(".cq").forEach(b=>{ b.onclick=()=>{ speak(sayable(cand[+b.dataset.i][0]), b, false, true); if(b.classList.contains("paired")) return;
+   box.querySelectorAll(".cq:not(.paired)").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); selQ=+b.dataset.i; tryPair(); }; });
+  box.querySelectorAll(".cr").forEach(b=>{ b.onclick=()=>{ if(b.classList.contains("paired")) return;
+   box.querySelectorAll(".cr:not(.paired)").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); selR=+b.dataset.i; tryPair(); }; });
+  $("go").onclick = ()=>nextStep();
+  return;
+ }
+ /* LEVEL 2 · heard, then answered (counted; a miss goes to review). Reading the words first
+    is allowed but then it counts as reading: XP only. */
+ if(st.kind==="ls"){
+  const it = st.it, say = sayable(it.say);
+  const optTxt = o => typeof o==="string" ? px(o) : px(tri(o));
+  const opts = shuffle(it.o.map((o,i)=>({i, v:optTxt(o)})));
+  const inner = `<div class="hearbig"><button class="hearplay" id="hp" type="button" aria-label="play">${SPK_ON_SVG}</button>`
+   + `<button class="hearslow" id="hps" type="button" aria-label="slow"><span class="tt">🐢</span>${esc(t.hearSlow)}</button></div>
+   <div class="scenebox hidden" id="lstext">“${esc(say)}”</div><button type="button" class="linkbtn" id="lsshow">${esc(t.lsShow)}</button>
+   <div class="qsub" style="margin:12px 0 8px;font-weight:700">${esc(px(tri(it.q)))}</div>`
+   + opts.map(o=>`<button class="opt" data-i="${o.i}"><span class="radio"></span><span>${esc(o.v)}</span></button>`).join("");
+  box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.lsK), t.lsSub, inner,
+   `<button class="btn btn-primary btn-block" id="go" disabled>${t.check}</button>`);
+  let read = !S.sound;
+  if(read) $("lstext").classList.remove("hidden");
+  $("hp").onclick = ()=>speak(say, $("hp"), false, true);
+  $("hps").onclick = ()=>speak(say, $("hps"), true, true);
+  $("lsshow").onclick = ()=>{ read = true; $("lstext").classList.remove("hidden"); $("lsshow").remove(); };
+  setTimeout(()=>{ if(still()) speak(say, $("hp"), false, true); }, 350);
+  let sel = null;
+  box.querySelectorAll(".opt").forEach(b=>{ b.onclick=()=>{ box.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel = b; $("go").disabled = false; }; });
+  $("go").onclick = ()=>{
+   if(!sel) return;
+   const ok = +sel.dataset.i===it.a;
+   box.querySelectorAll(".opt").forEach(b=>{ b.disabled = true; if(+b.dataset.i===it.a) b.classList.add("right"); else if(b===sel && !ok) b.classList.add("wrong"); });
+   $("lstext").classList.remove("hidden"); if($("lsshow")) $("lsshow").remove();
+   $("go").disabled = true;
+   const correct = optTxt(it.o[it.a]);
+   const gained = read ? (ok && !st.paid ? (st.paid = true, P.xp += 5, $("sessxp").textContent = P.xp, 5) : 0) : award(5, ok);
+   if(!read) trackAnswer(ok, st.ref||{m:P.mi,l:P.li,k:"ls",n:st.n}, "🎧 "+say+" — "+px(tri(it.q)), correct, it.e ? tri(it.e) : "");
+   else P.last = {ref: st.ref||{m:P.mi,l:P.li,k:"ls",n:st.n}, given: optTxt(it.o[+sel.dataset.i]), pooled:false, question: px(tri(it.q))};
+   showFeedback(ok, {correct, expl: it.e ? tri(it.e) : "", xp:gained, onContinue:()=>nextStep()});
+  };
+  return;
+ }
+ /* LEVEL 2 · 15 seconds to plan before SAY IT YOURSELF (Yuan & Ellis 2003: planning time
+    makes what follows more fluent and more complex). Continue opens when the time is up. */
+ if(st.kind==="plan"){
+  const inner = `<div class="bubble" style="margin:4px 0 12px"><div class="bt">${esc(st.prompt ? tri(st.prompt) : "")}</div></div>${skillCardHTML(l)}
+   <div class="qsub" id="planleft" style="text-align:center;margin-top:14px"></div>`;
+  box.innerHTML = stepShell(stepNum, esc(t.planK), t.planSub, inner,
+   `<button class="btn btn-primary btn-block" id="go" disabled>${t.planGo}</button>`);
+  let left = 15;
+  const tick = ()=>{ if(!still()) return; const el = $("planleft"); if(!el) return;
+   if(left<=0){ el.textContent = ""; $("go").disabled = false; return; }
+   el.textContent = fmt(t.planWait, {n:left}); left--; setTimeout(tick, 1000); };
+  tick();
+  $("go").onclick = ()=>nextStep();
+  return;
+ }
+ /* LEVEL 1 BOSS · the build mission: 3–5 connected sentences said in one go, checked for
+    one phrase from each required group and a minimum length (not counted; +20 on a pass
+    or after two tries). The example is hidden until asked for: build first, compare later. */
+ if(st.kind==="mission"){
+  const M = ex0().mission;
+  const inner = `<div class="bubble" style="margin:4px 0 12px"><div class="bt">${esc(tri(M.prompt))}</div></div>
+   <div class="qsub" style="margin-bottom:8px">${esc(fmt(t.missionNeed, {n:M.minWords}))}</div>
+   <button type="button" class="btn btn-ghost btn-block" id="mmodel">${esc(t.missionModel)}</button>
+   <div class="scenebox hidden" id="mmtext" style="text-align:left;line-height:1.7">${M.model.map(x=>`<span data-say="${esc(sayable(x))}" role="button">${esc(px(x))}</span>`).join("<br>")}</div>
+   <div id="sparea"></div>`;
+  box.innerHTML = stepShell("🎤 "+stepNum+" · +20 XP", esc(t.missionK), t.missionSub, inner,
+   `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
+  $("mmodel").onclick = ()=>{ const b = $("mmtext"), open = b.classList.toggle("hidden"); $("mmodel").textContent = open ? t.missionModel : t.missionHide; };
+  const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 20; $("sessxp").textContent = P.xp; xpFloat(20); };
+  $("go").onclick = ()=>{ if(st.tries2) pay(); nextStep(); };
+  const missing = heard=>{
+   const h = " "+spNorm((heard||[]).join(" "))+" ", n = h.trim() ? h.trim().split(/\s+/).length : 0;
+   const gaps = M.groups.filter(g=>!g.some(k=>lemmaHit(h, k))).map(g=>g[0]);
+   return (gaps.length ? fmt(t.missionGaps, {g: gaps.join(" · ")})+" " : "") + (n < M.minWords ? fmt(t.missionShort, {n, m:M.minWords}) : "");
+  };
+  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-mission", long: true, good: t.missionGood,
+   s1: t.missionS1, retry: heard=>missing(heard) || t.missionRetry,
+   onTries: n=>{ if(n>=2) st.tries2 = true; },
+   judge: heard=>{
+    const h = " "+spNorm((heard||[]).join(" "))+" ";
+    const ws = h.trim().split(/\s+/), distinct = new Set(ws).size;
+    /* "I need could you before because report report…" hit every group: enough DIFFERENT
+       words are needed too (student test 2026-09-25) */
+    const ok = M.groups.every(g=>g.some(k=>lemmaHit(h, k))) && ws.length >= M.minWords && distinct >= Math.min(ws.length, M.minWords) * 0.6;
+    if(ok) pay();
+    return ok;
+   }});
+  return;
+ }
  /* LEVEL 1 · the dialogue heard first, no text, one gist question (not counted, +5 when right) */
  if(st.kind==="gist"){
   const g = ex0().gist, lines = (l.d && l.d.lines) || [];
+  if(!st.order) st.order = shuffle(g.o.map((_,i)=>i));
   const say = lines.map(x=>({v: x.who==="Y" ? "Y" : "A", s: sayable(x.who==="Y" ? x.ans : x.en)})).filter(x=>x.s);
   const inner = `<div class="hearbig"><button type="button" class="btn btn-ghost btn-block" id="gplay">${esc(t.gistPlay)}</button></div>
    <div class="qsub" style="margin:14px 0 8px;font-weight:700">${esc(tri(g.q))}</div>`
-   + g.o.map((o,i)=>`<button class="opt" data-i="${i}"><span class="radio"></span><span>${esc(tri(o))}</span></button>`).join("");
-  box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.gistK), t.gistSub, inner,
+   + st.order.map(i=>`<button class="opt" data-i="${i}"><span class="radio"></span><span>${esc(tri(g.o[i]))}</span></button>`).join("");
+  box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.gistK), t.gistSub+" "+t.gistEase, inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.check}</button>`);
   let playing = null;
   const stopPlay = ()=>{ playing = null; try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} const b = $("gplay"); if(b) b.textContent = t.gistPlay; };
@@ -1473,10 +1747,11 @@ function renderStep(){
  /* LEVEL 1 · one sentence heard with no text, a question about it (not counted, +5 when right) */
  if(st.kind==="listenonly"){
   const it = st.it, opts = it.o.map(o=>typeof o==="string" ? o : tri(o));
+  if(!st.order) st.order = shuffle(opts.map((_,i)=>i));
   const inner = `<div class="hearbig"><button class="hearplay" id="hp" type="button" aria-label="play">${SPK_ON_SVG}</button>`
    + `<button class="hearslow" id="hps" type="button" aria-label="slow"><span class="tt">🐢</span>${esc(t.hearSlow)}</button></div>
    <div class="qsub" style="margin:14px 0 8px;font-weight:700">${esc(tri(it.q))}</div>`
-   + opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="radio"></span><span>${esc(o)}</span></button>`).join("");
+   + st.order.map(i=>`<button class="opt" data-i="${i}"><span class="radio"></span><span>${esc(opts[i])}</span></button>`).join("");
   box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.loK), t.loSub, inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.check}</button>`);
   $("hp").onclick = ()=>speak(it.say, $("hp"), false, true);
@@ -1499,16 +1774,21 @@ function renderStep(){
  if(st.kind==="strans"){
   const it = st.it;
   const ans = sayable(it.ans), alts = (it.alt||[]).map(sayable);
-  const inner = mascotBubble(esc(px(tri(it.src)))) + `<div id="sparea"></div>`;
-  box.innerHTML = stepShell("🎤 "+stepNum+" · +10 XP", esc(t.stransK), t.stransSub, inner,
+  const l2 = typeof CONF!=="undefined" && CONF.flow==="l2" && it.src && it.src.en && S.lang!=="en";
+  const inner = (l2 ? mascotBubble(esc(px(it.src.en))+`<div class="cuezh hidden" id="cuezh">${esc(px(tri(it.src)))}</div>`)+`<button type="button" class="linkbtn" id="cuebtn">${esc(t.cueZh)}</button>`
+   : mascotBubble(esc(px(tri(it.src))))) + `<div id="sparea"></div>`;
+  box.innerHTML = stepShell("🎤 "+stepNum+" · +10 XP", esc(t.stransK), l2 ? t.stransSub.replace(/看中文，|Read this, |Baca ayat ini, /,"") : t.stransSub, inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
+  if($("cuebtn")) $("cuebtn").onclick = ()=>{ $("cuezh").classList.remove("hidden"); $("cuebtn").remove(); };
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 10; $("sessxp").textContent = P.xp; xpFloat(10); };
   $("go").onclick = ()=>{ if(st.tries2) pay(); nextStep(); };
-  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-st"+st.n, reveal: ans, retry: t.stransRetry,
+  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-st"+st.n, reveal: ans, retry: ()=>whyText(st.why, true),
    s1: ({zh:"先想一想英文怎么说", ms:"Fikir dahulu bagaimana menyebutnya", en:"First think how to say it in English"})[S.lang],
    onTries: n=>{ if(n>=2) st.tries2 = true; },
    judge: heard=>{
-    const ok = [ans].concat(alts).some(target=>TouchSpeech.check(target, heard).pass);
+    const cs = [ans].concat(alts).map(target=>TouchSpeech.check(target, heard));
+    const ok = cs.some(c=>c.pass);
+    st.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || "");
     if(ok){ pay(); speak(ans); }
     return ok;
    }});
@@ -1527,7 +1807,8 @@ function renderStep(){
    ${STEP_TAG}<div class="goalk">${esc(t.goalK)}</div>
    <div class="goalline">${esc(goalTxt)}</div>
    ${rows}
-   <div class="goaltime">${esc(t.goalTime)}</div>
+   ${skillCardHTML(l)}
+   <div class="goaltime">${esc(t.goalTime.replace(/\d+/, String(Math.max(5, Math.round(P.steps.length*40/60)))))}</div>
    <div class="pfoot"><button class="btn btn-primary btn-block" id="go">${esc(t.goalGo)}</button></div>
   </div>`;
   box.querySelectorAll(".saybtn").forEach(b=>{ b.onclick=()=>speak(b.dataset.sayit, b); });
@@ -1603,8 +1884,10 @@ function renderStep(){
   setTimeout(()=>{ if(still()) speak(st.say, $("hm")); }, 300);
   $("go").onclick = ()=>{ if(st.first && !st.paid){ st.paid = true; P.xp += 5; } nextStep(); };   // the old patterns step's +5
   mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-r"+st.n, model: ()=>speak(st.say, $("hm")),
+   retry: ()=>whyText(st.why),
    judge: heard=>{
     const c = TouchSpeech.check(st.say, heard);
+    st.why = c.why;
     $("repsent").innerHTML = c.words.map(x=>`<span class="w ${x.ok?"hit":"miss"}">${esc(x.w)}</span>`).join(" ");
     return c.pass;
    }});
@@ -1625,8 +1908,9 @@ function renderStep(){
      screen as a red ✗ (walkthrough 2026-09-25). 「现在不方便说」 earns nothing. */
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); };
   $("go").onclick = ()=>{ if(st.tried && st.tries2) pay(); nextStep(); };
-  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: st.ask ? t.ownAskRetry : t.ownRetry, good: t.ownGood,
+  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: heard=>{ const q = (heard||[]).some(h=>QWORD.test(spNorm(h))); return st.ask ? (q ? t.ownAskTopic : t.ownAskRetry) : t.ownRetry; }, good: t.ownGood,
    model: ()=>speak(st.line, null, false, true), hearLabel: t.hearModel2,
+   reveal: st.keys[0] ? st.keys[0].charAt(0).toUpperCase()+st.keys[0].slice(1)+(st.ask ? "?" : " …") : "",
    s1: ({zh:"先听对方说什么（点对话泡泡可以再听）", ms:"Dengar apa yang dia kata (tekan gelembung untuk dengar lagi)", en:"Listen to what they say (tap the bubble to hear it again)"})[S.lang],
    onTries: n=>{ if(n>=2) st.tries2 = true; },
    judge: heard=>{
@@ -1638,7 +1922,7 @@ function renderStep(){
  }
 
  if(st.kind==="vocab"){
-  const inner = l.w.map((w,i)=>`<div class="vrow"><span class="en">${esc(w[0])}</span><span class="gl">${esc(S.lang==="ms"?w[2]:(S.lang==="zh"?w[1]:w[1]+" · "+w[2]))}</span><span class="ex" data-say="${esc(w[3]||"")}" role="button" tabindex="0">${esc(px(w[3]))}</span>${TTS?`<button class="spk" data-w="${esc(w[0])}" aria-label="play">${SPK_SVG}</button>`:""}</div>`).join("");
+  const inner = l.w.map((w,i)=>`<div class="vrow"><span class="en">${esc(w[0])}</span><span class="gl">${esc(S.lang==="ms"?w[2]:(S.lang==="zh"?w[1]:(w[4]||w[1]+" · "+w[2])))}</span><span class="ex" data-say="${esc(w[3]||"")}" role="button" tabindex="0">${esc(px(w[3]))}</span>${TTS?`<button class="spk" data-w="${esc(w[0])}" aria-label="play">${SPK_SVG}</button>`:""}</div>`).join("");
   box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.vocab), t.vocabSub+(TTS?" "+t.tapSpk:""), inner,
    `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
   box.querySelectorAll(".spk").forEach(b=>{ b.onclick=()=>speak(b.dataset.w,b); });
@@ -1741,7 +2025,7 @@ function renderStep(){
   const inner = `<div class="pat"><div class="tp">${esc(px(it.tpl)).replace(/___/g,"<b>___</b>")}</div></div>
    <div class="bank">${shuffle(it.bank.map(px)).map(w=>`<button class="wchip" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
    <div id="fbslot"></div>`;
-  box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.sub), t.subSub, inner,
+  box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.sub), t.subSub+(it.hint ? " "+tri(it.hint) : ""), inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
   document.querySelectorAll(".wchip").forEach(b=>{
    b.onclick=()=>{
@@ -1760,11 +2044,12 @@ function renderStep(){
  if(st.kind==="order" || st.kind==="trans"){
   const isO = st.kind==="order";
   const it = st.it;
-  const answer = words(px(isO ? it.w.join(" ") : it.ans).split(" "));
-  const pool = isO ? shuffle(answer) : shuffle(answer.concat(words((it.x||[]).map(px))));
+  const sent = isO && it.q;                        // Level 2: the tiles are whole sentences
+  const answer = sent ? it.w.map(px) : words(px(isO ? it.w.join(" ") : it.ans).split(" "));
+  const pool = isO ? shuffle(answer.slice()) : shuffle(answer.concat(words((it.x||[]).map(px))));
   const title = isO ? t.order : t.trans;
-  const sub = isO ? t.orderSub : t.transSub;
-  const bubble = isO ? "" : mascotBubble(esc(px(tri(it.src))));
+  const sub = sent ? t.sorderSub : isO ? t.orderSub : t.transSub;
+  const bubble = sent ? mascotBubble(esc(px(tri(it.q)))) : isO ? "" : mascotBubble(esc(px(tri(it.src))));
   const display = px(isO ? it.w.join(" ") : it.ans).replace(/\s+([.,!?;:])/g,"$1");
   const meta = {ref: st.ref||{m:P.mi,l:P.li,k:st.kind,n:st.n}, q: isO ? T().order : px(tri(it.src)), alts:(it.alt||[]).map(px)};
   if(!isO) meta.meaning = px(tri(it.src));
@@ -1871,21 +2156,45 @@ function renderDialog(box, stepNum, l){
  let li = 0;
  const rendered = [];
  function header(){
-  return `<div class="scenebox">📍 ${esc(t.sceneLbl)}: ${esc(px(tri(d.scene)))}</div><div id="dlog">${rendered.join("")}</div><div id="dwork"></div>`;
+  const role = (typeof CONF!=="undefined" && CONF.flow!=="pb" && t.roleNote) ? `<div class="qsub" style="margin:-4px 0 10px;font-size:12.5px">${esc(t.roleNote)}</div>` : "";
+  const scene = px(tri(d.scene)).replace(/^\s*(scene|场景|situasi)\s*[:：]\s*/i, "");
+  return `<div class="scenebox">📍 ${esc(t.sceneLbl)}: ${esc(scene)}</div>${role}<div id="dlog">${rendered.join("")}</div><div id="dwork"></div>`;
  }
+ /* the gloss under their line: never the same English again, and in a Boss only for a Manglish line */
+ const MANG = /\b(lah|lor|meh|leh|can,? can|got,? got|already lah)\b/i;
+ const glossOf = line=>{ const g = line.g ? px(tri(line.g)) : ""; if(!g) return "";
+  if(spNorm(g)===spNorm(px(line.en))) return "";
+  if(isBoss && !MANG.test(line.en)) return ""; return g; };
  function pushThem(line){
   /* 每一行都可以点来听。播的就是画面上那一句（句尾标点要留着，音档档名连它一起算 ——
      以前每一句都去掉句点，结果对方的台词全部找不到音档）。
      带学生名字的句子交给 voice.js 在名字那里切开播。 */
   const sayable = px(line.en).replace(/\s+([.,!?;:])/g,"$1").replace(/\s+/g," ").trim();
-  rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" role="button" tabindex="0">${esc(px(line.en))}</span>${line.g&&!isBoss?`<span class="gl">${esc(px(tri(line.g)))}</span>`:""}</span></div>`);
+  /* Level 2: heard before read — the line is played and its words stay covered until tapped */
+  if(typeof CONF!=="undefined" && CONF.flow==="l2" && S.sound && TTS){
+   rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en covered" data-say="${esc(sayable)}" role="button" tabindex="0" onclick="this.classList.remove('covered')">${esc(px(line.en))}</span>${glossOf(line)?`<span class="gl covered" onclick="this.classList.remove('covered')">${esc(glossOf(line))}</span>`:""}</span></div>`);
+   pendingSay.push(sayable);
+   return;
+  }
+  rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" role="button" tabindex="0">${esc(px(line.en))}</span>${glossOf(line)?`<span class="gl">${esc(glossOf(line))}</span>`:""}</span></div>`);
  }
  function pushYou(text){
   /* 学生刚拼好的那一句 —— 让他听一次正确的念法，再进下一句 */
   const sayable = String(text).replace(/\s+([.,!?;:])/g,"$1").trim();
   rendered.push(`<div class="dline you"><span class="who">${esc(t.you[0]||"Y")}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" role="button" tabindex="0">${esc(text)}</span></span></div>`);
  }
- function advance(){
+ /* the other person's new lines, played one after another once the screen is drawn */
+ let pendingSay = [];
+ function flushSay(){
+  const q = pendingSay; pendingSay = [];
+  if(!q.length || !S.sound || !window.TouchVoice) return;
+  const mine = stD;
+  let i = 0;
+  const next = ()=>{ if(i>=q.length || !P || P.steps[P.idx]!==mine) return; TouchVoice.say(q[i++], {fallbackMaxWords:99, voice:"A", onDone:()=>setTimeout(next, 350)}); };
+  setTimeout(next, 300);
+ }
+ function advance(){ advance0(); flushSay(); }
+ function advance0(){
   while(li<lines.length && lines[li].who!=="Y"){ pushThem(lines[li]); li++; }
   if(li>=lines.length){
    // dialogue done
@@ -1931,7 +2240,9 @@ function renderDialog(box, stepNum, l){
     `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
    $("go").onclick = ()=>{ pushYou(disp); li++; advance(); };
    mountSpeech($("sparea"), {st:stD, key: COURSE[P.mi].id+"-"+P.li+"-dl", reveal: disp,
-    judge: heard=>targets.some(x=>TouchSpeech.check(x, heard).pass)});
+    retry: ()=>whyText(stD.why, true),
+    judge: heard=>{ const cs = targets.map(x=>TouchSpeech.check(x, heard)); const ok = cs.some(c=>c.pass);
+     stD.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || ""); return ok; }});
    window.scrollTo(0,document.body.scrollHeight);
    return;
   }
@@ -2023,7 +2334,7 @@ function finishLesson(){
  $("medal").textContent = isBoss?"👑":"🎉";
  $("medal").className = "medal";
  $("restitle").textContent = isBoss?t.bossDone:t.lessonDone;
- $("ressub").textContent = t.resSub + (isBoss?` (+20 ${t.bossBonus})`:"");
+ $("ressub").textContent = t.resSub + (isBoss?` (+20 ${t.bossBonus})`:"") + (P.skipped ? " "+fmt(t.skippedN, {n:P.skipped}) : "");
  $("resxp").textContent = "+"+total;
  $("resacc").textContent = acc+"%";
  $("resacclbl").textContent = t.accuracy;
