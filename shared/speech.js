@@ -19,6 +19,7 @@
      TouchSpeech.available                                   // boolean
      TouchSpeech.listen({ onStart, onHear, maxMs }) -> Promise<string[]>   // what it heard, best first
      TouchSpeech.finish()                     // stop now, keep what was heard
+     listen({ record: true, onRecorded(blob) }) // also record, to hear yourself back; noRecording() turns it off here
      TouchSpeech.check(target, heard)  -> { words: [{ w, ok }], ok: n, total: n, pass: bool }
      TouchSpeech.stop()
      TouchSpeech.normalize(text) -> string    // lower case, no punctuation, contractions spelled out
@@ -83,6 +84,19 @@
      - it stops by itself as soon as a phrase is final, instead of waiting for the phone to
        decide the learner is silent, which on iPhone can take several seconds;
      - finish() stops at once and keeps what was heard so far (a second tap on the mic). */
+  /* Hearing yourself back (Marco 2026-09-25: 「可不可以…听回自己的声音」). The recogniser
+     keeps no audio, so with opt.record the microphone is also recorded (MediaRecorder)
+     while the phone recognises; opt.onRecorded(blob) gets it when listening ends. Some
+     phones cannot give the microphone to both at once (the recogniser then reports
+     "audio-capture" or never starts): noRecording() switches recording off on this
+     device for good, and listening goes on as before. */
+  var NOREC = "touch-speech-norecord";
+  function canRecord() {
+    try { if (global.localStorage && global.localStorage.getItem(NOREC)) return false; } catch (e) {}
+    return !!(global.MediaRecorder && global.navigator && global.navigator.mediaDevices && global.navigator.mediaDevices.getUserMedia);
+  }
+  function noRecording() { try { global.localStorage.setItem(NOREC, "1"); } catch (e) {} }
+
   var finisher = null, killer = null;
   function listen(opt) {
     opt = opt || {};
@@ -96,9 +110,15 @@
       r.continuous = false;
       current = r;
       var finals = [], interim = "", done = false, started = false, settle = null;
+      var mr = null, stream = null, chunks = [], wantRec = !!opt.record && canRecord();
+      var stopRec = function () {
+        if (mr && mr.state !== "inactive") { try { mr.stop(); } catch (e) {} }
+        else if (stream) { try { stream.getTracks().forEach(function (tr) { tr.stop(); }); } catch (e) {} }
+      };
       var finish = function (err) {
         if (done) return;
         done = true;
+        stopRec();
         clearTimeout(t); clearTimeout(settle);
         current = null; finisher = null; killer = null;
         var got = finals.length ? finals : (interim ? [interim] : []);
@@ -128,6 +148,22 @@
       r.onerror = function (e) { finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
       r.onend = function () { finish(); };
       try { r.start(); } catch (e) { finish(e); }
+      // recording starts after the recogniser, so the recogniser keeps the tap's user gesture
+      if (wantRec && !done) {
+        global.navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
+          stream = st;
+          if (done) { stopRec(); return; }
+          try {
+            mr = new global.MediaRecorder(st);
+            mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+            mr.onstop = function () {
+              try { st.getTracks().forEach(function (tr) { tr.stop(); }); } catch (e) {}
+              if (chunks.length && opt.onRecorded) opt.onRecorded(new Blob(chunks, { type: mr.mimeType || "audio/webm" }));
+            };
+            mr.start();
+          } catch (e) { stopRec(); }
+        }, function () {});
+      }
     });
   }
 
@@ -149,5 +185,5 @@
     return t.replace(/\bmister\b/g, "mr").replace(/\b(\d{1,2}) 00\b/g, "$1 o'clock");
   }
 
-  global.TouchSpeech = { available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize };
+  global.TouchSpeech = { available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording };
 })(typeof globalThis !== "undefined" ? globalThis : window);

@@ -129,7 +129,11 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .spres.ok{background:#DDF6E6;color:#1E6B43}.spres.no{background:#FDECEC;color:#9E2E47}
 .spres .spcode{margin-top:4px;font-size:11px;color:#8C97A8}
 .spres .sph{font-weight:800;font-size:16px}.spres .spb{margin-top:4px;font-size:14px;color:#33415C}
-.spres .spbtns{display:flex;gap:8px;margin-top:10px}.spres .spbtns .btn{flex:1;padding:9px 10px;font-size:14px}
+.spres .spbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.spres .spbtns .btn{min-width:30%}.spres .spbtns .btn{flex:1;padding:9px 10px;font-size:14px}
+.bzrow{display:flex;align-items:flex-start;gap:8px}.bzrow .buildzone{flex:1}
+.bzspk{flex:none;width:40px;height:40px;margin-top:6px;border-radius:50%;border:0;background:var(--te-brand-soft,#EAF0FB);color:var(--te-brand,#15357B);display:grid;place-items:center;cursor:pointer}.bzspk svg{width:20px;height:20px}
+.dplay{margin-top:12px}
+.dline.playing .bub{outline:3px solid #84C1F0;outline-offset:2px;border-radius:14px}
 .spheard{min-height:22px;margin-top:6px;text-align:center;font-weight:700;color:#33415C;font-size:15px}
 .spmsg.live{color:#1E8A55;font-weight:700}
 .micbig.wait{opacity:.6;animation:none!important}
@@ -1908,9 +1912,9 @@ const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
    and after listening a result card — what it heard, a clear verdict, try again / hear it. */
 function SPK_TXT(){
  return ({
-  zh:{s1:"先听示范（上面的喇叭）", s2:"按麦克风，看到「正在听」再说", s3:"说完再按一下，结果会出现在这里", you:"我听到你说：", none:"我没有听到声音。", noneTip:"等画面出现「正在听」再开口，嘴巴离手机近一点。", again:"再说一次", hear:"听示范", ok:"说得很清楚！", red:"红色的字没听清楚，再说一次。"},
-  ms:{s1:"Dengar contoh dahulu (pembesar suara di atas)", s2:"Tekan mikrofon, tunggu “Sedang mendengar”, kemudian bercakap", s3:"Selesai? Tekan sekali lagi — keputusan muncul di sini", you:"Saya dengar:", none:"Saya tidak dengar suara anda.", noneTip:"Tunggu “Sedang mendengar” dahulu, dan dekatkan telefon.", again:"Cuba lagi", hear:"Dengar contoh", ok:"Sangat jelas!", red:"Perkataan merah tidak jelas — sebut sekali lagi."},
-  en:{s1:"Listen to the model first (the speaker above)", s2:"Tap the mic, wait for “Listening”, then speak", s3:"Tap again when you finish — the result appears here", you:"I heard:", none:"I didn't hear anything.", noneTip:"Wait for “Listening” before you speak, and hold the phone closer.", again:"Say it again", hear:"Hear the model", ok:"Very clear!", red:"The red words didn't come through — say it again."}
+  zh:{mine:"听我自己", s1:"先听示范（上面的喇叭）", s2:"按麦克风，看到「正在听」再说", s3:"说完再按一下，结果会出现在这里", you:"我听到你说：", none:"我没有听到声音。", noneTip:"等画面出现「正在听」再开口，嘴巴离手机近一点。", again:"再说一次", hear:"听示范", ok:"说得很清楚！", red:"红色的字没听清楚，再说一次。"},
+  ms:{mine:"Dengar suara saya", s1:"Dengar contoh dahulu (pembesar suara di atas)", s2:"Tekan mikrofon, tunggu “Sedang mendengar”, kemudian bercakap", s3:"Selesai? Tekan sekali lagi — keputusan muncul di sini", you:"Saya dengar:", none:"Saya tidak dengar suara anda.", noneTip:"Tunggu “Sedang mendengar” dahulu, dan dekatkan telefon.", again:"Cuba lagi", hear:"Dengar contoh", ok:"Sangat jelas!", red:"Perkataan merah tidak jelas — sebut sekali lagi."},
+  en:{mine:"Hear myself", s1:"Listen to the model first (the speaker above)", s2:"Tap the mic, wait for “Listening”, then speak", s3:"Tap again when you finish — the result appears here", you:"I heard:", none:"I didn't hear anything.", noneTip:"Wait for “Listening” before you speak, and hold the phone closer.", again:"Say it again", hear:"Hear the model", ok:"Very clear!", red:"The red words didn't come through — say it again."}
  })[S.lang] || {s1:"",s2:"",s3:"",you:"",none:"",noneTip:"",again:"",hear:"",ok:"",red:""};
 }
 function mountSpeech(host, o){
@@ -1945,12 +1949,20 @@ function mountSpeech(host, o){
   const mic = $("mic"), hd = $("spheard");
   mic.classList.add("on", "wait"); msg(W.wait, ""); if(hd) hd.textContent = "";
   if(COACH) COACH.pose("listen");
-  let heard = [], err = "", started = false;
+  let heard = [], err = "", started = false, mine = null;
+  const recTried = TouchSpeech.canRecord && TouchSpeech.canRecord();
+  // their own voice, to hear back: a button in the result card as soon as the recording is ready
+  const addMine = ()=>{
+   const row = document.querySelector("#spres .spbtns");
+   if(!mine || !row || $("spmine")) return;
+   row.insertAdjacentHTML("afterbegin", `<button type="button" class="btn btn-ghost" id="spmine">▶ ${esc(SPK_TXT().mine)}</button>`);
+   $("spmine").onclick = ()=>{ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} try{ const a = new Audio(URL.createObjectURL(mine)); a.play().catch(()=>{}); }catch(e){} };
+  };
   /* The phone sometimes never starts listening (seen on iPhone, second sentence of a
      lesson): after 4 s without a start, stop and say so, rather than wait silently. */
   const watchdog = setTimeout(()=>{ if(!started){ err = err || "no-start"; TouchSpeech.stop(); } }, 4000);
   try{
-   heard = await TouchSpeech.listen({maxMs: 9000,
+   heard = await TouchSpeech.listen({maxMs: 9000, record: true, onRecorded: b=>{ mine = b; addMine(); },
     onStart: ()=>{ started = true; mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
     onHear: txt=>{ if(hd) hd.textContent = "“"+txt+"”"; }});
   }catch(e){ err = err || String((e && e.message) || e || "error"); }
@@ -1965,6 +1977,8 @@ function mountSpeech(host, o){
      code in small grey text, so a learner (and we) can see what happened. */
   if(err==="not-allowed" || err==="service-not-allowed"){ SPEECH_OFF = true; return fallback(t.spFallback); }
   if(err==="no-speech") err = "";
+  // a phone that cannot record and recognise at once: recognise only, from now on
+  if(recTried && (err==="audio-capture" || err==="no-start") && TouchSpeech.noRecording) TouchSpeech.noRecording();
   tries++;
   first();
   const X = SPK_TXT(), res = $("spres"), steps = $("spsteps");
@@ -1975,6 +1989,7 @@ function mountSpeech(host, o){
    res.className = "spres "+cls;
    res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(X.hear)}</button>` : ""}</div>`;
    $("spagain").onclick = ()=>$("mic").click();
+   addMine();
    if(o.model && $("sphear")) $("sphear").onclick = ()=>o.model();
   };
   const more = tries>=2 ? " "+t.spMoveOn : "";
@@ -2380,7 +2395,10 @@ function norm(arr){ return words(arr).join(" ").toLowerCase().replace(/[.,!?;:'"
 /* tap-to-build (order / translation / dialogue lines) */
 function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, display, meta, bubble){
  const t = T();
- const inner = `${bubble||""}<div class="buildzone" id="bz"></div>
+ /* Tapping a tile is silent (Marco 2026-09-25: reading every tapped word got in the way;
+    Duolingo reads the sentence). The small speaker beside the answer reads what has been
+    built so far — one tile placed, it says that word — and Check plays the whole sentence. */
+ const inner = `${bubble||""}<div class="bzrow"><div class="buildzone" id="bz"></div><button type="button" class="bzspk hidden" id="bzspk" aria-label="play">${SPK_SVG}</button></div>
   <div class="bank" id="bk">${pool.map((w,i)=>`<button class="wchip" data-i="${i}" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
   <div id="fbslot"></div>`;
  box.innerHTML = stepShell(lbl, title, sub, inner,
@@ -2393,10 +2411,12 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
     document.querySelector(`#bk .wchip[data-i="${p.i}"]`).classList.remove("used"); redraw(); };
   });
   $("go").disabled = placed.length===0;
+  const sp = $("bzspk"); if(sp) sp.classList.toggle("hidden", placed.length===0);
  }
  document.querySelectorAll("#bk .wchip").forEach(b=>{
-  b.onclick=()=>{ if(b.classList.contains("used"))return; speak(b.dataset.v); b.classList.add("used"); placed.push({v:b.dataset.v,i:b.dataset.i}); redraw(); };
+  b.onclick=()=>{ if(b.classList.contains("used"))return; b.classList.add("used"); placed.push({v:b.dataset.v,i:b.dataset.i}); redraw(); };
  });
+ $("bzspk").onclick = ()=>{ const txt = placed.map(p=>p.v).join(" ").replace(/\s+([.,!?;:])/g,"$1"); if(txt) speak(txt, $("bzspk")); };
  $("go").onclick=()=>{
   /* 同一组词块常常不只拼得出一句对的话（「Now it is ten o'clock」「At six o'clock I go home」）。
      题目可以带 alt：[另一种完整的正确答案…]，用同一套 norm() 比对，对上任何一句都算对。
@@ -2407,6 +2427,8 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
   if(viaAlt) ok = true;
   const std = display || answer.join(" ");
   document.querySelectorAll(".wchip").forEach(b=>b.disabled=true);
+  // the whole sentence, read once it is checked — the learner's own when it was another right way
+  speak(String(viaAlt || std).replace(/\s+([.,!?;:])/g,"$1"));
   $("go").disabled = true;
   if(meta) trackAnswer(ok, meta.ref, meta.q, std, expl, placed.map(p=>p.v).join(" "), (title && title!==meta.q ? title+" · " : "")+meta.q+" ["+pool.join(" / ")+"]");
   if(onDone){ onDone(ok, viaAlt); }
@@ -2445,9 +2467,35 @@ function renderDialog(box, stepNum, l){
   while(li<lines.length && lines[li].who!=="Y"){ pushThem(lines[li]); li++; }
   if(li>=lines.length){
    // dialogue done
+   const PL = ({zh:["▶ 播放整段对话","■ 停止"], ms:["▶ Main seluruh perbualan","■ Berhenti"], en:["▶ Play the whole conversation","■ Stop"]})[S.lang] || ["▶","■"];
    box.innerHTML = stepShell((isBoss?t.boss:t.dialog)+" · +10 XP", esc(isBoss?t.boss:t.dialog), isBoss?t.bossSub:t.dialogSub,
-    header(), `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
-   $("go").onclick=()=>{ P.xp+=10; nextStep(); };
+    header()+`<button type="button" class="btn btn-ghost btn-block dplay" id="dplay">${esc(PL[0])}</button>`,
+    `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
+   $("go").onclick=()=>{ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} P.xp+=10; nextStep(); };
+   /* The whole conversation, line after line, once it is done (Marco 2026-09-25: 「完成全部的
+      时候…一键播放来回对话」). Each line is highlighted while it plays. The partner and the
+      learner will get two different voices with the audio step (voice: "A" / "Y"). */
+   let playing = null;
+   $("dplay").onclick = ()=>{
+    const btn = $("dplay");
+    const lines = [...document.querySelectorAll("#dlog .dline")];
+    const clear = ()=>{ lines.forEach(x=>x.classList.remove("playing")); btn.textContent = PL[0]; playing = null; };
+    if(playing){ try{ TouchVoice.stop(); }catch(e){} clear(); return; }
+    if(!window.TouchVoice) return;
+    const token = playing = {};
+    btn.textContent = PL[1];
+    let i = 0;
+    const next = ()=>{
+     if(playing !== token) return;
+     lines.forEach(x=>x.classList.remove("playing"));
+     if(i >= lines.length){ clear(); return; }
+     const row = lines[i++], en = row.querySelector(".en[data-say]");
+     row.classList.add("playing"); row.scrollIntoView({block:"nearest", behavior:"smooth"});
+     TouchVoice.say(en ? en.dataset.say : "", {fallbackMaxWords: 99, voice: row.classList.contains("you") ? "Y" : "A",
+      onDone: ()=>setTimeout(next, 450)});
+    };
+    next();
+   };
    return;
   }
   const line = lines[li];

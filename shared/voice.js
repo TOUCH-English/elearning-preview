@@ -169,10 +169,8 @@
               vs.filter(function (x) { return /^en/i.test(x.lang); })[0];
       if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
       u.rate = (opt.rate != null ? opt.rate : rateFor(opt.slow)) * 0.85;   // 机械音本来就要再慢一点才听得懂
-      if (opt.btn) {
-        curBtn = opt.btn; curBtn.classList.add("playing");
-        u.onend = u.onerror = clearBtn;
-      }
+      if (opt.btn) { curBtn = opt.btn; curBtn.classList.add("playing"); }
+      u.onend = u.onerror = function () { if (opt.btn) clearBtn(); if (opt.onDone) opt.onDone(); };
       global.speechSynthesis.speak(u);
       return true;
     } catch (e) { return false; }
@@ -224,7 +222,7 @@
     var i = 0;
     (function next() {
       if (cur !== token && !(cur && cur._seg === token)) return;
-      if (i >= segs.length) { cur = null; clearBtn(); return; }
+      if (i >= segs.length) { cur = null; clearBtn(); if (opt.onDone) opt.onDone(); return; }
       var seg = segs[i++];
       if (have && !have[key(seg)]) { next(); return; }
       var a = new Audio(BASE + key(seg) + ".mp3");
@@ -244,6 +242,18 @@
   /* 主要入口。回传 "audio" / "tts" / false，方便测试与除错。 */
   function say(text, opt) {
     opt = opt || {};
+    /* opt.onDone: called once when this line has finished (or could not play), so a
+       caller can play lines one after another — the whole dialogue at once (Marco
+       2026-09-25: 「完成全部的时候…一键播放来回对话」). Not called when stop() cut it. */
+    if (opt.onDone) {
+      var cb = opt.onDone, fired = false;
+      opt.onDone = function () { if (!fired) { fired = true; try { cb(); } catch (e) {} } };
+    }
+    var r = say1(text, opt);
+    if (r === false && opt.onDone) setTimeout(opt.onDone, 0);
+    return r;
+  }
+  function say1(text, opt) {
     if (opt.fallbackMaxWords === undefined) opt.fallbackMaxWords = 3;
     var t = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
     if (!t) return false;
@@ -271,20 +281,22 @@
       if ("webkitPreservesPitch" in a) a.webkitPreservesPitch = true;
 
       if (opt.btn) { curBtn = opt.btn; curBtn.classList.add("playing"); }
-      a.onended = function () { if (cur === a) cur = null; clearBtn(); };
+      a.onended = function () { var mine = cur === a; if (mine) cur = null; clearBtn(); if (mine && opt.onDone) opt.onDone(); };
       /* 档案不在、或格式不支援 —— 静静退回浏览器语音，学生不会察觉 */
       a.onerror = function () {
         if (cur === a) cur = null;
         clearBtn();
         var segs = withName(t);                    // manifest 还没载到时才会走到这里
-        if (segs) playSegments(segs, opt); else fallback(t, opt);
+        var ok = segs ? playSegments(segs, opt) : fallback(t, opt);
+        if (!ok && opt.onDone) opt.onDone();   // nothing could play: let a sequence move on
       };
 
       cur = a;
       var p = a.play();
       if (p && p.catch) p.catch(function () {                       // 自动播放被挡等
         if (cur === a) cur = null;
-        clearBtn(); fallback(t, opt);
+        clearBtn();
+        if (!fallback(t, opt) && opt.onDone) opt.onDone();
       });
       return "audio";
     } catch (e) {
