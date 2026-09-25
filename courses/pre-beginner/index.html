@@ -124,6 +124,11 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .pprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-deep));border-radius:99px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
 .pxp{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--gold-deep);white-space:nowrap}
 .combochip{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--danger-d);white-space:nowrap;animation:pop .2s ease-out}
+.spsteps{margin:14px auto 4px;padding:0 0 0 20px;max-width:320px;text-align:left;color:#51607A;font-size:13.5px;line-height:1.7}
+.spres{margin:12px 0 4px;border-radius:16px;padding:12px 14px;text-align:left}
+.spres.ok{background:#DDF6E6;color:#1E6B43}.spres.no{background:#FDECEC;color:#9E2E47}
+.spres .sph{font-weight:800;font-size:16px}.spres .spb{margin-top:4px;font-size:14px;color:#33415C}
+.spres .spbtns{display:flex;gap:8px;margin-top:10px}.spres .spbtns .btn{flex:1;padding:9px 10px;font-size:14px}
 .spheard{min-height:22px;margin-top:6px;text-align:center;font-weight:700;color:#33415C;font-size:15px}
 .spmsg.live{color:#1E8A55;font-weight:700}
 .micbig.wait{opacity:.6;animation:none!important}
@@ -1897,6 +1902,16 @@ function ownHit(h, keys, line){
    record-and-play-back, and without a microphone a plain "say it aloud". */
 let SPEECH_OFF = false;
 const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+/* What the mic does, said before and after (Marco 2026-09-25 on his iPhone: 「我不知道开麦克风
+   最后会出现什么…要它出现了，我才知道你要我做什么」): three numbered steps under the mic,
+   and after listening a result card — what it heard, a clear verdict, try again / hear it. */
+function SPK_TXT(){
+ return ({
+  zh:{s1:"先听示范（上面的喇叭）", s2:"按麦克风，看到「正在听」再说", s3:"说完再按一下，结果会出现在这里", you:"我听到你说：", none:"我没有听到声音。", noneTip:"等画面出现「正在听」再开口，嘴巴离手机近一点。", again:"再说一次", hear:"听示范", ok:"说得很清楚！", red:"红色的字没听清楚，再说一次。"},
+  ms:{s1:"Dengar contoh dahulu (pembesar suara di atas)", s2:"Tekan mikrofon, tunggu “Sedang mendengar”, kemudian bercakap", s3:"Selesai? Tekan sekali lagi — keputusan muncul di sini", you:"Saya dengar:", none:"Saya tidak dengar suara anda.", noneTip:"Tunggu “Sedang mendengar” dahulu, dan dekatkan telefon.", again:"Cuba lagi", hear:"Dengar contoh", ok:"Sangat jelas!", red:"Perkataan merah tidak jelas — sebut sekali lagi."},
+  en:{s1:"Listen to the model first (the speaker above)", s2:"Tap the mic, wait for “Listening”, then speak", s3:"Tap again when you finish — the result appears here", you:"I heard:", none:"I didn't hear anything.", noneTip:"Wait for “Listening” before you speak, and hold the phone closer.", again:"Say it again", hear:"Hear the model", ok:"Very clear!", red:"The red words didn't come through — say it again."}
+ })[S.lang] || {s1:"",s2:"",s3:"",you:"",none:"",noneTip:"",again:"",hear:"",ok:"",red:""};
+}
 function mountSpeech(host, o){
  const t = T(), go = $("go");
  const allow = ()=>{ if(go) go.disabled = false; };
@@ -1913,6 +1928,8 @@ function mountSpeech(host, o){
  host.innerHTML = `<button class="micbig" id="mic" type="button" aria-label="${esc(t.micTap)}">${MIC_SVG}</button>
   <div class="spmsg" id="spmsg">${esc(t.micTap)}</div>
   <div class="spheard" id="spheard"></div>
+  <div class="spres hidden" id="spres"></div>
+  <ol class="spsteps" id="spsteps"><li>${esc(o.s1 || SPK_TXT().s1)}</li><li>${esc(SPK_TXT().s2)}</li><li>${esc(SPK_TXT().s3)}</li></ol>
   <button class="linkbtn" id="later" type="button">${esc(t.spLater)}</button>`;
  const msg = (s, cls)=>{ const m = $("spmsg"); if(m){ m.textContent = s; m.className = "spmsg"+(cls?" "+cls:""); } };
  $("later").onclick = ()=>{ allow(); if(go) go.click(); };
@@ -1941,10 +1958,30 @@ function mountSpeech(host, o){
   if(err && err!=="no-speech"){ SPEECH_OFF = true; return fallback(t.spFallback); }
   tries++;
   first();
+  const X = SPK_TXT(), res = $("spres"), steps = $("spsteps");
+  if(steps) steps.classList.add("hidden");
+  if(hd) hd.textContent = "";
+  const card = (cls, head, body)=>{
+   if(!res) return;
+   res.className = "spres "+cls;
+   res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(X.hear)}</button>` : ""}</div>`;
+   $("spagain").onclick = ()=>$("mic").click();
+   if(o.model && $("sphear")) $("sphear").onclick = ()=>o.model();
+  };
   const more = tries>=2 ? " "+t.spMoveOn : "";
-  if(!heard || !heard.length){ msg(t.spNone+more, "no"); if(tries>=2) allow(); if(COACH) COACH.pose("think"); return; }
-  if(o.judge(heard)){ msg(o.good || t.spGood, "ok"); allow(); if(COACH) COACH.pose("celebrate"); }
-  else { msg((o.retry || t.spMiss)+more, "no"); if(tries>=2) allow(); if(COACH) COACH.pose("think"); }
+  msg(t.micTap, "");
+  if(!heard || !heard.length){
+   card("no", "🤔 "+esc(X.none), `<div class="spb">${esc(X.noneTip)}${esc(more)}</div>`);
+   if(tries>=2) allow(); if(COACH) COACH.pose("think"); return;
+  }
+  const said = `<div class="spb">${esc(X.you)} <b>“${esc(heard[0])}”</b></div>`;
+  if(o.judge(heard)){
+   card("ok", "✓ "+esc(o.good || X.ok), said);
+   allow(); if(COACH) COACH.pose("celebrate");
+  } else {
+   card("no", "✗ "+esc(o.retry || X.red), said+(more ? `<div class="spb">${esc(more)}</div>` : ""));
+   if(tries>=2) allow(); if(COACH) COACH.pose("think");
+  }
  };
 }
 
@@ -2128,7 +2165,7 @@ function renderStep(){
   $("hms").onclick = ()=>speak(st.say, $("hms"), true);
   setTimeout(()=>{ if(still()) speak(st.say, $("hm")); }, 300);
   $("go").onclick = ()=>{ if(st.first && !st.paid){ st.paid = true; P.xp += 5; } nextStep(); };   // the old patterns step's +5
-  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-r"+st.n,
+  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-r"+st.n, model: ()=>speak(st.say, $("hm")),
    judge: heard=>{
     const c = TouchSpeech.check(st.say, heard);
     $("repsent").innerHTML = c.words.map(x=>`<span class="w ${x.ok?"hit":"miss"}">${esc(x.w)}</span>`).join(" ");
@@ -2141,7 +2178,7 @@ function renderStep(){
   const inner = `<div class="ownrow"><span class="coachslot" data-coach></span>
     <div class="bubble"><div class="bt" data-sayit="${esc(st.line)}" role="button" tabindex="0">${esc(st.line)}</div></div></div>
    ${st.hint ? `<div class="ownhint">${esc(t.ownHint)} ${esc(st.hint)}</div>` : ""}
-   <div id="sparea"></div><div class="spheard" id="spheard"></div>`;
+   <div id="sparea"></div>`;
   box.innerHTML = stepShell("🎤 "+t.ownK+" · "+stepNum+" · +5 XP", esc(prompt), "", inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
   const bt = box.querySelector(".bubble .bt");
@@ -2149,11 +2186,11 @@ function renderStep(){
   setTimeout(()=>{ if(still()) speak(st.line, null); }, 350);
   $("go").onclick = ()=>nextStep();
   mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: t.ownRetry, good: t.ownGood,
+   model: ()=>speak(st.line, null), s1: ({zh:"先听对方说什么（点对话泡泡可以再听）", ms:"Dengar apa yang dia kata (tekan gelembung untuk dengar lagi)", en:"Listen to what they say (tap the bubble to hear it again)"})[S.lang],
    onFirst: ()=>{ P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); },   // the old Speak Up's +5
    judge: heard=>{
     const hit = heard.find(h=>ownHit(h, st.keys, st.line));
-    const show = hit || heard[0] || "";
-    $("spheard").innerHTML = show ? `${esc(t.ownHeard)} <b>“${esc(show)}”</b>` : "";
+    if(hit) heard.unshift(hit);   // the result card shows heard[0]: show the answer that counted
     return !!hit;
    }});
   return;
