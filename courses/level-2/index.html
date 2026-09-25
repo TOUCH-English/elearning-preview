@@ -126,6 +126,7 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .pprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-deep));border-radius:99px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
 .pxp{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--gold-deep);white-space:nowrap}
 .combochip{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--danger-d);white-space:nowrap;animation:pop .2s ease-out}
+.pskip{flex:none;border:1px solid var(--te-line,#DFE5F0);background:#fff;color:var(--te-brand,#15357B);font-weight:700;font-size:12.5px;border-radius:999px;padding:6px 11px;margin-left:6px;cursor:pointer}
 .stephead{display:flex;gap:12px;align-items:flex-end;margin-bottom:6px}.stephtext{flex:1;min-width:0}.coachslot{flex:none;margin:-6px 0 0 -4px}.coachslot:empty{display:none}
 .stepcard{background:var(--surface);border:1px solid #E6EBF2;border-radius:20px;box-shadow:var(--sh-md);padding:22px 18px}
 .steplbl{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:8px}
@@ -527,6 +528,7 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
    <div class="pprog"><i id="progfill"></i></div>
    <span class="combochip hidden" id="combochip"></span>
    <span class="pxp">+<span id="sessxp">0</span> XP</span>
+   <button class="pskip hidden" id="pskip" type="button">Skip ›</button>
   </div>
   <div id="stepbox"></div>
  </div>
@@ -1012,6 +1014,7 @@ function whenVoiceKnown(cb){
 }
 
 /* ---------- Speak Up: local-only voice recording ---------- */
+const PREVIEW = !!(window.TOUCH_PLATFORM && window.TOUCH_PLATFORM.preview);   // Student View, see the Skip hook below
 const CANREC = !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.indexedDB);
 let REC = {recorder:null, stream:null, audio:null, timers:[]};
 function recTimer(fn, ms){ const id = setTimeout(fn, ms); REC.timers.push(id); return id; }
@@ -1379,14 +1382,14 @@ function renderHome(){
    nodes: m.lessons.map((l,li)=>{
     const dn = lessonDone(mi,li), un = lessonUnlocked(mi,li);
     const isRec = rec && rec.mi===mi && rec.li===li;
-    const state = dn ? "done" : (!un ? "locked" : (isRec ? "go" : "avail"));
+    const state = dn ? "done" : (!un && !PREVIEW ? "locked" : (isRec ? "go" : "avail"));
     return {
      label: tri(l.t),
      sub: l.boss ? fmt(h.bossOf, {u:mi+1}) : fmt(h.lessonOf, {u:mi+1, l:li+1, n}),
      state, boss: !!l.boss, icon: l.boss ? "trophy" : "star",
      practised: false,
      lockedText: state==="locked" ? t.gfBossLocked : "",
-     onClick: state==="locked" ? null : ()=>tap(mi,li,state)
+     onClick: state==="locked" ? null : ()=> PREVIEW ? startLesson(mi,li) : tap(mi,li,state)
     };
    })
   };
@@ -1607,6 +1610,12 @@ function stepShell(lbl, title, sub, inner, footBtn){
   <div class="pfoot">${footBtn}</div>
  </div>`;
 }
+
+/* ---- Student View (staff preview, shared/storage.js ?as=student) ----
+   Marco 2026-09-25: staff see the student's screens but must not get stuck the way a
+   student does — every lesson opens (no locks, no off-path suggestion) and a Skip
+   button walks through a lesson step by step. Real students never have PREVIEW. */
+if(PREVIEW){ const sk = document.getElementById("pskip"); if(sk){ sk.classList.remove("hidden"); sk.onclick = ()=>{ try{ hideFeedback(); }catch(e){} nextStep(); }; } }
 
 /* ---- Amy in the lesson (shared/coach.js) ----
    Marco 2026-09-24: the character should fit what is on screen, like Duolingo.
@@ -2300,7 +2309,37 @@ function init(){
  if(!(SP && SP.platform) && !S.name && !store.get("askedname", false) && !(SP && SP.asked())){ showNameScreen(); return; }
  renderHome();
 }
+/* ---- Student View demo (shared/storage.js ?as=student) ----
+   Marco 2026-09-25: staff should feel a student half-way through, and the Mistakes card
+   should land on the wrong questions themselves, not on the course. So, for the preview
+   student only: &demo=N — the first N lessons of this course are done (in order) and a
+   few of their questions are waiting in review, as if answered wrong; &review=1 — open
+   that review straight away. Real students never have PREVIEW. */
+function previewDemo(){
+ if(!PREVIEW) return false;
+ const q = new URLSearchParams(location.search);
+ const n = parseInt(q.get("demo") || "", 10);
+ if(n >= 0){
+  S.done = {}; S.practised = {};
+  let c = 0;
+  COURSE.forEach((m)=>m.lessons.forEach((l,li)=>{ if(c < n){ S.done[m.id+"-"+li] = true; c++; } }));
+  const refs = [];
+  COURSE.forEach((m,mi)=>m.lessons.forEach((L,li)=>{
+   if(refs.length >= 6 || !S.done[m.id+"-"+li] || L.boss) return;
+   if(L.f && L.f[0]) refs.push({m:mi, l:li, k:"fill", n:0});
+   if(L.m && L.m[0] && refs.length < 6) refs.push({m:mi, l:li, k:"mcq", n:0});
+  }));
+  S.review = refs;
+  S.xp = n * 10;
+  const today = new Date().toISOString().slice(0,10);
+  S.streak = {count: Math.max(1, Math.round(n/2)), last: today};
+  save();
+ }
+ return q.get("review") === "1";
+}
+const PREVIEW_REVIEW = previewDemo();
 init();
+if(PREVIEW_REVIEW && S.review.length) startReview();
 </script>
 </body>
 </html>

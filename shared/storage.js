@@ -66,7 +66,7 @@
     var pl = ((global.location.search || "").match(/[?&]lang=(zh|ms|en)\b/) || [])[1] || "zh";
     global.TOUCH_PLATFORM = {
       student: { id: "preview", name: "Preview Student", nickname: "Alex", lang: pl },
-      staff: true, preview: true, blobs: {}, homeUrl: "/ui-c/courses"
+      staff: true, preview: true, blobs: {}, homeUrl: "/ui-c/student-view"
     };
   }
 

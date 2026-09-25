@@ -329,7 +329,9 @@
       nodes.forEach(function (n, ni) {
         var st = n.state || "avail";
         var x = X[ni % X.length] * (flip ? -1 : 1);
-        var icon = st === "done" ? ICON.check : st === "locked" ? ICON.lock : ICON[n.icon] || (n.boss ? ICON.trophy : ICON.star);
+        // a passed unit test keeps its trophy, on gold: the tick alone left the gold unexplained
+        // (Marco 2026-09-25: 「第五个完成后变成黄色的用意是什么？」)
+        var icon = st === "done" ? (n.boss ? ICON.trophy : ICON.check) : st === "locked" ? ICON.lock : ICON[n.icon] || (n.boss ? ICON.trophy : ICON.star);
         var cls = "th-node " + st + (n.boss ? " boss" : "");
         h += '<div class="th-nw" style="transform:translateX(' + x + 'px)">' +
           '<button type="button" class="' + cls + '" data-th="node" data-s="' + si + '" data-n="' + ni + '" aria-label="' + esc(n.label) + '"' +
