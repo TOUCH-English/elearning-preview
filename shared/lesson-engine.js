@@ -177,17 +177,18 @@ function pickVoice(){
 }
 if(TTS){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
-/* Who speaks in which voice (Marco 2026-09-25: a dialogue needs two voices). The learner
-   and the coach's model sentences are Bella; the other person is a man's or a woman's voice
-   by who they are. tools/build-audio.mjs reads this same line to know which files to make,
-   so it stays one JSON object on one line. Unknown or unnamed speakers are "m", which also
-   keeps them apart from Bella. */
-const VOICE_OF = {"Mr. Tan":"m","Kumar":"m","Ali":"m","Siti":"f","Mei Ling":"f","Amy":"f","tan":"m","kumar":"m","ali":"m","siti":"f","meiling":"f","amy":"f","New colleague":"m","Trainee":"f","Receptionist":"f","Friend":"f","Customer":"m","Landlord":"m"};
+/* Who speaks in which voice. Marco 2026-09-25: each of the six characters has their own
+   voice, the same one as in the classroom materials (touch-lesson-materials
+   lessons/audio/voices.json); the learner and model sentences are Bella. Unnamed people
+   are "xm" / "xf" (Chris / Matilda — no character's voice). A recording of a character's
+   line is "<code>-<key>.mp3". tools/build-audio.mjs reads this same line, so it stays one
+   JSON object on one line. */
+const VOICE_OF = {"Mr. Tan":"tan","Kumar":"kumar","Ali":"ali","Siti":"siti","Mei Ling":"meiling","Amy":"amy","tan":"tan","kumar":"kumar","ali":"ali","siti":"siti","meiling":"meiling","amy":"amy","New colleague":"xm","Trainee":"xf","Receptionist":"xf","Friend":"xf","Customer":"xm","Landlord":"xm"};
 /* Pre-Beginner has a recording of every option and every built sentence. Level 1 and 2 record
    only what a learner must or should hear (Marco 2026-09-25, A+B): there an option is not read
    when tapped, the right one is read once answered, and a substitution sentence has no speaker. */
 const ALL_AUDIO = ()=> typeof CONF==="undefined" || CONF.flow==="pb";
-function voiceOf(who){ return (who && who!=="Y" && VOICE_OF[who]) || "m"; }
+function voiceOf(who){ return (who && who!=="Y" && VOICE_OF[who]) || "xm"; }
 /* heard lines with no speaker of their own (listen, ls, cm): the lesson's dialogue partner */
 function lessonVoice(l){ const x = ((l && l.d && l.d.lines) || []).find(y=>y.who && y.who!=="Y"); return voiceOf(x && x.who); }
 function speak(txt, btn, slow, mustHear, voice){
@@ -2359,8 +2360,8 @@ function renderDialog(box, stepNum, l){
     `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
    $("go").onclick=()=>{ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} P.xp+=10; nextStep(); };
    /* The whole conversation, line after line, once it is done (Marco 2026-09-25: 「完成全部的
-      时候…一键播放来回对话」). Each line is highlighted while it plays. The partner speaks in
-      their own voice (data-voice), the learner in Bella's. */
+      时候…一键播放来回对话」). Each line is highlighted while it plays. Each character speaks
+      in their own voice (data-voice), the learner in Bella's. */
    let playing = null;
    $("dplay").onclick = ()=>{
     const btn = $("dplay");

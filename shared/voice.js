@@ -130,15 +130,18 @@
     } catch (e) {}
   })();
 
-  /* The other person in a dialogue speaks in a man's ("m") or a woman's ("f") voice, and
-     that recording is the same key with "m-" / "f-" in front (tools/build-audio.mjs).
-     opt.voice names it; when that file is missing the other one is tried, then Bella's —
-     a line heard in review, away from its own lesson, still finds a human voice. */
+  /* Each character speaks in their own voice (lesson-engine.js VOICE_OF): the recording is
+     the same key with the character's code in front ("tan-…", "siti-…"; tools/build-audio.mjs).
+     opt.voice names it; when that file is missing any character's recording of the line is
+     tried, then Bella's — a line heard in review, away from its own lesson, still finds a
+     human voice. */
+  var VOICES = ["tan", "kumar", "ali", "siti", "meiling", "amy", "xm", "xf"];
   function fileKey(t, voice) {
     var k = key(t);
-    if (!have || (voice !== "m" && voice !== "f")) return k;
-    var other = voice === "m" ? "f" : "m";
-    return have[voice + "-" + k] ? voice + "-" + k : have[other + "-" + k] ? other + "-" + k : k;
+    if (!have || VOICES.indexOf(voice) < 0) return k;
+    if (have[voice + "-" + k]) return voice + "-" + k;
+    for (var i = 0; i < VOICES.length; i++) if (have[VOICES[i] + "-" + k]) return VOICES[i] + "-" + k;
+    return k;
   }
 
   var MISSING = [];      // 退回机械音的字串（测试用）
