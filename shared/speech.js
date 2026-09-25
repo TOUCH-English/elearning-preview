@@ -340,5 +340,5 @@
     return t.replace(/\bmister\b/g, "mr").replace(/\b(\d{1,2}) 00\b/g, "$1 o'clock");
   }
 
-  global.TouchSpeech = { available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording, audioFor: audioFor };
+  global.TouchSpeech = { tokens: words, irregular: IRREG, available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording, audioFor: audioFor };
 })(typeof globalThis !== "undefined" ? globalThis : window);

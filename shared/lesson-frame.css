@@ -124,3 +124,4 @@ body.embedded .player{padding-bottom:40px}
 .cmgrid .cq{flex-direction:column;gap:4px}
 .cmgrid .cqt{display:block;font-size:13px;font-weight:600;line-height:1.35;text-align:left}
 .cuezh{margin-top:6px;font-size:14px;color:var(--subtle,#6B7A90)}
+.cmgrid .pw,.pairgrid .pw{white-space:normal;overflow-wrap:anywhere;word-break:normal;min-width:0}

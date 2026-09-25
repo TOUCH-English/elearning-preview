@@ -52,7 +52,7 @@ Object.keys(UI_LESSON).forEach(k=>Object.assign(UI[k], UI_LESSON[k]));
 const UI_L1 = {
  zh:{gistK:"先听一段对话",gistSub:"没有字，只用听的。听完回答下面的问题。",gistPlay:"▶ 播放对话",gistStop:"■ 停止",
   loK:"只听不看",loSub:"听这一句（没有字），然后回答。",loWas:"刚才那一句是：",
-  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",ownNot:"这里不能说「{w}」——这正是这一课要改的说法，再说一次。",ownShort:"请说一个完整的句子，至少四个字。",missionOff:"要说的是上面这个题目——多用题目里的事来说。",stransSubL2:"看情境，按麦克风用英文说出来——用你自己的话也可以。",ownMust:"还要说出这一部分：{w}…，再说一次。",slipTip:"小提醒：{t}",planStory:"开口前先想 15 秒：先发生什么？然后呢？结果怎样？",planPPF:"开口前先想 15 秒：重点是什么？为什么？下一步是什么？",planLoop:"开口前先想 15 秒：怎么回答？加什么细节？反问什么？",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
+  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",compareModel:"对照一下示范：",ownNot:"这里不能说「{w}」——这正是这一课要改的说法，再说一次。",ownShort:"请说一个完整的句子，至少四个字。",missionOff:"要说的是上面这个题目——多用题目里的事来说。",stransSubL2:"看情境，按麦克风用英文说出来——用你自己的话也可以。",ownMust:"还要说出这一部分：{w}…，再说一次。",slipTip:"小提醒：{t}",planStory:"开口前先想 15 秒：先发生什么？然后呢？结果怎样？",planPPF:"开口前先想 15 秒：重点是什么？为什么？下一步是什么？",planLoop:"开口前先想 15 秒：怎么回答？加什么细节？反问什么？",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
   wholeK:"一次说完整",missionK:"Boss 任务：连说几句",missionSub:"按麦克风，一口气说完；说完再按一下。",missionModel:"看示范",missionHide:"收起示范",missionRetry:"再说完整一点——把上面要求的每一样都说到。",missionNeed:"至少说 {n} 个英文单词",missionGaps:"还缺：{g}。",missionShort:"你说了 {n} 个英文单词，至少要 {m} 个。",
   whyFact:"注意：这里要说 {w}。再说一次。",whySmall:"少了一个小字：{w}。英文句子里这种字不能省，再说一次。",whyForm:"注意词尾：这里要说 {w}。再说一次。",whyMissing:"红色的字漏掉了或没听清楚，再说一次。",
   skippedN:"这一课你跳过了 {n} 个开口／听力练习——方便的时候再做一次。",missionGood:"任务完成！说得很完整。",missionS1:"先看上面的要求，想好要说的每一样",
@@ -60,7 +60,7 @@ const UI_L1 = {
   roleNote:"练习对话：句子里的年龄、地方照题目说就好，不一定是你自己的情况。",gistEase:"听不懂也没关系，先猜猜看——等一下会学到这些字。"},
  ms:{gistK:"Dengar perbualan dahulu",gistSub:"Tiada teks — dengar sahaja, kemudian jawab soalan di bawah.",gistPlay:"▶ Main perbualan",gistStop:"■ Berhenti",
   loK:"Dengar sahaja",loSub:"Dengar ayat ini (tiada teks), kemudian jawab.",loWas:"Ayat tadi ialah:",
-  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",ownNot:"Jangan sebut “{w}” di sini — itulah yang pelajaran ini betulkan. Cuba lagi.",ownShort:"Sebut satu ayat lengkap, sekurang-kurangnya empat perkataan.",missionOff:"Cakap tentang tugasan di atas — guna perkara dalam tugasan itu.",stransSubL2:"Baca situasi, tekan mikrofon dan sebut dalam Bahasa Inggeris — boleh guna ayat anda sendiri.",ownMust:"Sebut juga bahagian ini: {w}… Cuba lagi.",slipTip:"Tip: {t}",planStory:"Fikir 15 saat: apa berlaku dahulu? Kemudian? Kesudahannya?",planPPF:"Fikir 15 saat: apa perkara utama? Kenapa? Apa langkah seterusnya?",planLoop:"Fikir 15 saat: jawapan anda? Butiran apa? Soalan balas apa?",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
+  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",compareModel:"Bandingkan dengan contoh:",ownNot:"Jangan sebut “{w}” di sini — itulah yang pelajaran ini betulkan. Cuba lagi.",ownShort:"Sebut satu ayat lengkap, sekurang-kurangnya empat perkataan.",missionOff:"Cakap tentang tugasan di atas — guna perkara dalam tugasan itu.",stransSubL2:"Baca situasi, tekan mikrofon dan sebut dalam Bahasa Inggeris — boleh guna ayat anda sendiri.",ownMust:"Sebut juga bahagian ini: {w}… Cuba lagi.",slipTip:"Tip: {t}",planStory:"Fikir 15 saat: apa berlaku dahulu? Kemudian? Kesudahannya?",planPPF:"Fikir 15 saat: apa perkara utama? Kenapa? Apa langkah seterusnya?",planLoop:"Fikir 15 saat: jawapan anda? Butiran apa? Soalan balas apa?",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
   wholeK:"Cakap semuanya sekali gus",missionK:"Misi Boss: cakap beberapa ayat",missionSub:"Tekan mikrofon dan cakap semuanya; tekan sekali lagi bila selesai.",missionModel:"Lihat contoh",missionHide:"Tutup contoh",missionRetry:"Cakap dengan lebih lengkap — sebut setiap perkara yang diminta.",missionNeed:"Sekurang-kurangnya {n} perkataan Inggeris",missionGaps:"Masih kurang: {g}.",missionShort:"Anda sebut {n} perkataan Inggeris; perlu sekurang-kurangnya {m}.",
   whyFact:"Perhatian: di sini sebut {w}. Cuba lagi.",whySmall:"Kurang satu perkataan kecil: {w}. Dalam ayat Inggeris perkataan ini tidak boleh ditinggalkan. Cuba lagi.",whyForm:"Perhatikan hujung perkataan: sebut {w}. Cuba lagi.",whyMissing:"Perkataan merah tertinggal atau kurang jelas. Cuba lagi.",
   skippedN:"Anda melangkau {n} latihan bercakap/mendengar dalam pelajaran ini — cuba lagi bila sesuai.",missionGood:"Misi selesai! Lengkap sekali.",missionS1:"Baca tugasan di atas dan fikir setiap perkara yang perlu disebut",
@@ -68,7 +68,7 @@ const UI_L1 = {
   roleNote:"Dialog latihan: umur dan tempat dalam ayat ikut soalan sahaja, bukan semestinya tentang anda.",gistEase:"Tak faham pun tak apa — teka dahulu. Perkataan ini akan diajar sekejap lagi."},
  en:{gistK:"Listen to the conversation first",gistSub:"No text — just listen, then answer the question below.",gistPlay:"▶ Play the conversation",gistStop:"■ Stop",
   loK:"Listen only",loSub:"Listen to this sentence (no text), then answer.",loWas:"The sentence was:",
-  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",ownNot:"Don't say “{w}” here — that is exactly what this lesson corrects. Try again.",ownShort:"Please say a full sentence, at least four words.",missionOff:"Talk about the task above — use the things in the task.",stransSubL2:"Read the situation, tap the mic and say it in English — your own words are fine.",ownMust:"Say this part too: {w}… Try again.",slipTip:"Tip: {t}",planStory:"Take 15 seconds: what happened first? Then? How did it end?",planPPF:"Take 15 seconds: what is the point? Why? What is the next step?",planLoop:"Take 15 seconds: your answer? One detail? A question back?",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
+  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",compareModel:"Compare with the model:",ownNot:"Don't say “{w}” here — that is exactly what this lesson corrects. Try again.",ownShort:"Please say a full sentence, at least four words.",missionOff:"Talk about the task above — use the things in the task.",stransSubL2:"Read the situation, tap the mic and say it in English — your own words are fine.",ownMust:"Say this part too: {w}… Try again.",slipTip:"Tip: {t}",planStory:"Take 15 seconds: what happened first? Then? How did it end?",planPPF:"Take 15 seconds: what is the point? Why? What is the next step?",planLoop:"Take 15 seconds: your answer? One detail? A question back?",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
   wholeK:"Say it all in one go",missionK:"Boss mission: say a few sentences",missionSub:"Tap the mic and say it all; tap again when you finish.",missionModel:"See an example",missionHide:"Hide the example",missionRetry:"Say a bit more — cover everything the task asks for.",missionNeed:"At least {n} English words",missionGaps:"Still missing: {g}.",missionShort:"You said {n} English words; at least {m} are needed.",
   whyFact:"Check: it should be {w} here. Try again.",whySmall:"A small word is missing: {w}. English sentences need it — say it again.",whyForm:"Check the ending: say {w} here. Try again.",whyMissing:"The red words were missing or unclear. Say it again.",
   skippedN:"You skipped {n} speaking/listening steps in this lesson — try them when you can.",missionGood:"Mission complete! Very full answer.",missionS1:"Read the task above and plan each thing you need to say",
@@ -747,8 +747,16 @@ const SLIPS = [
  [/\byesterday i (go|eat|buy|see|have|take|come|meet|visit|watch|play|cook)\b/, m=>`yesterday I ${m[1]} → the past form`],
  [/\bvery like\b/, ()=>`very like → really like`],
 ];
+const PASTCTX = /\b(yesterday|last (week|night|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|ago|in the end|was|were|went|had|did|on (monday|tuesday|wednesday|thursday|friday|saturday|sunday) (i|my|we|he|she|the))\b/;
+function pastOf(v){ const I = (window.TouchSpeech && TouchSpeech.irregular) || {}; return I[v] || (/e$/.test(v) ? v+"d" : /[^aeiou]y$/.test(v) ? v.slice(0,-1)+"ied" : v+"ed"); }
 function slipTip(heard){
  const h = spNorm((heard||[]).join(" "));
+ /* in a story about the past, a base verb after its subject is the slip — and the advice is
+    the PAST form (Mei Fong: "my brother help me" was told "helps" in a story about last week) */
+ if(PASTCTX.test(h)){
+  const m = h.match(/\b(i|he|she|it|we|they|my \w+|the \w+|mr tan|siti|kumar|ali) (break|go|eat|buy|see|come|take|make|get|meet|have|drive|leave|lose|forget|help|call|wait|lock|open|close|walk|finish|start|stay|visit|watch|play|cook|clean|tell|say|give|find|feel|think|know|bring|send|pay|ride|run|fall)\b(?! to\b)/);
+  if(m && !/\b(will|can|could|would|should|must|to|did|do|does|not)\s*$/.test(h.slice(0, m.index))) return `${m[1]} ${m[2]} → ${m[1]} ${pastOf(m[2])}`;
+ }
  for(const [re, fx] of SLIPS){ const m = h.match(re); if(m) return fx(m); }
  return "";
 }
@@ -771,16 +779,31 @@ function ideaCheck(targets, heard){
   if(bad){ ideaCheck.slip = bad; return false; }
  }
  if(slipTip(heard)){ ideaCheck.slip = slipTip(heard); return false; }
- const cw = x=>spNorm(px(x)).split(" ").filter(w=>w && !STOPW.has(w) && !/^(the|a|an|and|but|so|very|really|just|also|too|now|then|that|this|it|is|am|are|was|were|be|of|on|at|in|for|to|with|by)$/.test(w));
- const said = (heard||[]).map(h=>spNorm(h)).filter(Boolean);
+ /* everyday synonyms a learner says instead of the model's word (Mei Fong: "reached the office…
+    my boss understood" for "got to work… my manager understood") */
+ const SYN = {boss:"manager",supervisor:"manager",reached:"got",reach:"get",arrived:"got",arrive:"get",office:"work",workplace:"work",
+  handphone:"phone",mobile:"phone",large:"big",huge:"big",small:"little",quick:"fast",quickly:"fast",begin:"start",began:"started",
+  purchase:"buy",purchased:"bought",tired:"exhausted",glad:"happy",pleased:"happy",problem:"issue",trouble:"issue",
+  inexpensive:"cheap",pricey:"expensive",costly:"expensive",ready:"done",finished:"done",completed:"done",complete:"done",
+  motorbike:"motorcycle",car:"car",customer:"client",clients:"customers"};
+ const tok = x=>((window.TouchSpeech && TouchSpeech.tokens) ? TouchSpeech.tokens(px(x)) : spNorm(px(x)).split(" ")).map(w=>SYN[w]||w);
+ const cw = x=>tok(x).filter(w=>w && !STOPW.has(w) && !/^(the|a|an|and|but|so|very|really|just|also|too|now|then|that|this|it|is|am|are|was|were|be|of|on|at|in|for|to|with|by)$/.test(w));
+ const said = (heard||[]).map(h=>tok(h).join(" ")).filter(Boolean);
+ const NEG = /\b(not|never|no|nobody|nothing|cannot)\b/;
+ const DAY = /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^\d+$/;
  let best = 0;
  for(const h of said){
   if(h.split(" ").length < 4) continue;
   const L = lemma(h);
+  const hWords = h.split(" ");
   for(const t of targets){ const ws = cw(t); if(!ws.length) continue;
-   const hard = ws.filter(w=>/^(mon|tues|wednes|thurs|fri|satur|sun)day$|^\d/.test(w));
-   if(hard.some(w=>!L.includes(lemma(w)))) continue;
-   best = Math.max(best, ws.filter(w=>L.includes(lemma(w))).length / ws.length); }
+   // "my manager NEVER understood" is not "my manager understood": negation must agree
+   if(NEG.test(tok(t).join(" ")) !== NEG.test(h)) continue;
+   // a day or a number: saying a DIFFERENT one is wrong; leaving it out (context gave it) is not
+   const tDays = ws.filter(w=>DAY.test(w)), hDays = hWords.filter(w=>DAY.test(w));
+   if(hDays.some(w=>!tDays.includes(w)) && tDays.length) continue;
+   const core = ws.filter(w=>!DAY.test(w));
+   best = Math.max(best, core.length ? core.filter(w=>L.includes(lemma(w))).length / core.length : 1); }
  }
  return best >= 0.6;
 }
@@ -1541,9 +1564,11 @@ function mountSpeech(host, o){
   }
   const said = `<div class="spb">${esc(X.you)} <b>“${esc(heard[0])}”</b></div>`;
   const tip = o.tips ? slipTip(heard) : "";
+  const pm = o.passModel ? o.passModel() : "";
+  const modelNote = pm ? `<div class="spb">${esc(T().compareModel)} <b data-say="${esc(pm)}" role="button">🔊 ${esc(pm)}</b></div>` : "";
   const tipHTML = tip ? `<div class="spb">💡 ${esc(fmt(T().slipTip, {t: tip}))}</div>` : "";
   if(o.judge(heard)){
-   card("ok", "✓ "+esc(o.good || X.ok), said+tipHTML);
+   card("ok", "✓ "+esc(o.good || X.ok), said+tipHTML+modelNote);
    allow(); if(COACH) COACH.pose("celebrate");
   } else {
    const reveal = (o.reveal && tries>=2) ? `<div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">🔊 ${esc(o.reveal)}</b></div>` : "";
@@ -1871,12 +1896,14 @@ function renderStep(){
   if($("cuebtn")) $("cuebtn").onclick = ()=>{ $("cuezh").classList.remove("hidden"); $("cuebtn").remove(); };
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 10; $("sessxp").textContent = P.xp; xpFloat(10); };
   $("go").onclick = ()=>{ if(st.tries2) pay(); nextStep(); };
-  mountSpeech($("sparea"), {st, tips: CONF.flow==="l2", key: COURSE[P.mi].id+"-"+P.li+"-st"+st.n, reveal: ans, retry: ()=>whyText(st.why, true),
+  mountSpeech($("sparea"), {st, tips: CONF.flow==="l2", passModel: ()=>st.byIdea ? ans : "", key: COURSE[P.mi].id+"-"+P.li+"-st"+st.n, reveal: ans, retry: ()=>whyText(st.why, true),
    s1: ({zh:"先想一想英文怎么说", ms:"Fikir dahulu bagaimana menyebutnya", en:"First think how to say it in English"})[S.lang],
    onTries: n=>{ if(n>=2) st.tries2 = true; },
    judge: heard=>{
     const cs = [ans].concat(alts).map(target=>TouchSpeech.check(target, heard));
-    const ok = cs.some(c=>c.pass) || (CONF.flow==="l2" && ideaCheck([ans].concat(alts), heard));
+    const exact = cs.some(c=>c.pass);
+    const ok = exact || (CONF.flow==="l2" && ideaCheck([ans].concat(alts), heard));
+    st.byIdea = ok && !exact;
     st.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || "");
     if(!ok && CONF.flow!=="l2") ideaCheck.slip = "";
     if(ok){ pay(); speak(ans); }
@@ -2344,7 +2371,8 @@ function renderDialog(box, stepNum, l){
    $("go").onclick = ()=>{ pushYou(disp); li++; advance(); };
    mountSpeech($("sparea"), {st:stD, key: COURSE[P.mi].id+"-"+P.li+"-dl", reveal: disp,
     retry: ()=>whyText(stD.why, true),
-    judge: heard=>{ const cs = targets.map(x=>TouchSpeech.check(x, heard)); const ok = cs.some(c=>c.pass) || (CONF.flow==="l2" && ideaCheck(targets, heard));
+    tips: CONF.flow==="l2", passModel: ()=>stD.byIdea ? disp : "",
+    judge: heard=>{ const cs = targets.map(x=>TouchSpeech.check(x, heard)); const exact = cs.some(c=>c.pass); const ok = exact || (CONF.flow==="l2" && ideaCheck(targets, heard)); stD.byIdea = ok && !exact;
      stD.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || ""); return ok; }});
    window.scrollTo(0,document.body.scrollHeight);
    return;
