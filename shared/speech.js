@@ -110,6 +110,10 @@
     w = String(w).toLowerCase().replace(/ph/g, "f").replace(/[cq]/g, "k").replace(/z/g, "s").replace(/[hwy]/g, "").replace(/(.)\1+/g, "$1");
     return w.charAt(0) + w.slice(1).replace(/[aeiou]/g, "");
   }
+  var PLACES = ["ipoh","penang","kulai","kuantan","melaka","malacca","johor","bahru","jb","kl","kuala","lumpur","selangor","singapore",
+    "seremban","klang","shah","alam","putrajaya","cyberjaya","kota","tinggi","batu","pahat","muar","segamat","kluang","pontian","ayer","hitam",
+    "tangkak","setia","sutera","austin","indah","taiping","kedah","perak","kelantan","terengganu","sabah","sarawak","kuching","miri","sibu","bangi",
+    "cheras","ampang","subang","puchong","kajang","nilai","port","dickson","langkawi","genting","cameron","highlands","mersing","desaru","gudang","pasir"];
   var CRITICAL = ["am", "is", "are", "was", "were", "be", "been", "do", "does", "did", "have", "has", "had",
     "can", "could", "will", "would", "should", "not", "never", "because", "to",
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
@@ -135,11 +139,23 @@
         var parts = days(numbers((SAME[w] || w).replace(/-/g, " "))).split(" ").filter(Boolean);
         var isName = parts.every(function (p) { return names.indexOf(p) >= 0; });
         // a place or other proper name in mid-sentence (Kulai, Johor Bahru, Room 5) must be the right one
-        var proper = !isName && ri > 0 && /^[A-Z]/.test(raw) && raw !== "I" && !/[.!?]$/.test(tw[ri - 1]);
+        var proper = !isName && ri > 0 && /^[A-Z][a-z]/.test(raw) && !/^I'/.test(raw) && !/^(Mr|Mrs|Ms|Dr)\.?$/.test(raw) && !/[.!?]$/.test(tw[ri - 1]);
         parts.forEach(function (p) { tv.push({ p: p, ri: ri, name: isName, proper: proper }); });
       });
       var n = tv.length, m = hw.length, i, j;
-      var eq = function (a, b) { return near(a.p, b) || (a.name && !!b) || (a.proper && b && b.length > 2 && soundKey(a.p) === soundKey(b)); };
+      /* a place slot: the phone spells local places anyhow ("Kota Tinggi" came back as "13") —
+         any word counts there EXCEPT another place of this sentence (two places swapped) or a
+         different known place (Penang for Ipoh) */
+      var ownPlaces = tv.filter(function (x) { return x.proper; }).map(function (x) { return soundKey(x.p); });
+      var eq = function (a, b) {
+        if (near(a.p, b) || (a.name && !!b)) return true;
+        if (!a.proper || !b) return false;
+        var k = soundKey(b);
+        if (k === soundKey(a.p)) return true;
+        if (ownPlaces.indexOf(k) >= 0) return false;
+        if (PLACES.some(function (pl) { return soundKey(pl) === k; })) return false;
+        return /^\d+$/.test(b) || b.length > 2;
+      };
       var L = []; for (i = 0; i <= n; i++) { L[i] = []; for (j = 0; j <= m; j++) L[i][j] = 0; }
       for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
         L[i][j] = eq(tv[i], hw[j]) ? 1 + L[i + 1][j + 1] : Math.max(L[i + 1][j], L[i][j + 1]);
@@ -158,8 +174,12 @@
         var at = spare.indexOf(t.p);
         if (at >= 0 && MOVABLE.indexOf(t.p) >= 0 && !/^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(t.p)) { spare.splice(at, 1); hit[k] = true; return; }
         miss.push(t.p);
-        if (leftover.some(function (x) { return grammarTwin(t.p, x); })) why = why || "form:" + t.p;
-        else if (t.proper || /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) why = why || "fact:" + t.p;
+        var twin = leftover.filter(function (x) { return grammarTwin(t.p, x); })[0];
+        var sOnly = twin && (t.p === twin + "s" || twin === t.p + "s" || t.p === twin + "es" || twin === t.p + "es");
+        var prev = k > 0 ? tv[k - 1].p : "";
+        var verbSlot = /^(he|she|it)$/.test(prev) || (k > 0 && tv[k - 1].name);
+        if (twin && (!sOnly || verbSlot)) why = why || "form:" + t.p;
+        else if ((t.proper && leftover.some(function (x) { return PLACES.indexOf(x) >= 0; })) || /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) why = why || "fact:" + t.p;
         else if (CRITICAL.indexOf(t.p) >= 0) why = why || "small:" + t.p;
       });
       var res = tw.map(function (raw, ri) {
@@ -252,7 +272,11 @@
         /* opt.long: several sentences in one go (a Boss mission). The phone keeps listening
            through pauses until the learner taps again (or maxMs), and what was heard is
            joined into one text instead of being offered as alternatives. */
-        var long = !!opt.long, parts = [];
+        /* Every listen keeps going through short pauses (Marco's iPhone, 2026-09-25: 「可能还没有等
+           我讲完，它就自己收起了」 — the phone ended the session at the first breath, and this code
+           stopped 0.35 s after a final result). It stops once no new words have come for 1.6 s
+           (5 s in a mission, where a learner stops to think), on the second tap, or at maxMs. */
+        var long = true, quietMs = opt.long ? 5000 : 1600, parts = [], stopping = false;
         var r = recogniser(long);
         current = r;
         var finals = [], interim = "", done = false, started = false, settle = null;
@@ -274,7 +298,7 @@
           mark(err ? "error:" + err.message : "done:" + got.length);
           if (err && !got.length) reject(err); else resolve(got);
         };
-        finisher = function () { mark("stop"); try { r.stop(); } catch (e) {} settle = setTimeout(function () { finish(); }, 700); };
+        finisher = function () { stopping = true; mark("stop"); try { r.stop(); } catch (e) {} settle = setTimeout(function () { finish(); }, 700); };
         // stop(): end this listen now, even if the phone never sends its end event
         killer = function () { try { r.abort(); } catch (e) {} finish(new Error("aborted")); };
         var t = setTimeout(function () { finisher && finisher(); }, opt.maxMs || 8000);
@@ -295,7 +319,8 @@
           interim = live || interim;
           if (long) interim = live;
           if (opt.onHear) opt.onHear(long ? (parts.filter(Boolean).join(" ") + " " + interim).trim() : (finals[0] || interim));
-          if (anyFinal) { clearTimeout(settle); settle = setTimeout(function () { try { r.stop(); } catch (x) {} finish(); }, 350); }
+          // once the learner has tapped stop, late words must not restart the wait
+          if (!stopping) { clearTimeout(settle); settle = setTimeout(function () { stopping = true; mark("quiet"); try { r.stop(); } catch (x) {} settle = setTimeout(function () { finish(); }, 700); }, quietMs); }
         };
         r.onerror = function (e) { mark("err:" + (e && e.error) + (e && e.message ? "(" + e.message + ")" : "")); finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
         r.onend = function () { mark("end"); active = false; flushIdle(); finish(); };
