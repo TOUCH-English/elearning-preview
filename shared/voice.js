@@ -130,6 +130,17 @@
     } catch (e) {}
   })();
 
+  /* The other person in a dialogue speaks in a man's ("m") or a woman's ("f") voice, and
+     that recording is the same key with "m-" / "f-" in front (tools/build-audio.mjs).
+     opt.voice names it; when that file is missing the other one is tried, then Bella's —
+     a line heard in review, away from its own lesson, still finds a human voice. */
+  function fileKey(t, voice) {
+    var k = key(t);
+    if (!have || (voice !== "m" && voice !== "f")) return k;
+    var other = voice === "m" ? "f" : "m";
+    return have[voice + "-" + k] ? voice + "-" + k : have[other + "-" + k] ? other + "-" + k : k;
+  }
+
   var MISSING = [];      // 退回机械音的字串（测试用）
   var cur = null;        // 正在播的 Audio
   var curBtn = null;
@@ -376,8 +387,9 @@
       if (cur !== token && !(cur && cur._seg === token)) return;
       if (i >= segs.length) { cur = null; clearBtn(); if (opt.onDone) opt.onDone(); return; }
       var seg = segs[i++];
-      if (have && !have[key(seg)]) { next(); return; }
-      var a = clip(BASE + key(seg) + ".mp3");
+      var sk = fileKey(seg, opt.voice);
+      if (have && !have[sk]) { next(); return; }
+      var a = clip(BASE + sk + ".mp3");
       a._seg = token;
       a.playbackRate = (opt.rate != null) ? opt.rate : rateFor(opt.slow);
       if ("preservesPitch" in a) a.preservesPitch = true;
@@ -418,7 +430,7 @@
 
     stop();
 
-    var k = key(t);
+    var k = fileKey(t, opt.voice);
     if (have && !have[k]) {
       var segs = withName(t);
       if (segs) return playSegments(segs, opt);
@@ -484,7 +496,7 @@
       if (config().slowFactor >= 1) return;        // 后台把「长按慢速」关掉了
       lpTimer = setTimeout(function () {
         lpFired = true;
-        say(lpText(el), { btn: el.classList.contains("spk") ? el : null, slow: true });
+        say(lpText(el), { btn: el.classList.contains("spk") ? el : null, slow: true, voice: el.getAttribute("data-voice") || "" });
       }, LONG);
     }, { passive: true });
 
@@ -505,7 +517,7 @@
     /* 例句／对话这类没有自己 onclick 的元素，短按就由这里播 */
     doc.addEventListener("click", function (e) {
       var el = lpTarget(e.target);
-      if (el && el.hasAttribute("data-say")) say(el.getAttribute("data-say"), {});
+      if (el && el.hasAttribute("data-say")) say(el.getAttribute("data-say"), { voice: el.getAttribute("data-voice") || "" });
     });
   }
 
@@ -519,7 +531,7 @@
     rate: baseRate,          /* 这个课程现在用的速度 */
     rateFor: rateFor,
     /* 这一条有没有音档（manifest 还没载到时回传 null＝不知道） */
-    has: function (t) { return have ? !!have[key(t)] : null; },
+    has: function (t, voice) { return have ? !!have[fileKey(t, voice)] : null; },
     /* 学生自己的名字（课程在知道名字後设定）：这些字不念，句子在这里切开 */
     get names() { return NAMES.slice(); },
     set names(v) { NAMES = (v || []).map(function (x) { return String(x || "").trim(); }).filter(Boolean); },

@@ -177,14 +177,28 @@ function pickVoice(){
 }
 if(TTS){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
-function speak(txt, btn, slow, mustHear){
+/* Who speaks in which voice (Marco 2026-09-25: a dialogue needs two voices). The learner
+   and the coach's model sentences are Bella; the other person is a man's or a woman's voice
+   by who they are. tools/build-audio.mjs reads this same line to know which files to make,
+   so it stays one JSON object on one line. Unknown or unnamed speakers are "m", which also
+   keeps them apart from Bella. */
+const VOICE_OF = {"Mr. Tan":"m","Kumar":"m","Ali":"m","Siti":"f","Mei Ling":"f","Amy":"f","tan":"m","kumar":"m","ali":"m","siti":"f","meiling":"f","amy":"f","New colleague":"m","Trainee":"f","Receptionist":"f","Friend":"f","Customer":"m","Landlord":"m"};
+/* Pre-Beginner has a recording of every option and every built sentence. Level 1 and 2 record
+   only what a learner must or should hear (Marco 2026-09-25, A+B): there an option is not read
+   when tapped, the right one is read once answered, and a substitution sentence has no speaker. */
+const ALL_AUDIO = ()=> typeof CONF==="undefined" || CONF.flow==="pb";
+function voiceOf(who){ return (who && who!=="Y" && VOICE_OF[who]) || "m"; }
+/* heard lines with no speaker of their own (listen, ls, cm): the lesson's dialogue partner */
+function lessonVoice(l){ const x = ((l && l.d && l.d.lines) || []).find(y=>y.who && y.who!=="Y"); return voiceOf(x && x.who); }
+function speak(txt, btn, slow, mustHear, voice){
  if(!S.sound) return;
  if(NOSPEAK.has(String(txt).trim())) return;
+ if(/_{2,}/.test(txt)) txt = blankPause(txt);        // a pattern card ("Thank you for ___")
  /* 有真人音档就播它（例句、整句对话都有）；没有才退回浏览器的机械音，
     而机械音维持原本的规矩：只念 3 个字以内的短词。
     mustHear: a line the learner has to hear to answer (the other person's question in
     自己说说看) falls back to the phone's voice at any length — silence there is worse. */
- if(globalThis.TouchVoice){ TouchVoice.say(txt, {btn:btn, slow:!!slow, fallbackMaxWords: (mustHear || (typeof CONF!=="undefined" && CONF.flow!=="pb")) ? 40 : 3}); return; }
+ if(globalThis.TouchVoice){ TouchVoice.say(txt, {btn:btn, slow:!!slow, voice:voice, fallbackMaxWords: (mustHear || (typeof CONF!=="undefined" && CONF.flow!=="pb")) ? 40 : 3}); return; }
  if(!TTS) return;
  let s = String(txt).replace(/[.,!?'"]/g," ").replace(/\s+/g," ").trim();
  if(!s || s.split(" ").length>3) return;            // words only — never sentences
@@ -817,13 +831,16 @@ function wordBlocks(n){                       // 7 → 3,2,2 · 8 → 3,3,2 · 1
 }
 /* a goal sentence may be a pattern ("My name is ___."): fill it the way the lesson does —
    the learner's own line that starts the same way, else the substitution's first word */
+/* a pattern read aloud: each blank is a short pause ("It takes … minutes.") —
+   tools/build-audio.mjs blankPause() is the same line, so the recording is found */
+function blankPause(s){ return sayable(String(s).replace(/_{2,}/g,"…")).replace(/…\s*[.,;:]/g,"…"); }
 function fillBlank(l, s){
  if(!/___/.test(s)) return sayable(s);
  const pre = s.split("___")[0].trim().toLowerCase();
  const y = ((l.d && l.d.lines) || []).find(x=>x.who==="Y" && x.ans && sayable(x.ans).toLowerCase().startsWith(pre) && pre);
  if(y) return sayable(y.ans);
  const sub = (l.s || []).find(x=>x.tpl===s || x.tpl.split("___")[0].trim().toLowerCase()===pre);
- if(sub && sub.bank && sub.bank[0]) return sayable(s.replace("___", sub.bank[0]));
+ if(sub && sub.bank && sub.bank[0] && s.split("___").length===2) return sayable(s.replace("___", sub.bank[0]));
  return "";
 }
 function repeatSentences(l, ex){
@@ -1098,7 +1115,7 @@ function showFeedback(ok, opts){
  $("fbcorr").textContent = px(corrTxt);
  $("fbcorr").style.display = corrTxt ? "" : "none";
  /* a wrong answer's right sentence can be heard, on purpose (English only) */
- const sayCorr = !ok && corrTxt && /[A-Za-z]/.test(corrTxt) && !/[\u3400-\u9fff]/.test(corrTxt) ? corrTxt.replace(/\s+([.,!?;:])/g,"$1").trim() : "";
+ const sayCorr = !opts.quiet && !ok && corrTxt && /[A-Za-z]/.test(corrTxt) && !/[\u3400-\u9fff]/.test(corrTxt) ? corrTxt.replace(/\s+([.,!?;:])/g,"$1").trim() : "";
  if(sayCorr){ $("fbcorr").setAttribute("data-say", sayCorr); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = "🔊 "+corrTxt; }
  else { $("fbcorr").removeAttribute("data-say"); $("fbcorr").removeAttribute("role"); }
  $("fbexpl").textContent = px(opts.expl || "");
@@ -1717,7 +1734,7 @@ function renderStep(){
    } else { r.classList.add("shake"); setTimeout(()=>r.classList.remove("shake","sel"), 420); q.classList.remove("sel"); }
    selQ=null; selR=null;
   };
-  box.querySelectorAll(".cq").forEach(b=>{ b.onclick=()=>{ speak(sayable(cand[+b.dataset.i][0]), b, false, true); if(b.classList.contains("paired")) return;
+  box.querySelectorAll(".cq").forEach(b=>{ b.onclick=()=>{ speak(sayable(cand[+b.dataset.i][0]), b, false, true, lessonVoice(l)); if(b.classList.contains("paired")) return;
    box.querySelectorAll(".cq:not(.paired)").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); selQ=+b.dataset.i; tryPair(); }; });
   box.querySelectorAll(".cr").forEach(b=>{ b.onclick=()=>{ if(b.classList.contains("paired")) return;
    box.querySelectorAll(".cr:not(.paired)").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); selR=+b.dataset.i; tryPair(); }; });
@@ -1739,10 +1756,10 @@ function renderStep(){
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.check}</button>`);
   let read = !S.sound;
   if(read) $("lstext").classList.remove("hidden");
-  $("hp").onclick = ()=>speak(say, $("hp"), false, true);
-  $("hps").onclick = ()=>speak(say, $("hps"), true, true);
+  $("hp").onclick = ()=>speak(say, $("hp"), false, true, lessonVoice(l));
+  $("hps").onclick = ()=>speak(say, $("hps"), true, true, lessonVoice(l));
   $("lsshow").onclick = ()=>{ read = true; $("lstext").classList.remove("hidden"); $("lsshow").remove(); };
-  setTimeout(()=>{ if(still()) speak(say, $("hp"), false, true); }, 350);
+  setTimeout(()=>{ if(still()) speak(say, $("hp"), false, true, lessonVoice(l)); }, 350);
   let sel = null;
   box.querySelectorAll(".opt").forEach(b=>{ b.onclick=()=>{ box.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel = b; $("go").disabled = false; }; });
   $("go").onclick = ()=>{
@@ -1828,7 +1845,7 @@ function renderStep(){
  if(st.kind==="gist"){
   const g = ex0().gist, lines = (l.d && l.d.lines) || [];
   if(!st.order) st.order = shuffle(g.o.map((_,i)=>i));
-  const say = lines.map(x=>({v: x.who==="Y" ? "Y" : "A", s: sayable(x.who==="Y" ? x.ans : x.en)})).filter(x=>x.s);
+  const say = lines.map(x=>({v: x.who==="Y" ? "" : voiceOf(x.who), s: sayable(x.who==="Y" ? x.ans : x.en)})).filter(x=>x.s);
   const inner = `<div class="hearbig"><button type="button" class="btn btn-ghost btn-block" id="gplay">${esc(t.gistPlay)}</button></div>
    <div class="qsub" style="margin:14px 0 8px;font-weight:700">${esc(tri(g.q))}</div>`
    + st.order.map(i=>`<button class="opt" data-i="${i}"><span class="radio"></span><span>${esc(tri(g.o[i]))}</span></button>`).join("");
@@ -1871,9 +1888,9 @@ function renderStep(){
    + st.order.map(i=>`<button class="opt" data-i="${i}"><span class="radio"></span><span>${esc(opts[i])}</span></button>`).join("");
   box.innerHTML = stepShell(stepNum+" · +5 XP", esc(t.loK), t.loSub, inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.check}</button>`);
-  $("hp").onclick = ()=>speak(it.say, $("hp"), false, true);
-  $("hps").onclick = ()=>speak(it.say, $("hps"), true, true);
-  setTimeout(()=>{ if(still()) speak(it.say, $("hp"), false, true); }, 350);
+  $("hp").onclick = ()=>speak(it.say, $("hp"), false, true, lessonVoice(l));
+  $("hps").onclick = ()=>speak(it.say, $("hps"), true, true, lessonVoice(l));
+  setTimeout(()=>{ if(still()) speak(it.say, $("hp"), false, true, lessonVoice(l)); }, 350);
   let sel = null;
   box.querySelectorAll(".opt").forEach(b=>{ b.onclick=()=>{ box.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel = b; $("go").disabled = false; }; });
   $("go").onclick = ()=>{
@@ -1919,7 +1936,7 @@ function renderStep(){
   const goalTxt = (ex && ex.goal) ? tri(ex.goal) : tri(l.t);
   const says = (ex && ex.goalSay && ex.goalSay.length) ? ex.goalSay.slice(0,2) : (l.p[0] ? [l.p[0].t] : []);
   const rows = says.map(s=>{
-   const heard = fillBlank(l, s) || sayable(s.replace(/_+/g," "));
+   const heard = fillBlank(l, s) || blankPause(s);
    return `<button class="saybtn" type="button" data-sayit="${esc(heard)}">${SPK_SVG}<span>${esc(px(s)).replace(/___/g,"<b>___</b>")}</span></button>`;
   }).join("");
   box.innerHTML = `<div class="stepcard goalcard">
@@ -2022,8 +2039,8 @@ function renderStep(){
   box.innerHTML = stepShell("🎤 "+t.ownK+" · "+stepNum+" · +5 XP", esc(prompt), "", inner,
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
   const bt = box.querySelector(".bubble .bt");
-  bt.onclick = ()=>speak(st.line, null, false, true);
-  setTimeout(()=>{ if(still()) speak(st.line, null, false, true); }, 350);
+  bt.onclick = ()=>speak(st.line, null, false, true, voiceOf(st.who));
+  setTimeout(()=>{ if(still()) speak(st.line, null, false, true, voiceOf(st.who)); }, 350);
   /* +5 when it is said right, or on moving on after two honest tries — never on the same
      screen as a red ✗ (walkthrough 2026-09-25). 「现在不方便说」 earns nothing. */
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); };
@@ -2031,7 +2048,7 @@ function renderStep(){
   mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ")});
     if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort; if(st.ask && hs.some(h=>NOAUX.test(h))) return t.ownAskAux;
     const q = hs.some(h=>QWORD.test(h)); return st.ask ? (q ? t.ownAskTopic : t.ownAskRetry) : t.ownRetry; }, good: t.ownGood,
-   model: ()=>speak(st.line, null, false, true), hearLabel: t.hearModel2,
+   model: ()=>speak(st.line, null, false, true, voiceOf(st.who)), hearLabel: t.hearModel2,
    reveal: st.model ? px(st.model) : "",
    s1: ({zh:"先听对方说什么（点对话泡泡可以再听）", ms:"Dengar apa yang dia kata (tekan gelembung untuk dengar lagi)", en:"Listen to what they say (tap the bubble to hear it again)"})[S.lang],
    onTries: n=>{ if(n>=2) st.tries2 = true; },
@@ -2136,7 +2153,7 @@ function renderStep(){
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.check}</button>`);
   let sel=null;
   document.querySelectorAll(".opt").forEach(b=>{
-   b.onclick=()=>{ document.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel=b; $("go").disabled=false; speak(b.dataset.v); };
+   b.onclick=()=>{ document.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); sel=b; $("go").disabled=false; if(ALL_AUDIO()) speak(b.dataset.v); };
   });
   $("go").onclick=()=>{
    if(!sel) return;
@@ -2147,6 +2164,7 @@ function renderStep(){
     else if(b===sel&&!ok) b.classList.add("wrong");
    });
    const gained = award(5, ok);
+   if(ok && !isF && !ALL_AUDIO()) speak(correctText);
    trackAnswer(ok, st.ref||{m:P.mi,l:P.li,k:st.kind,n:st.n}, px(isF?it.q:tri(it.q)), correctText, tri(it.e), sel.dataset.v, px(isF?it.q:tri(it.q))+" ["+opts.join(" / ")+"]");
    $("go").disabled = true;
    showFeedback(ok, {correct:correctText, expl:tri(it.e), xp:gained, onContinue:()=>nextStep()});
@@ -2162,11 +2180,13 @@ function renderStep(){
    `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
   document.querySelectorAll(".wchip").forEach(b=>{
    b.onclick=()=>{
-    speak(b.dataset.v);
+    if(ALL_AUDIO()) speak(b.dataset.v);
     document.querySelectorAll(".wchip").forEach(x=>x.classList.remove("used"));
     const sentence = px(it.tpl).replace("___", b.dataset.v).replace(/___/g, "___");
     /* 拼好的句子要听得到 —— 不然学生只是把词摆对位置，不知道它念起来怎样 */
-    $("fbslot").innerHTML = `<div class="fb ok"><div class="h">${esc(T().subBuilt)}</div><div class="corr" data-say="${esc(String(sentence).replace(/\s+([.,!?;:])/g,"$1"))}" role="button" tabindex="0">${esc(sentence)}</div></div>`;
+    $("fbslot").innerHTML = ALL_AUDIO()
+     ? `<div class="fb ok"><div class="h">${esc(T().subBuilt)}</div><div class="corr" data-say="${esc(String(sentence).replace(/\s+([.,!?;:])/g,"$1"))}" role="button" tabindex="0">${esc(sentence)}</div></div>`
+     : `<div class="fb ok"><div class="h">${esc(T().subBuilt)}</div><div class="corr">${esc(sentence)}</div></div>`;
     $("go").classList.remove("hidden"); $("go").disabled = false;
    };
   });
@@ -2186,6 +2206,8 @@ function renderStep(){
   const display = px(isO ? it.w.join(" ") : it.ans).replace(/\s+([.,!?;:])/g,"$1");
   const meta = {ref: st.ref||{m:P.mi,l:P.li,k:st.kind,n:st.n}, q: isO ? T().order : px(tri(it.src)), alts:(it.alt||[]).map(px)};
   if(!isO) meta.meaning = px(tri(it.src));
+  /* Level 2 orders whole sentences: the joined paragraph has no recording (C, not made) */
+  if(sent && !ALL_AUDIO()) meta.quiet = true;
   renderBuilder(box, stepNum+" · +"+(isO?5:10)+" XP", title, sub, pool, answer, isO?5:10, it.e?tri(it.e):"", null, display, meta, bubble);
   return;
  }
@@ -2266,13 +2288,13 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
   document.querySelectorAll(".wchip").forEach(b=>b.disabled=true);
   $("bz").classList.add(ok ? "bzok" : "bzno");
   // the whole sentence, read only when it is right — the learner's own when it was another right way
-  if(ok) speak(String(viaAlt || std).replace(/\s+([.,!?;:])/g,"$1"));
+  if(ok && !(meta && meta.quiet)) speak(String(viaAlt || std).replace(/\s+([.,!?;:])/g,"$1"));
   $("go").disabled = true;
   if(meta) trackAnswer(ok, meta.ref, meta.q, std, expl, placed.map(p=>p.v).join(" "), (title && title!==meta.q ? title+" · " : "")+meta.q+" ["+pool.join(" / ")+"]");
   if(onDone){ onDone(ok, viaAlt); }
   else {
    const gained = award(xp, ok);
-   showFeedback(ok, {correct:std, also:viaAlt?std:"", expl:expl, xp:gained,
+   showFeedback(ok, {correct:std, also:viaAlt?std:"", expl:expl, xp:gained, quiet:!!(meta && meta.quiet),
     meaning:(meta&&meta.meaning)||"", onContinue:()=>nextStep()});
   }
  };
@@ -2305,11 +2327,11 @@ function renderDialog(box, stepNum, l){
   const sayable = px(line.en).replace(/\s+([.,!?;:])/g,"$1").replace(/\s+/g," ").trim();
   /* Level 2: heard before read — the line is played and its words stay covered until tapped */
   if(typeof CONF!=="undefined" && CONF.flow==="l2" && S.sound && TTS){
-   rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en covered" data-say="${esc(sayable)}" role="button" tabindex="0" onclick="this.classList.remove('covered')">${esc(px(line.en))}</span>${glossOf(line)?`<span class="gl covered" onclick="this.classList.remove('covered')">${esc(glossOf(line))}</span>`:""}</span></div>`);
-   pendingSay.push(sayable);
+   rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en covered" data-say="${esc(sayable)}" data-voice="${voiceOf(line.who)}" role="button" tabindex="0" onclick="this.classList.remove('covered')">${esc(px(line.en))}</span>${glossOf(line)?`<span class="gl covered" onclick="this.classList.remove('covered')">${esc(glossOf(line))}</span>`:""}</span></div>`);
+   pendingSay.push({s:sayable, v:voiceOf(line.who)});
    return;
   }
-  rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" role="button" tabindex="0">${esc(px(line.en))}</span>${glossOf(line)?`<span class="gl">${esc(glossOf(line))}</span>`:""}</span></div>`);
+  rendered.push(`<div class="dline them"><span class="who">${esc(line.who)}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" data-voice="${voiceOf(line.who)}" role="button" tabindex="0">${esc(px(line.en))}</span>${glossOf(line)?`<span class="gl">${esc(glossOf(line))}</span>`:""}</span></div>`);
  }
  function pushYou(text){
   /* 学生刚拼好的那一句 —— 让他听一次正确的念法，再进下一句 */
@@ -2323,7 +2345,7 @@ function renderDialog(box, stepNum, l){
   if(!q.length || !S.sound || !window.TouchVoice) return;
   const mine = stD;
   let i = 0;
-  const next = ()=>{ if(i>=q.length || !P || P.steps[P.idx]!==mine) return; TouchVoice.say(q[i++], {fallbackMaxWords:99, voice:"A", onDone:()=>setTimeout(next, 350)}); };
+  const next = ()=>{ if(i>=q.length || !P || P.steps[P.idx]!==mine) return; const x = q[i++]; TouchVoice.say(x.s, {fallbackMaxWords:99, voice:x.v, onDone:()=>setTimeout(next, 350)}); };
   setTimeout(next, 300);
  }
  function advance(){ advance0(); flushSay(); }
@@ -2337,8 +2359,8 @@ function renderDialog(box, stepNum, l){
     `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
    $("go").onclick=()=>{ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} P.xp+=10; nextStep(); };
    /* The whole conversation, line after line, once it is done (Marco 2026-09-25: 「完成全部的
-      时候…一键播放来回对话」). Each line is highlighted while it plays. The partner and the
-      learner will get two different voices with the audio step (voice: "A" / "Y"). */
+      时候…一键播放来回对话」). Each line is highlighted while it plays. The partner speaks in
+      their own voice (data-voice), the learner in Bella's. */
    let playing = null;
    $("dplay").onclick = ()=>{
     const btn = $("dplay");
@@ -2355,7 +2377,7 @@ function renderDialog(box, stepNum, l){
      if(i >= lines.length){ clear(); return; }
      const row = lines[i++], en = row.querySelector(".en[data-say]");
      row.classList.add("playing"); row.scrollIntoView({block:"nearest", behavior:"smooth"});
-     TouchVoice.say(en ? en.dataset.say : "", {fallbackMaxWords: 99, voice: row.classList.contains("you") ? "Y" : "A",
+     TouchVoice.say(en ? en.dataset.say : "", {fallbackMaxWords: 99, voice: row.classList.contains("you") || !en ? "" : en.dataset.voice,
       onDone: ()=>setTimeout(next, 450)});
     };
     next();
