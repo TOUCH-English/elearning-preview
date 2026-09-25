@@ -254,6 +254,8 @@
     return r;
   }
   function say1(text, opt) {
+    // after the microphone was used, iPhone plays through the earpiece unless told this is playback
+    try { if (global.navigator && global.navigator.audioSession) global.navigator.audioSession.type = "playback"; } catch (e) {}
     if (opt.fallbackMaxWords === undefined) opt.fallbackMaxWords = 3;
     var t = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
     if (!t) return false;

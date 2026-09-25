@@ -104,72 +104,112 @@
   function noRecording() { try { global.localStorage.setItem(NOREC, "1"); } catch (e) {} }
 
   var finisher = null, killer = null;
+
+  /* ONE recogniser for the page, and never two sessions at once (Marco's iPhone,
+     2026-09-25: the first try works, the second comes back "aborted" — iPhone Safari
+     will not start a new recognition while the last one is still shutting down, and a
+     fresh instance each time made that likely). If the last session has not ended yet,
+     ask it to stop and wait up to a second for its end before starting again. */
+  var R = null, active = false, waiters = [];
+  function recogniser() {
+    if (!R) {
+      R = new Rec();
+      R.lang = "en-US";
+      R.interimResults = true;
+      R.maxAlternatives = 5;
+      R.continuous = false;
+    }
+    return R;
+  }
+  function whenIdle() {
+    if (!active) return Promise.resolve();
+    return new Promise(function (res) {
+      waiters.push(res);
+      try { R.stop(); } catch (e) {}
+      setTimeout(function () { active = false; flushIdle(); }, 1000);
+    });
+  }
+  function flushIdle() { var w = waiters; waiters = []; w.forEach(function (f) { f(); }); }
+
+  /* The sound comes out of the phone's earpiece, not its speaker, after the microphone
+     has been used on iPhone (why "hear myself" seemed silent). Safari 16.4+ lets a page
+     say what the sound is for: "play-and-record" while listening, "playback" to play. */
+  function audioFor(kind) {
+    try { if (global.navigator && global.navigator.audioSession) global.navigator.audioSession.type = kind; } catch (e) {}
+  }
+
   function listen(opt) {
     opt = opt || {};
+    var log = opt.log || function () {};
+    var t0 = Date.now();
+    var mark = function (what) { log(what + " " + ((Date.now() - t0) / 1000).toFixed(1) + "s"); };
     return new Promise(function (resolve, reject) {
       if (!Rec) return reject(new Error("unavailable"));
-      stop();
-      var r = new Rec();
-      r.lang = "en-US";
-      r.interimResults = true;
-      r.maxAlternatives = 5;
-      r.continuous = false;
-      current = r;
-      var finals = [], interim = "", done = false, started = false, settle = null;
-      var mr = null, stream = null, chunks = [], wantRec = !!opt.record && canRecord();
-      var stopRec = function () {
-        if (mr && mr.state !== "inactive") { try { mr.stop(); } catch (e) {} }
-        else if (stream) { try { stream.getTracks().forEach(function (tr) { tr.stop(); }); } catch (e) {} }
-      };
-      var finish = function (err) {
-        if (done) return;
-        done = true;
-        stopRec();
-        clearTimeout(t); clearTimeout(settle);
-        current = null; finisher = null; killer = null;
-        var got = finals.length ? finals : (interim ? [interim] : []);
-        if (err && !got.length) reject(err); else resolve(got);
-      };
-      finisher = function () { try { r.stop(); } catch (e) {} settle = setTimeout(function () { finish(); }, 700); };
-      // stop(): end this listen now, even if the phone never sends its end event
-      killer = function () { finish(new Error("aborted")); };
-      var t = setTimeout(function () { finisher && finisher(); }, opt.maxMs || 8000);
-      var begin = function () { if (!started) { started = true; if (opt.onStart) opt.onStart(); } };
-      r.onaudiostart = begin;
-      r.onstart = function () { if (!("onaudiostart" in r)) begin(); };
-      r.onresult = function (e) {
-        begin();
-        var live = "", anyFinal = false;
-        for (var i = e.resultIndex; i < e.results.length; i++) {
-          var res = e.results[i];
-          if (res.isFinal) {
-            anyFinal = true;
-            for (var j = 0; j < res.length; j++) if (finals.indexOf(res[j].transcript) < 0) finals.push(res[j].transcript);
-          } else live += res[0].transcript;
+      if (current) { try { current = null; } catch (e) {} }
+      var go = function () {
+        var r = recogniser();
+        current = r;
+        var finals = [], interim = "", done = false, started = false, settle = null;
+        var mr = null, stream = null, chunks = [], wantRec = !!opt.record && canRecord();
+        var stopRec = function () {
+          if (mr && mr.state !== "inactive") { try { mr.stop(); } catch (e) {} }
+          else if (stream) { try { stream.getTracks().forEach(function (tr) { tr.stop(); }); } catch (e) {} }
+        };
+        var finish = function (err) {
+          if (done) return;
+          done = true;
+          stopRec();
+          clearTimeout(t); clearTimeout(settle);
+          if (current === r) current = null;
+          finisher = null; killer = null;
+          audioFor("playback");
+          var got = finals.length ? finals : (interim ? [interim] : []);
+          mark(err ? "error:" + err.message : "done:" + got.length);
+          if (err && !got.length) reject(err); else resolve(got);
+        };
+        finisher = function () { mark("stop"); try { r.stop(); } catch (e) {} settle = setTimeout(function () { finish(); }, 700); };
+        // stop(): end this listen now, even if the phone never sends its end event
+        killer = function () { try { r.abort(); } catch (e) {} finish(new Error("aborted")); };
+        var t = setTimeout(function () { finisher && finisher(); }, opt.maxMs || 8000);
+        var begin = function () { if (!started) { started = true; mark("listening"); if (opt.onStart) opt.onStart(); } };
+        r.onaudiostart = begin;
+        r.onstart = function () { mark("start"); if (!("onaudiostart" in r)) begin(); };
+        r.onresult = function (e) {
+          begin();
+          var live = "", anyFinal = false;
+          for (var i = e.resultIndex; i < e.results.length; i++) {
+            var res = e.results[i];
+            if (res.isFinal) {
+              anyFinal = true;
+              for (var j = 0; j < res.length; j++) if (finals.indexOf(res[j].transcript) < 0) finals.push(res[j].transcript);
+            } else live += res[0].transcript;
+          }
+          interim = live || interim;
+          if (opt.onHear) opt.onHear(finals[0] || interim);
+          if (anyFinal) { clearTimeout(settle); settle = setTimeout(function () { try { r.stop(); } catch (x) {} finish(); }, 350); }
+        };
+        r.onerror = function (e) { mark("err:" + (e && e.error)); finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
+        r.onend = function () { mark("end"); active = false; flushIdle(); finish(); };
+        audioFor("play-and-record");
+        try { active = true; r.start(); mark("tap"); } catch (e) { active = false; mark("start-failed"); finish(e); }
+        // recording starts after the recogniser, so the recogniser keeps the tap's user gesture
+        if (wantRec && !done) {
+          global.navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
+            stream = st;
+            if (done) { stopRec(); return; }
+            try {
+              mr = new global.MediaRecorder(st);
+              mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+              mr.onstop = function () {
+                try { st.getTracks().forEach(function (tr) { tr.stop(); }); } catch (e) {}
+                if (chunks.length && opt.onRecorded) opt.onRecorded(new Blob(chunks, { type: mr.mimeType || "audio/webm" }));
+              };
+              mr.start();
+            } catch (e) { stopRec(); }
+          }, function () {});
         }
-        interim = live || interim;
-        if (opt.onHear) opt.onHear(finals[0] || interim);
-        if (anyFinal) { clearTimeout(settle); settle = setTimeout(function () { try { r.stop(); } catch (x) {} finish(); }, 350); }
       };
-      r.onerror = function (e) { finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
-      r.onend = function () { finish(); };
-      try { r.start(); } catch (e) { finish(e); }
-      // recording starts after the recogniser, so the recogniser keeps the tap's user gesture
-      if (wantRec && !done) {
-        global.navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
-          stream = st;
-          if (done) { stopRec(); return; }
-          try {
-            mr = new global.MediaRecorder(st);
-            mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
-            mr.onstop = function () {
-              try { st.getTracks().forEach(function (tr) { tr.stop(); }); } catch (e) {}
-              if (chunks.length && opt.onRecorded) opt.onRecorded(new Blob(chunks, { type: mr.mimeType || "audio/webm" }));
-            };
-            mr.start();
-          } catch (e) { stopRec(); }
-        }, function () {});
-      }
+      if (active) { mark("waiting-for-last"); whenIdle().then(go); } else go();
     });
   }
 
@@ -178,7 +218,7 @@
 
   function stop() {
     var k = killer;
-    if (current) { try { current.abort(); } catch (e) {} current = null; }
+    current = null;
     if (k) k();
   }
 
@@ -191,5 +231,5 @@
     return t.replace(/\bmister\b/g, "mr").replace(/\b(\d{1,2}) 00\b/g, "$1 o'clock");
   }
 
-  global.TouchSpeech = { available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording };
+  global.TouchSpeech = { available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording, audioFor: audioFor };
 })(typeof globalThis !== "undefined" ? globalThis : window);

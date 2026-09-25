@@ -1011,14 +1011,20 @@ async function recLoad(key){
   });
  }catch(e){ return null; }
 }
-function playBlob(blob){
+/* Playing the learner's own recording. On iPhone the sound came out of the earpiece after
+   the microphone had been used (「没有办法播放听回自己的声音」): say it is playback first.
+   A refused play is reported through onErr instead of vanishing. */
+function playBlob(blob, onErr){
  try{
+  try{ if(navigator.audioSession) navigator.audioSession.type = "playback"; }catch(e){}
   const url = URL.createObjectURL(blob);
   REC.audio = new Audio(url);
+  REC.audio.setAttribute("playsinline", "");
   REC.audio.onended = ()=>{ try{ URL.revokeObjectURL(url); }catch(e){} };
+  REC.audio.onerror = ()=>{ if(onErr) onErr("media-error "+((REC.audio.error && REC.audio.error.code) || "")+" "+(blob.type||"")); };
   const p = REC.audio.play();
-  if(p && p.catch) p.catch(()=>{});
- }catch(e){}
+  if(p && p.catch) p.catch(e=>{ if(onErr) onErr((e && e.name) || "play-failed"); });
+ }catch(e){ if(onErr) onErr((e && e.message) || "error"); }
 }
 
 /* ---------- safe storage ----------
@@ -1952,19 +1958,20 @@ function mountSpeech(host, o){
   { const old = $("spres"); if(old){ old.className = "spres hidden"; old.innerHTML = ""; } }   // the last try's card goes
   if(COACH) COACH.pose("listen");
   let heard = [], err = "", started = false, mine = null;
+  const trail = [];   // what the phone did, in order — shown small under the result (diagnosis)
   const recTried = TouchSpeech.canRecord && TouchSpeech.canRecord();
   // their own voice, to hear back: a button in the result card as soon as the recording is ready
   const addMine = ()=>{
    const row = document.querySelector("#spres .spbtns");
    if(!mine || !row || $("spmine")) return;
    row.insertAdjacentHTML("afterbegin", `<button type="button" class="btn btn-ghost" id="spmine">▶ ${esc(SPK_TXT().mine)}</button>`);
-   $("spmine").onclick = ()=>{ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} try{ const a = new Audio(URL.createObjectURL(mine)); a.play().catch(()=>{}); }catch(e){} };
+   $("spmine").onclick = ()=>{ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} playBlob(mine, why=>{ const c = document.querySelector("#spres .spcode"); if(c) c.textContent += " · ▶✗ "+why; }); };
   };
   /* The phone sometimes never starts listening (seen on iPhone, second sentence of a
      lesson): after 4 s without a start, stop and say so, rather than wait silently. */
   const watchdog = setTimeout(()=>{ if(!started){ err = err || "no-start"; TouchSpeech.stop(); } }, 4000);
   try{
-   heard = await TouchSpeech.listen({maxMs: 9000, record: true, onRecorded: b=>{ mine = b; addMine(); },
+   heard = await TouchSpeech.listen({maxMs: 9000, record: true, log: x=>trail.push(x), onRecorded: b=>{ mine = b; addMine(); },
     onStart: ()=>{ started = true; mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
     onHear: txt=>{ if(hd) hd.textContent = "“"+txt+"”"; }});
   }catch(e){ err = err || String((e && e.message) || e || "error"); }
@@ -1989,7 +1996,7 @@ function mountSpeech(host, o){
   const card = (cls, head, body)=>{
    if(!res) return;
    res.className = "spres "+cls;
-   res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(X.hear)}</button>` : ""}</div>`;
+   res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spcode">${esc(trail.join(" · "))}</div><div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(X.hear)}</button>` : ""}</div>`;
    $("spagain").onclick = ()=>$("mic").click();
    addMine();
    /* where the phone cannot record while it recognises (iPhone), hearing yourself is a
@@ -2008,7 +2015,7 @@ function mountSpeech(host, o){
   const more = tries>=2 ? " "+t.spMoveOn : "";
   msg(t.micTap, "");
   if(!heard || !heard.length){
-   card("no", "🤔 "+esc(X.none), `<div class="spb">${esc(X.noneTip)}${esc(more)}</div>${err ? `<div class="spcode">(${esc(err)})</div>` : ""}`);
+   card("no", "🤔 "+esc(X.none), `<div class="spb">${esc(X.noneTip)}${esc(more)}</div>`);
    if(tries>=2) allow(); if(COACH) COACH.pose("think"); return;
   }
   const said = `<div class="spb">${esc(X.you)} <b>“${esc(heard[0])}”</b></div>`;
@@ -2095,7 +2102,7 @@ function mountRecorder(host, key, onRecorded){
   // ---- tail buffer: keep capturing a little after Stop so the last word survives ----
   recTimer(()=>{ try{ if(REC.recorder && REC.recorder.state==="recording") REC.recorder.stop(); }catch(e){ uiIdle(); } }, TAIL_BUF);
  };
- $("playrec").onclick = ()=>{ if(blob && phase==="idle") playBlob(blob); };
+ $("playrec").onclick = ()=>{ if(blob && phase==="idle") playBlob(blob, why=>{ $("speaknote").textContent = "▶ ✗ ("+why+")"; }); };
  uiIdle();
 }
 
