@@ -104,7 +104,7 @@
     store.set("lang", l);
     /* 在平台里，语言只有一个家：students.language。顾问还没设时学生在课程的第一个画面选的，
        也要送回去 —— 否则 /learn 不知道（它只读平台的值，2026-09-24 起），Grammar Course 的选单就不对 */
-    if (onPlatform && global.fetch) {
+    if (onPlatform && global.fetch && !(global.TOUCH_PLATFORM && global.TOUCH_PLATFORM.preview)) {
       try {
         global.fetch("/api/learn/language", {
           method: "POST", credentials: "same-origin", keepalive: true,

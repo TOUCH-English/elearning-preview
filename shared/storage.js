@@ -58,6 +58,18 @@
 
   var VERSION = "v1";
 
+  /* 员工看「学生看到的样子」：?as=student（Marco 2026-09-25：「我不知道学生的画面到底长什么样，
+     因为我现在是站在管理层看到的画面」）。员工开课程时平台不给 TOUCH_PLATFORM，课程就跑单机版
+     （有自己的 Profile、问语言）—— 跟学生看到的不一样。这里假装成一个学生：画面完全照学生版，
+     但进度只存这台装置（key 用 preview），不送平台、不算进任何学生。语言用 ?lang=zh|ms|en。 */
+  if (!global.TOUCH_PLATFORM && global.location && /[?&]as=student\b/.test(global.location.search || "")) {
+    var pl = ((global.location.search || "").match(/[?&]lang=(zh|ms|en)\b/) || [])[1] || "zh";
+    global.TOUCH_PLATFORM = {
+      student: { id: "preview", name: "Preview Student", nickname: "Alex", lang: pl },
+      staff: true, preview: true, blobs: {}, homeUrl: "/ui-c/courses"
+    };
+  }
+
   /* 平台给的资料（没有就是 null ＝ 单机模式） */
   var PLATFORM = (global.TOUCH_PLATFORM && typeof global.TOUCH_PLATFORM === "object") ? global.TOUCH_PLATFORM : null;
   var STUDENT  = PLATFORM && PLATFORM.student && PLATFORM.student.id != null ? String(PLATFORM.student.id) : "";
@@ -287,7 +299,7 @@
     } catch (e) { retry(); }
   }
 
-  if (PLATFORM) {
+  if (PLATFORM && !PLATFORM.preview) {
     /* 平台为准：先用平台的资料盖掉本机 */
     var fromPlatform = PLATFORM.blobs && typeof PLATFORM.blobs === "object" ? PLATFORM.blobs : {};
     hydrate(fromPlatform);

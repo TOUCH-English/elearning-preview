@@ -218,6 +218,12 @@
     d.getElementById("te-clang").addEventListener("change", function (e) {
       /* setLang 在平台里本身就会送 /api/learn/language；这里再送一次是为了等它回来才重新载入 */
       var v = e.target.value, P = global.TouchProfile, S = global.TouchStore;
+      /* 员工的学生预览（storage.js 的 ?as=student）：语言在网址上，不送平台 */
+      if (PLATFORM && PLATFORM.preview) {
+        var q = global.location.search.replace(/([?&])lang=[a-z]+&?/, "$1").replace(/[?&]$/, "");
+        global.location.search = q + (q ? "&" : "?") + "lang=" + v;
+        return;
+      }
       if (P) P.setLang(v);
       var done = function () {
         try { if (S && S.flush) S.flush(); } catch (err) {}
