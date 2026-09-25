@@ -732,6 +732,7 @@ function skillCardHTML(l){
    "I a little tired" was told 「红色的字没听清楚」 — blaming the voice for a missing word). */
 function whyText(why, hidden){
  const t = T(), w = String(why||"").split(":")[1] || "";
+ if(hidden && typeof CONF!=="undefined" && CONF.flow==="l2" && ideaCheck.slip) return fmt(t.ownNot, {w: ideaCheck.slip});
  if(/^small:/.test(why)) return fmt(t.whySmall, {w});
  if(/^form:/.test(why)) return fmt(t.whyForm, {w});
  if(/^fact:/.test(why)) return fmt(t.whyFact, {w: w.charAt(0).toUpperCase()+w.slice(1)});
@@ -741,7 +742,7 @@ function whyText(why, hidden){
    pass on content and still deserve one correction — Mei Fong's "more lighter", "she clean"). */
 const SLIPS = [
  [/\bmore (\w+er)\b/, m=>`more ${m[1]} → ${m[1]}`],
- [/\b(he|she|it|my \w+|mr tan|siti|kumar|ali|mei ling) (clean|buy|go|work|like|want|need|help|use|live|come|take|make|say|know|think|feel|love|eat|drink|play|watch|start|finish)\b(?! to\b)/, m=>`${m[1]} ${m[2]} → ${m[1]} ${m[2]}s`],
+ [/\b(he|she|it|my \w+[^s ]|the (?:customer|manager|boss|report|machine|printer|driver)|mr tan|siti|kumar|ali|mei ling) (clean|buy|go|work|like|want|need|help|use|live|come|take|make|say|know|think|feel|love|eat|drink|play|watch|start|finish)\b(?! to\b)/, m=>`${m[1]} ${m[2]} → ${m[1]} ${m[2]}s`],
  [/\bi (good|busy|tired|happy|fine|okay|sad|sick|free|ready|sure|late)\b/, m=>`I ${m[1]} → I am ${m[1]}`],
  [/\byesterday i (go|eat|buy|see|have|take|come|meet|visit|watch|play|cook)\b/, m=>`yesterday I ${m[1]} → the past form`],
  [/\bvery like\b/, ()=>`very like → really like`],
@@ -756,7 +757,20 @@ function slipTip(heard){
    「missing: and」). Level 1 is Construct — the sentence itself is the point, so it stays
    word-for-word; Level 2 is Convey — the message is. Passes when at least 70% of a model's
    content words (stems) are there, in 4+ words; days and numbers must still be right. */
+function lessonNots(){
+ const ex = ex0(); return ((ex && ex.own) || []).flatMap(o=>o.not||[]).map(k=>spNorm(k)).filter(Boolean);
+}
 function ideaCheck(targets, heard){
+ /* judging the idea must not let the lesson's own target mistake through (Hafiz, round 2:
+    "I'll finish it until five" passed the translation of "by five") — the lesson's `not`
+    phrases and the common slips fail an otherwise right idea, and the slip is named */
+ const nots = lessonNots();
+ ideaCheck.slip = "";
+ for(const h of (heard||[]).map(x=>spNorm(x))){
+  const bad = nots.find(k=>(" "+h+" ").includes(" "+k+" "));
+  if(bad){ ideaCheck.slip = bad; return false; }
+ }
+ if(slipTip(heard)){ ideaCheck.slip = slipTip(heard); return false; }
  const cw = x=>spNorm(px(x)).split(" ").filter(w=>w && !STOPW.has(w) && !/^(the|a|an|and|but|so|very|really|just|also|too|now|then|that|this|it|is|am|are|was|were|be|of|on|at|in|for|to|with|by)$/.test(w));
  const said = (heard||[]).map(h=>spNorm(h)).filter(Boolean);
  let best = 0;
@@ -764,11 +778,11 @@ function ideaCheck(targets, heard){
   if(h.split(" ").length < 4) continue;
   const L = lemma(h);
   for(const t of targets){ const ws = cw(t); if(!ws.length) continue;
-   const hard = ws.filter(w=>/day$|^\d/.test(w));
+   const hard = ws.filter(w=>/^(mon|tues|wednes|thurs|fri|satur|sun)day$|^\d/.test(w));
    if(hard.some(w=>!L.includes(lemma(w)))) continue;
    best = Math.max(best, ws.filter(w=>L.includes(lemma(w))).length / ws.length); }
  }
- return best >= 0.7;
+ return best >= 0.6;
 }
 function ex0(){ return (P && lessonExtra(P.mi, P.li)) || {}; }
 function lessonExtra(mi,li){ const c = COURSE[mi]; return (c && typeof LESSON_EXTRA!=="undefined" && LESSON_EXTRA[c.id+"-"+li]) || null; }
@@ -1645,7 +1659,7 @@ function renderStep(){
  /* Sound off: a step that can only be answered by ear is not asked (student test 2026-09-25:
     Priya, in a quiet office, had to guess and was marked wrong for what she never heard). */
  if(["gist","listenonly","convo","ls"].includes(st.kind) && !S.sound){
-  box.innerHTML = stepShell(stepNum, esc(st.kind==="gist" ? t.gistK : st.kind==="convo" ? t.convoK : st.kind==="ls" ? t.lsK : t.loK), t.listenMuted,
+  box.innerHTML = stepShell(stepNum, esc(st.kind==="gist" ? t.gistK : st.kind==="convo" ? t.convoK : st.kind==="ls" ? t.lsK : t.loK), "",
    `<div class="scenebox">🔇 ${esc(t.listenMuted)}</div>`, `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
   $("go").onclick = ()=>{ P.skipped = (P.skipped||0)+1; nextStep(); };
   return;
@@ -1774,7 +1788,8 @@ function renderStep(){
     const onTopic = [...new Set(ws.filter(w=>w.length>3).map(w=>lemma(w).trim()))].filter(w=>modelW.has(w)).length;
     /* "I think because for example I understand let us. My cat is orange…" hit every group (Hafiz):
        it must also be about the task — at least three of the model answer's content words */
-    st.offTopic = onTopic < 3;
+    const small = ws.filter(w=>STOPW.has(w)).length / Math.max(1, ws.length);
+    st.offTopic = onTopic < 3 || small < 0.25;
     const ok = !st.offTopic && M.groups.every(g=>g.some(k=>lemmaHit(h, k))) && ws.length >= M.minWords && distinct >= Math.min(ws.length, M.minWords) * 0.6;
     if(ok) pay();
     return ok;
@@ -1863,6 +1878,7 @@ function renderStep(){
     const cs = [ans].concat(alts).map(target=>TouchSpeech.check(target, heard));
     const ok = cs.some(c=>c.pass) || (CONF.flow==="l2" && ideaCheck([ans].concat(alts), heard));
     st.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || "");
+    if(!ok && CONF.flow!=="l2") ideaCheck.slip = "";
     if(ok){ pay(); speak(ans); }
     return ok;
    }});
@@ -1905,9 +1921,9 @@ function renderStep(){
  }
  if(st.kind==="hearpick"){
   if(!S.sound){
-   box.innerHTML = stepShell(stepNum, esc(t.hearK), t.listenMuted, `<div class="scenebox">🔇 ${esc(t.listenMuted)}</div>`,
+   box.innerHTML = stepShell(stepNum, esc(t.hearK), "", `<div class="scenebox">🔇 ${esc(t.listenMuted)}</div>`,
     `<button class="btn btn-primary btn-block" id="go">${t.continue}</button>`);
-   $("go").onclick = ()=>{ if(st.last) P.xp += 5; nextStep(); };
+   $("go").onclick = ()=>{ P.skipped = (P.skipped||0)+1; nextStep(); };   // not heard: no XP
    return;
   }
   if(st.target==null){                           // decided once, so a redraw asks the same word

@@ -156,10 +156,10 @@
       tv.forEach(function (t, k) {
         if (hit[k]) return;
         var at = spare.indexOf(t.p);
-        if (at >= 0 && MOVABLE.indexOf(t.p) >= 0 && !/day$/.test(t.p)) { spare.splice(at, 1); hit[k] = true; return; }
+        if (at >= 0 && MOVABLE.indexOf(t.p) >= 0 && !/^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(t.p)) { spare.splice(at, 1); hit[k] = true; return; }
         miss.push(t.p);
         if (leftover.some(function (x) { return grammarTwin(t.p, x); })) why = why || "form:" + t.p;
-        else if (t.proper || /day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) why = why || "fact:" + t.p;
+        else if (t.proper || /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) why = why || "fact:" + t.p;
         else if (CRITICAL.indexOf(t.p) >= 0) why = why || "small:" + t.p;
       });
       var res = tw.map(function (raw, ri) {
