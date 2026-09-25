@@ -127,6 +127,7 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .spsteps{margin:14px auto 4px;padding:0 0 0 20px;max-width:320px;text-align:left;color:#51607A;font-size:13.5px;line-height:1.7}
 .spres{margin:12px 0 4px;border-radius:16px;padding:12px 14px;text-align:left}
 .spres.ok{background:#DDF6E6;color:#1E6B43}.spres.no{background:#FDECEC;color:#9E2E47}
+.spres .spcode{margin-top:4px;font-size:11px;color:#8C97A8}
 .spres .sph{font-weight:800;font-size:16px}.spres .spb{margin-top:4px;font-size:14px;color:#33415C}
 .spres .spbtns{display:flex;gap:8px;margin-top:10px}.spres .spbtns .btn{flex:1;padding:9px 10px;font-size:14px}
 .spheard{min-height:22px;margin-top:6px;text-align:center;font-weight:700;color:#33415C;font-size:15px}
@@ -1944,18 +1945,26 @@ function mountSpeech(host, o){
   const mic = $("mic"), hd = $("spheard");
   mic.classList.add("on", "wait"); msg(W.wait, ""); if(hd) hd.textContent = "";
   if(COACH) COACH.pose("listen");
-  let heard = [], err = "";
+  let heard = [], err = "", started = false;
+  /* The phone sometimes never starts listening (seen on iPhone, second sentence of a
+     lesson): after 4 s without a start, stop and say so, rather than wait silently. */
+  const watchdog = setTimeout(()=>{ if(!started){ err = err || "no-start"; TouchSpeech.stop(); } }, 4000);
   try{
    heard = await TouchSpeech.listen({maxMs: 9000,
-    onStart: ()=>{ mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
+    onStart: ()=>{ started = true; mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
     onHear: txt=>{ if(hd) hd.textContent = "“"+txt+"”"; }});
-  }catch(e){ err = String((e && e.message) || e || "error"); }
+  }catch(e){ err = err || String((e && e.message) || e || "error"); }
+  clearTimeout(watchdog);
   mic.classList.remove("wait");
   busy = false;
   if(!host.isConnected) return;                                    // moved on while it listened
   mic.classList.remove("on");
-  if(err==="aborted"){ msg(t.micTap, ""); return; }
-  if(err && err!=="no-speech"){ SPEECH_OFF = true; return fallback(t.spFallback); }
+  /* Only a refusal ("not-allowed": no permission; "service-not-allowed": no recogniser)
+     switches to record-and-play-back for good. Anything else — aborted, no-speech,
+     network, a recogniser that never started — ends in the result card below with its
+     code in small grey text, so a learner (and we) can see what happened. */
+  if(err==="not-allowed" || err==="service-not-allowed"){ SPEECH_OFF = true; return fallback(t.spFallback); }
+  if(err==="no-speech") err = "";
   tries++;
   first();
   const X = SPK_TXT(), res = $("spres"), steps = $("spsteps");
@@ -1971,7 +1980,7 @@ function mountSpeech(host, o){
   const more = tries>=2 ? " "+t.spMoveOn : "";
   msg(t.micTap, "");
   if(!heard || !heard.length){
-   card("no", "🤔 "+esc(X.none), `<div class="spb">${esc(X.noneTip)}${esc(more)}</div>`);
+   card("no", "🤔 "+esc(X.none), `<div class="spb">${esc(X.noneTip)}${esc(more)}</div>${err ? `<div class="spcode">(${esc(err)})</div>` : ""}`);
    if(tries>=2) allow(); if(COACH) COACH.pose("think"); return;
   }
   const said = `<div class="spb">${esc(X.you)} <b>“${esc(heard[0])}”</b></div>`;

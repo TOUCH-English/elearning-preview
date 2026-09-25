@@ -55,7 +55,7 @@
     var tw = String(target || "").split(/\s+/).filter(function (w) { return /[A-Za-z0-9]/.test(w); });
     var best = null;
     (heard && heard.length ? heard : [""]).forEach(function (h) {
-      var hw = words(Object.keys(SAME).reduce(function (s, k) { return s.replace(new RegExp("\\b" + k + "\\b", "g"), SAME[k]); }, norm(h)));
+      var hw = words(Object.keys(SAME).reduce(function (s, k) { return s.replace(new RegExp("\\b" + k + "\\b", "g"), SAME[k]); }, norm(h)).replace(/\bmister\b/g, "mr").replace(/\bmissus\b|\bmisses\b/g, "mrs"));
       var used = [];
       var res = tw.map(function (raw) {
         var w = norm(raw);
@@ -83,7 +83,7 @@
      - it stops by itself as soon as a phrase is final, instead of waiting for the phone to
        decide the learner is silent, which on iPhone can take several seconds;
      - finish() stops at once and keeps what was heard so far (a second tap on the mic). */
-  var finisher = null;
+  var finisher = null, killer = null;
   function listen(opt) {
     opt = opt || {};
     return new Promise(function (resolve, reject) {
@@ -100,11 +100,13 @@
         if (done) return;
         done = true;
         clearTimeout(t); clearTimeout(settle);
-        current = null; finisher = null;
+        current = null; finisher = null; killer = null;
         var got = finals.length ? finals : (interim ? [interim] : []);
         if (err && !got.length) reject(err); else resolve(got);
       };
       finisher = function () { try { r.stop(); } catch (e) {} settle = setTimeout(function () { finish(); }, 700); };
+      // stop(): end this listen now, even if the phone never sends its end event
+      killer = function () { finish(new Error("aborted")); };
       var t = setTimeout(function () { finisher && finisher(); }, opt.maxMs || 8000);
       var begin = function () { if (!started) { started = true; if (opt.onStart) opt.onStart(); } };
       r.onaudiostart = begin;
@@ -132,7 +134,11 @@
   /* Stop now and keep what was heard (the learner tapped the mic again). */
   function finishNow() { if (finisher) finisher(); }
 
-  function stop() { if (current) { try { current.abort(); } catch (e) {} current = null; } }
+  function stop() {
+    var k = killer;
+    if (current) { try { current.abort(); } catch (e) {} current = null; }
+    if (k) k();
+  }
 
   /* Text as the checks compare it: lower case, no punctuation, contractions spelled out
      ("It's 9 o'clock" -> "it is 9 o'clock"), so free answers can be matched on phrases. */
