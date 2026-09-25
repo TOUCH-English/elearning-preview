@@ -40,7 +40,7 @@
     fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,
     seventy:70,eighty:80,ninety:90,hundred:100};
   function numbers(t) {
-    t = t.replace(/\b(\d+)(am|pm)\b/g, "$1 $2").replace(/\ba m\b/g, "am").replace(/\bp m\b/g, "pm");
+    t = t.replace(/\b(\d+)(am|pm)\b/g, "$1 $2").replace(/\ba m\b/g, "am").replace(/\bp m\b/g, "pm").replace(/\bok\b/g, "okay").replace(/\bo'?clock\b/g, "00");
     var w = t.split(" "), out = [];
     for (var i = 0; i < w.length; i++) {
       var a = NUM[w[i]];
@@ -79,6 +79,7 @@
      (walkthrough 2026-09-25: "I visit my parents" was praised in the past-tense lesson). */
   var ENDS = ["s", "es", "d", "ed", "ing"];
   function twinOf(long, short) {        // long = short + a grammar ending (incl. like→liked, live→living, study→studied)
+    if (short.length < 3) return false;   // "is" is not a form of "i", nor "as" of "a"
     return ENDS.some(function (e) { return long === short + e; }) ||
       (/e$/.test(short) && (long === short.slice(0, -1) + "ing" || long === short.slice(0, -1) + "ed")) ||
       (/y$/.test(short) && (long === short.slice(0, -1) + "ies" || long === short.slice(0, -1) + "ied"));
