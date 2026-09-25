@@ -144,6 +144,158 @@
     clearBtn();
   }
 
+  /* ---------------------------------------------------------------------------
+     On iPhone the clips play through Web Audio, not <audio>.
+
+     Marco's iPhone, 2026-09-25: the first 跟着说 is heard, every one after it comes
+     back "aborted". The cause is a known iOS Safari fault: once an <audio> element has
+     played AFTER speech recognition, WebKit leaves the phone's audio session in
+     "playback" and the next recognition cannot get the microphone (the next sentence's
+     model line autoplays, so the second try always follows an <audio>). Playing through
+     an AudioContext does not move the session, so the microphone stays available.
+     (technetexperts.com "iOS Safari Web Speech API bug"; lilting.ch iOS WebSpeech tips.)
+
+     clip(url) behaves like the parts of an Audio element this file uses (playbackRate,
+     onended, onerror, play() -> Promise, pause()). Slow speed: a buffer source has no
+     preservesPitch, so the slow copy is time-stretched here (WSOLA) to keep the voice's
+     pitch, as the <audio> path does. Anything that fails falls back to <audio>.
+  --------------------------------------------------------------------------- */
+  var IOS = /iP(hone|ad|od)/.test(global.navigator && global.navigator.userAgent || "") ||
+    (/Macintosh/.test(global.navigator && global.navigator.userAgent || "") && (global.navigator.maxTouchPoints || 0) > 1);
+  var AC = null;
+  function actx() {
+    if (!AC) {
+      var C = global.AudioContext || global.webkitAudioContext;
+      if (!C) return null;
+      try { AC = new C(); } catch (e) { return null; }
+    }
+    if (AC.state === "suspended") { try { AC.resume(); } catch (e) {} }
+    return AC;
+  }
+  /* Web Audio on iPhone obeys the silent switch, which <audio> did not: while a clip plays
+     the page says it is "playback" (speaker, silent switch ignored), and hands the phone
+     back to "auto" when it ends. Only between listens — shared/speech.js sets
+     "play-and-record" before every recognition. */
+  var playing = 0;
+  function session(kind) {
+    try { if (global.navigator && global.navigator.audioSession) global.navigator.audioSession.type = kind; } catch (e) {}
+  }
+  function started(s) {
+    playing++; session("playback");
+    var done = false;
+    return function () { if (done) return; done = true; if (--playing <= 0) { playing = 0; session("auto"); } };
+  }
+  // an AudioContext may only start inside a tap: wake it on the first one
+  if (IOS && doc) {
+    var wake = function () { actx(); };
+    doc.addEventListener("touchend", wake, { passive: true });
+    doc.addEventListener("click", wake, true);
+  }
+  function decode(ab) {
+    return new Promise(function (res, rej) {
+      var p = AC.decodeAudioData(ab, res, rej);
+      if (p && p.then) p.then(res, rej);
+    });
+  }
+  var BUF = {};   // url -> Promise<AudioBuffer>
+  function bufferFor(url) {
+    if (!BUF[url]) BUF[url] = fetch(url).then(function (r) {
+      if (!r.ok) throw new Error("http " + r.status);
+      return r.arrayBuffer();
+    }).then(decode).catch(function (e) { delete BUF[url]; throw e; });
+    return BUF[url];
+  }
+  /* Slower without dropping the pitch: waveform-similarity overlap-add. Frames of ~40 ms
+     laid down every 10 ms of output, each taken from where the input has reached, nudged
+     by up to ~3 ms to the spot that best continues the previous frame. */
+  var SLOW = {};
+  function stretch(buf, rate) {
+    var sr = buf.sampleRate, N = Math.round(sr * 0.04) & ~1, Hs = N >> 2, tol = Math.round(sr * 0.003);
+    var inLen = buf.length, outLen = Math.ceil(inLen / rate) + N;
+    var out = AC.createBuffer(buf.numberOfChannels, outLen, sr);
+    var win = new Float32Array(N);
+    for (var i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / N);
+    var ref = buf.getChannelData(0), offs = [];
+    var prev = 0, k, frames = Math.floor((outLen - N) / Hs);
+    for (k = 0; k < frames; k++) {
+      var nominal = Math.round(k * Hs * rate), best = nominal;
+      if (k > 0) {
+        var natural = prev + Hs, bestC = -Infinity;
+        for (var d = -tol; d <= tol; d += 2) {
+          var p = nominal + d;
+          if (p < 0 || p + N > inLen) continue;
+          var c = 0;
+          for (var j = 0; j < N; j += 8) c += ref[natural + j] * ref[p + j] || 0;
+          if (c > bestC) { bestC = c; best = p; }
+        }
+      }
+      if (best + N > inLen) break;
+      offs.push(best); prev = best;
+    }
+    for (var ch = 0; ch < buf.numberOfChannels; ch++) {
+      var src = buf.getChannelData(ch), dst = out.getChannelData(ch), norm = new Float32Array(outLen);
+      for (k = 0; k < offs.length; k++) {
+        var o = k * Hs, s0 = offs[k];
+        for (i = 0; i < N; i++) { dst[o + i] += src[s0 + i] * win[i]; norm[o + i] += win[i]; }
+      }
+      for (i = 0; i < outLen; i++) if (norm[i] > 1e-3) dst[i] /= norm[i];
+    }
+    return out;
+  }
+  function slowCopy(url, buf, rate) {
+    var k = url + "@" + rate.toFixed(3);
+    if (!SLOW[k]) SLOW[k] = stretch(buf, rate);
+    return SLOW[k];
+  }
+  function clip(url) {
+    if (!IOS || !actx() || !global.fetch) return new Audio(url);
+    var c = { playbackRate: 1, onended: null, onerror: null, _src: null, _off: false };
+    c.play = function () {
+      return bufferFor(url).then(function (buf) {
+        if (c._off) return;
+        var r = Number(c.playbackRate) || 1;
+        var b = Math.abs(r - 1) < 0.02 ? buf : slowCopy(url, buf, r);
+        var s = AC.createBufferSource();
+        s.buffer = b;
+        s.connect(AC.destination);
+        var end = started();
+        s.onended = function () { end(); if (!c._off && c.onended) c.onended(); };
+        c._src = s; c._end = end;
+        if (AC.state === "suspended") AC.resume();
+        s.start(0);
+      }, function () { if (!c._off && c.onerror) c.onerror(); });
+    };
+    c.pause = function () { c._off = true; if (c._end) c._end(); if (c._src) { try { c._src.stop(); } catch (e) {} } };
+    return c;
+  }
+  /* A learner's own recording (a Blob from MediaRecorder), through the same path. */
+  function playBlob(blob, onErr) {
+    stop();
+    var fail = function (why) { if (onErr) onErr(why); };
+    var viaTag = function () {
+      try {
+        var u = URL.createObjectURL(blob), a = new Audio(u);
+        a.setAttribute("playsinline", "");
+        a.onended = function () { try { URL.revokeObjectURL(u); } catch (e) {} };
+        a.onerror = function () { fail("media-error " + ((a.error && a.error.code) || "") + " " + (blob.type || "")); };
+        cur = a;
+        var p = a.play();
+        if (p && p.catch) p.catch(function (e) { fail((e && e.name) || "play-failed"); });
+      } catch (e) { fail((e && e.message) || "error"); }
+    };
+    if (!IOS || !actx() || !blob.arrayBuffer) return viaTag();
+    var c = { _off: false, _src: null, pause: function () { c._off = true; if (c._end) c._end(); if (c._src) { try { c._src.stop(); } catch (e) {} } } };
+    cur = c;
+    blob.arrayBuffer().then(decode).then(function (buf) {
+      if (c._off) return;
+      var s = AC.createBufferSource();
+      s.buffer = buf; s.connect(AC.destination); c._src = s;
+      var end = started(); c._end = end; s.onended = end;
+      if (AC.state === "suspended") AC.resume();
+      s.start(0);
+    }, function (e) { fail("decode " + ((e && (e.name || e.message)) || "") + " " + (blob.type || "") + " " + blob.size + "B"); });
+  }
+
   /* 退路：浏览器内建语音。
      长句子用机械音念很难听，所以 fallback 维持原本的规矩 —— 只念短的。
      （有 mp3 的时候不受这条限制，例句照样会念。） */
@@ -225,7 +377,7 @@
       if (i >= segs.length) { cur = null; clearBtn(); if (opt.onDone) opt.onDone(); return; }
       var seg = segs[i++];
       if (have && !have[key(seg)]) { next(); return; }
-      var a = new Audio(BASE + key(seg) + ".mp3");
+      var a = clip(BASE + key(seg) + ".mp3");
       a._seg = token;
       a.playbackRate = (opt.rate != null) ? opt.rate : rateFor(opt.slow);
       if ("preservesPitch" in a) a.preservesPitch = true;
@@ -254,8 +406,6 @@
     return r;
   }
   function say1(text, opt) {
-    // after the microphone was used, iPhone plays through the earpiece unless told this is playback
-    try { if (global.navigator && global.navigator.audioSession) global.navigator.audioSession.type = "playback"; } catch (e) {}
     if (opt.fallbackMaxWords === undefined) opt.fallbackMaxWords = 3;
     var t = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
     if (!t) return false;
@@ -276,7 +426,7 @@
     }
 
     try {
-      var a = new Audio(BASE + k + ".mp3");
+      var a = clip(BASE + k + ".mp3");
       a.playbackRate = (opt.rate != null) ? opt.rate : rateFor(opt.slow);
       if ("preservesPitch" in a) a.preservesPitch = true;          // 慢放不变音高
       if ("mozPreservesPitch" in a) a.mozPreservesPitch = true;
@@ -362,6 +512,7 @@
   global.TouchVoice = {
     say: say,
     stop: stop,
+    playBlob: playBlob,
     key: key,
     base: BASE,
     course: COURSE,

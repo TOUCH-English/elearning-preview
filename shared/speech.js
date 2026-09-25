@@ -105,20 +105,19 @@
 
   var finisher = null, killer = null;
 
-  /* ONE recogniser for the page, and never two sessions at once (Marco's iPhone,
-     2026-09-25: the first try works, the second comes back "aborted" — iPhone Safari
-     will not start a new recognition while the last one is still shutting down, and a
-     fresh instance each time made that likely). If the last session has not ended yet,
-     ask it to stop and wait up to a second for its end before starting again. */
+  /* Never two sessions at once: if the last one has not ended, ask it to stop and wait
+     up to a second for its end. Then a FRESH recogniser each time — a reused one keeps
+     whatever state the last session left behind. (Marco's iPhone, 2026-09-25: the first
+     try works and the second comes back "aborted". A single reused recogniser was tried
+     first and did not help; the real cause was <audio> playing between the tries, which
+     shared/voice.js now avoids on iPhone.) R is the latest one. */
   var R = null, active = false, waiters = [];
   function recogniser() {
-    if (!R) {
-      R = new Rec();
-      R.lang = "en-US";
-      R.interimResults = true;
-      R.maxAlternatives = 5;
-      R.continuous = false;
-    }
+    R = new Rec();
+    R.lang = "en-US";
+    R.interimResults = true;
+    R.maxAlternatives = 5;
+    R.continuous = false;
     return R;
   }
   function whenIdle() {
@@ -131,9 +130,9 @@
   }
   function flushIdle() { var w = waiters; waiters = []; w.forEach(function (f) { f(); }); }
 
-  /* The sound comes out of the phone's earpiece, not its speaker, after the microphone
-     has been used on iPhone (why "hear myself" seemed silent). Safari 16.4+ lets a page
-     say what the sound is for: "play-and-record" while listening, "playback" to play. */
+  /* What the phone's audio is for (Safari 16.4+): "play-and-record" while listening, and
+     back to "auto" when it ends. Not "playback": a session left in playback is exactly
+     what stops the next recognition getting the microphone on iPhone. */
   function audioFor(kind) {
     try { if (global.navigator && global.navigator.audioSession) global.navigator.audioSession.type = kind; } catch (e) {}
   }
@@ -162,7 +161,7 @@
           clearTimeout(t); clearTimeout(settle);
           if (current === r) current = null;
           finisher = null; killer = null;
-          audioFor("playback");
+          audioFor("auto");
           var got = finals.length ? finals : (interim ? [interim] : []);
           mark(err ? "error:" + err.message : "done:" + got.length);
           if (err && !got.length) reject(err); else resolve(got);
@@ -188,7 +187,7 @@
           if (opt.onHear) opt.onHear(finals[0] || interim);
           if (anyFinal) { clearTimeout(settle); settle = setTimeout(function () { try { r.stop(); } catch (x) {} finish(); }, 350); }
         };
-        r.onerror = function (e) { mark("err:" + (e && e.error)); finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
+        r.onerror = function (e) { mark("err:" + (e && e.error) + (e && e.message ? "(" + e.message + ")" : "")); finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
         r.onend = function () { mark("end"); active = false; flushIdle(); finish(); };
         audioFor("play-and-record");
         try { active = true; r.start(); mark("tap"); } catch (e) { active = false; mark("start-failed"); finish(e); }

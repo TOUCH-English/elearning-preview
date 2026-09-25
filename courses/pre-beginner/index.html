@@ -1015,8 +1015,9 @@ async function recLoad(key){
    the microphone had been used (「没有办法播放听回自己的声音」): say it is playback first.
    A refused play is reported through onErr instead of vanishing. */
 function playBlob(blob, onErr){
+ // iPhone: through Web Audio (shared/voice.js), so playing it back does not take the microphone away from the next 跟着说
+ if(window.TouchVoice && TouchVoice.playBlob){ TouchVoice.playBlob(blob, onErr); return; }
  try{
-  try{ if(navigator.audioSession) navigator.audioSession.type = "playback"; }catch(e){}
   const url = URL.createObjectURL(blob);
   REC.audio = new Audio(url);
   REC.audio.setAttribute("playsinline", "");
@@ -1912,7 +1913,7 @@ function ownHit(h, keys, line){
    Continue opens on a pass or after two tries, and 「现在不方便说」 moves on at once.
    Without it — or when it fails on this device (no permission, no network) — the old
    record-and-play-back, and without a microphone a plain "say it aloud". */
-let SPEECH_OFF = false;
+let SPEECH_OFF = false, MIC_OK = false;
 const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 /* What the mic does, said before and after (Marco 2026-09-25 on his iPhone: 「我不知道开麦克风
    最后会出现什么…要它出现了，我才知道你要我做什么」): three numbered steps under the mic,
@@ -1936,6 +1937,8 @@ function mountSpeech(host, o){
   } else host.innerHTML = `<div class="spmsg" style="margin-top:16px">${esc(note ? note+" " : "")}${esc(t.sayAloud)}</div>`;
  };
  if(SPEECH_OFF || !(window.TouchSpeech && TouchSpeech.available)) return fallback("");
+ // asked here, not in the tap: anything awaited inside the tap loses it, and iPhone needs the tap to start listening
+ try{ if(!MIC_OK && navigator.permissions && navigator.permissions.query) navigator.permissions.query({name:"microphone"}).then(p=>{ MIC_OK = p.state==="granted"; }, ()=>{}); }catch(e){}
  let tries = 0, busy = false;
  host.innerHTML = `<button class="micbig" id="mic" type="button" aria-label="${esc(t.micTap)}">${MIC_SVG}</button>
   <div class="spmsg" id="spmsg">${esc(t.micTap)}</div>
@@ -1969,10 +1972,12 @@ function mountSpeech(host, o){
   };
   /* The phone sometimes never starts listening (seen on iPhone, second sentence of a
      lesson): after 4 s without a start, stop and say so, rather than wait silently. */
-  const watchdog = setTimeout(()=>{ if(!started){ err = err || "no-start"; TouchSpeech.stop(); } }, 4000);
+  /* …but not while the phone is still asking for permission (the first time ever, two
+     dialogs: speech recognition and the microphone) — then it waits much longer. */
+  const watchdog = setTimeout(()=>{ if(!started){ err = err || "no-start"; TouchSpeech.stop(); } }, MIC_OK ? 4000 : 20000);
   try{
    heard = await TouchSpeech.listen({maxMs: 9000, record: true, log: x=>trail.push(x), onRecorded: b=>{ mine = b; addMine(); },
-    onStart: ()=>{ started = true; mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
+    onStart: ()=>{ started = true; MIC_OK = true; mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
     onHear: txt=>{ if(hd) hd.textContent = "“"+txt+"”"; }});
   }catch(e){ err = err || String((e && e.message) || e || "error"); }
   clearTimeout(watchdog);
@@ -2076,8 +2081,17 @@ function mountRecorder(host, key, onRecorded){
    REC.recorder = new MediaRecorder(REC.stream);
    REC.recorder.ondataavailable = e=>{ if(e.data) chunks.push(e.data); };
    REC.recorder.onstop = ()=>{
-    blob = new Blob(chunks, {type: REC.recorder.mimeType || "audio/webm"});
+    const got = new Blob(chunks, {type: REC.recorder.mimeType || "audio/webm"});
+    const track = (REC.stream && REC.stream.getAudioTracks()[0]) || null;
     try{ REC.stream.getTracks().forEach(tr=>tr.stop()); }catch(e){}
+    /* An empty recording (the phone gave the page a microphone that was already closed —
+       seen when it is still held by speech recognition) must say so, not claim "saved"
+       and then play silence. */
+    if(!got.size){
+     $("speaknote").textContent = (({zh:"没有录到声音，请再录一次。", ms:"Tiada suara dirakam — sila rakam semula.", en:"Nothing was recorded — please record again."})[S.lang] || "")+" (0 bytes"+(track ? ", mic "+track.readyState : "")+")";
+     uiIdle(); return;
+    }
+    blob = got;
     recSave(key, blob);
     if(!awarded){ awarded = true; if(onRecorded) onRecorded(); }
     $("speaknote").textContent = t.speakSaved;
