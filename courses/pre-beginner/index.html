@@ -124,6 +124,9 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .pprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-deep));border-radius:99px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
 .pxp{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--gold-deep);white-space:nowrap}
 .combochip{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--danger-d);white-space:nowrap;animation:pop .2s ease-out}
+.spheard{min-height:22px;margin-top:6px;text-align:center;font-weight:700;color:#33415C;font-size:15px}
+.spmsg.live{color:#1E8A55;font-weight:700}
+.micbig.wait{opacity:.6;animation:none!important}
 .pskip{flex:none;border:1px solid var(--te-line,#DFE5F0);background:#fff;color:var(--te-brand,#15357B);font-weight:700;font-size:12.5px;border-radius:999px;padding:6px 11px;margin-left:6px;cursor:pointer}
 .stephead{display:flex;gap:12px;align-items:flex-end;margin-bottom:6px}.stephtext{flex:1;min-width:0}.coachslot{flex:none;margin:-6px 0 0 -4px}.coachslot:empty{display:none}
 .stepcard{background:var(--surface);border:1px solid #E6EBF2;border-radius:20px;box-shadow:var(--sh-md);padding:22px 18px}
@@ -1909,18 +1912,28 @@ function mountSpeech(host, o){
  let tries = 0, busy = false;
  host.innerHTML = `<button class="micbig" id="mic" type="button" aria-label="${esc(t.micTap)}">${MIC_SVG}</button>
   <div class="spmsg" id="spmsg">${esc(t.micTap)}</div>
+  <div class="spheard" id="spheard"></div>
   <button class="linkbtn" id="later" type="button">${esc(t.spLater)}</button>`;
  const msg = (s, cls)=>{ const m = $("spmsg"); if(m){ m.textContent = s; m.className = "spmsg"+(cls?" "+cls:""); } };
  $("later").onclick = ()=>{ allow(); if(go) go.click(); };
  $("mic").onclick = async ()=>{
-  if(busy) return;
+  /* A second tap while listening stops it now and keeps what was heard (Marco 2026-09-25 on
+     his iPhone: 「关麦…一直关不到」). "Speak now" shows only once the phone is really taking
+     sound, and the words appear as they are heard (「开麦好像录不到我的声音」). */
+  if(busy){ TouchSpeech.finish(); return; }
   busy = true;
   try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){}
-  const mic = $("mic");
-  mic.classList.add("on"); msg(t.listening, "");
+  const W = ({zh:{wait:"准备中…", stop:"说完再按一下麦克风"}, ms:{wait:"Bersedia…", stop:"Tekan mikrofon sekali lagi bila selesai"}, en:{wait:"Getting ready…", stop:"Tap the mic again when you finish"}})[S.lang] || {wait:"…", stop:""};
+  const mic = $("mic"), hd = $("spheard");
+  mic.classList.add("on", "wait"); msg(W.wait, ""); if(hd) hd.textContent = "";
   if(COACH) COACH.pose("listen");
   let heard = [], err = "";
-  try{ heard = await TouchSpeech.listen({maxMs: 8000}); }catch(e){ err = String((e && e.message) || e || "error"); }
+  try{
+   heard = await TouchSpeech.listen({maxMs: 9000,
+    onStart: ()=>{ mic.classList.remove("wait"); msg(t.listening+" · "+W.stop, "live"); },
+    onHear: txt=>{ if(hd) hd.textContent = "“"+txt+"”"; }});
+  }catch(e){ err = String((e && e.message) || e || "error"); }
+  mic.classList.remove("wait");
   busy = false;
   if(!host.isConnected) return;                                    // moved on while it listened
   mic.classList.remove("on");

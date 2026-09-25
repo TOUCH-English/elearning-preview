@@ -17,7 +17,8 @@
    `available` is false and the course falls back to record-and-play-back.
 
      TouchSpeech.available                                   // boolean
-     TouchSpeech.listen({ onStart, maxMs }) -> Promise<string[]>   // what it heard, best first
+     TouchSpeech.listen({ onStart, onHear, maxMs }) -> Promise<string[]>   // what it heard, best first
+     TouchSpeech.finish()                     // stop now, keep what was heard
      TouchSpeech.check(target, heard)  -> { words: [{ w, ok }], ok: n, total: n, pass: bool }
      TouchSpeech.stop()
      TouchSpeech.normalize(text) -> string    // lower case, no punctuation, contractions spelled out
@@ -74,6 +75,15 @@
     return best;
   }
 
+  /* Listening, the way a phone needs it (Marco 2026-09-25 on his iPhone: 「开麦好像录不到
+     我的声音…关麦…一直关不到…慢一拍」):
+     - the recogniser takes a moment to start after the tap; onStart fires only when it is
+       really taking sound (onaudiostart), so the screen says "speak now" at the right time;
+     - words arrive live (interim results) through onHear, so the learner sees it hearing;
+     - it stops by itself as soon as a phrase is final, instead of waiting for the phone to
+       decide the learner is silent, which on iPhone can take several seconds;
+     - finish() stops at once and keeps what was heard so far (a second tap on the mic). */
+  var finisher = null;
   function listen(opt) {
     opt = opt || {};
     return new Promise(function (resolve, reject) {
@@ -81,28 +91,46 @@
       stop();
       var r = new Rec();
       r.lang = "en-US";
-      r.interimResults = false;
+      r.interimResults = true;
       r.maxAlternatives = 5;
       r.continuous = false;
       current = r;
-      var got = [], done = false;
+      var finals = [], interim = "", done = false, started = false, settle = null;
       var finish = function (err) {
         if (done) return;
         done = true;
-        clearTimeout(t);
-        current = null;
+        clearTimeout(t); clearTimeout(settle);
+        current = null; finisher = null;
+        var got = finals.length ? finals : (interim ? [interim] : []);
         if (err && !got.length) reject(err); else resolve(got);
       };
-      var t = setTimeout(function () { try { r.stop(); } catch (e) { finish(); } }, opt.maxMs || 8000);
-      r.onstart = function () { if (opt.onStart) opt.onStart(); };
+      finisher = function () { try { r.stop(); } catch (e) {} settle = setTimeout(function () { finish(); }, 700); };
+      var t = setTimeout(function () { finisher && finisher(); }, opt.maxMs || 8000);
+      var begin = function () { if (!started) { started = true; if (opt.onStart) opt.onStart(); } };
+      r.onaudiostart = begin;
+      r.onstart = function () { if (!("onaudiostart" in r)) begin(); };
       r.onresult = function (e) {
-        for (var i = 0; i < e.results.length; i++) for (var j = 0; j < e.results[i].length; j++) got.push(e.results[i][j].transcript);
+        begin();
+        var live = "", anyFinal = false;
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          var res = e.results[i];
+          if (res.isFinal) {
+            anyFinal = true;
+            for (var j = 0; j < res.length; j++) if (finals.indexOf(res[j].transcript) < 0) finals.push(res[j].transcript);
+          } else live += res[0].transcript;
+        }
+        interim = live || interim;
+        if (opt.onHear) opt.onHear(finals[0] || interim);
+        if (anyFinal) { clearTimeout(settle); settle = setTimeout(function () { try { r.stop(); } catch (x) {} finish(); }, 350); }
       };
       r.onerror = function (e) { finish(new Error(e && e.error || "error")); };   // "not-allowed", "no-speech", …
       r.onend = function () { finish(); };
       try { r.start(); } catch (e) { finish(e); }
     });
   }
+
+  /* Stop now and keep what was heard (the learner tapped the mic again). */
+  function finishNow() { if (finisher) finisher(); }
 
   function stop() { if (current) { try { current.abort(); } catch (e) {} current = null; } }
 
@@ -115,5 +143,5 @@
     return t.replace(/\bmister\b/g, "mr").replace(/\b(\d{1,2}) 00\b/g, "$1 o'clock");
   }
 
-  global.TouchSpeech = { available: !!Rec, listen: listen, check: check, stop: stop, normalize: normalize };
+  global.TouchSpeech = { available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize };
 })(typeof globalThis !== "undefined" ? globalThis : window);
