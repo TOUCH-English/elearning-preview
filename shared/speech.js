@@ -34,7 +34,24 @@
   function norm(s) {
     return String(s || "").toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim();
   }
-  function words(s) { return norm(s).split(" ").filter(Boolean); }
+  /* numbers said as words and written as digits are the same answer ("ten p.m." / "10pm",
+     "twenty-eight" / "28"); "a.m." / "am" and "p.m." / "pm" too */
+  var NUM = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,
+    fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,
+    seventy:70,eighty:80,ninety:90,hundred:100};
+  function numbers(t) {
+    t = t.replace(/\b(\d+)(am|pm)\b/g, "$1 $2").replace(/\ba m\b/g, "am").replace(/\bp m\b/g, "pm");
+    var w = t.split(" "), out = [];
+    for (var i = 0; i < w.length; i++) {
+      var a = NUM[w[i]];
+      if (a !== undefined && a >= 20 && a < 100 && a % 10 === 0 && NUM[w[i + 1]] !== undefined && NUM[w[i + 1]] < 10) { out.push(String(a + NUM[w[i + 1]])); i++; }
+      else if (a !== undefined && w[i] !== "one") out.push(String(a));
+      else out.push(w[i]);
+    }
+    return out.join(" ");
+  }
+  function days(t) { return t.replace(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)s\b/g, "$1"); }
+  function words(s) { return days(numbers(norm(s).replace(/-/g, " "))).split(" ").filter(Boolean); }
 
   function lev(a, b) {
     if (a === b) return 0;
@@ -66,7 +83,18 @@
       (/e$/.test(short) && (long === short.slice(0, -1) + "ing" || long === short.slice(0, -1) + "ed")) ||
       (/y$/.test(short) && (long === short.slice(0, -1) + "ies" || long === short.slice(0, -1) + "ied"));
   }
-  function grammarTwin(a, b) { return a !== b && (twinOf(a, b) || twinOf(b, a)); }
+  /* irregular pasts: "go" for "went" is the same mistake as "visit" for "visited" */
+  var IRREG = {go:"went",have:"had",eat:"ate",see:"saw",buy:"bought",come:"came",take:"took",make:"made",get:"got",meet:"met",
+    is:"was",are:"were",do:"did",say:"said",tell:"told",think:"thought",give:"gave",find:"found",leave:"left",feel:"felt",
+    spend:"spent",sleep:"slept",write:"wrote",drive:"drove",ride:"rode",swim:"swam",run:"ran",sit:"sat",stand:"stood",
+    know:"knew",bring:"brought",catch:"caught",teach:"taught",pay:"paid",lose:"lost",send:"sent",build:"built",wake:"woke",
+    begin:"began",drink:"drank",forget:"forgot",break:"broke",speak:"spoke",choose:"chose",fall:"fell",hear:"heard",keep:"kept",
+    lend:"lent",put:"put",read:"read",sell:"sold",understand:"understood",win:"won",wear:"wore",fly:"flew",grow:"grew"};
+  function irregTwin(a, b) {
+    for (var k in IRREG) { var v = IRREG[k]; if ((a === k || twinOf(a, k)) && b === v || (b === k || twinOf(b, k)) && a === v) return true; }
+    return false;
+  }
+  function grammarTwin(a, b) { return a !== b && (twinOf(a, b) || twinOf(b, a) || irregTwin(a, b)); }
   function near(a, b) { return a === b || (a.length >= 5 && !grammarTwin(a, b) && lev(a, b) <= 1); }
 
   /* The small words that carry the grammar — leave one out and the sentence is wrong
@@ -74,7 +102,9 @@
      the model must be heard. Articles are not in the list: a missing "a"/"the" is the one
      slip a long, otherwise right sentence may keep. */
   var CRITICAL = ["am", "is", "are", "was", "were", "be", "been", "do", "does", "did", "have", "has", "had",
-    "can", "could", "will", "would", "should", "not", "never", "and", "but", "because", "so", "or", "then", "to",
+    "can", "could", "will", "would", "should", "not", "never", "because", "to",
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
     "i", "you", "he", "she", "it", "we", "they", "my", "your", "his", "her", "our", "their"];
 
   /* Which words of the model came through, IN ORDER (the longest ordered match between the
@@ -93,9 +123,11 @@
       var tv = [];
       tw.forEach(function (raw, ri) {
         var w = norm(raw); if (!w) return;
-        var parts = (SAME[w] || w).split(" ");
+        var parts = days(numbers((SAME[w] || w).replace(/-/g, " "))).split(" ").filter(Boolean);
         var isName = parts.every(function (p) { return names.indexOf(p) >= 0; });
-        parts.forEach(function (p) { tv.push({ p: p, ri: ri, name: isName }); });
+        // a place or other proper name in mid-sentence (Kulai, Johor Bahru, Room 5) must be the right one
+        var proper = !isName && ri > 0 && /^[A-Z]/.test(raw) && raw !== "I" && !/[.!?]$/.test(tw[ri - 1]);
+        parts.forEach(function (p) { tv.push({ p: p, ri: ri, name: isName, proper: proper }); });
       });
       var n = tv.length, m = hw.length, i, j;
       var eq = function (a, b) { return near(a.p, b) || (a.name && !!b); };
@@ -109,10 +141,16 @@
       }
       var leftover = hw.filter(function (_, k) { return !usedH[k]; });
       var miss = [], why = "";
+      // a small word or a frequency word that was only MOVED ("Usually I wake up…") is still there
+      var MOVABLE = CRITICAL.concat(["usually", "sometimes", "always", "often", "normally", "also", "too", "now", "today", "here", "there"]);
+      var spare = leftover.slice();
       tv.forEach(function (t, k) {
         if (hit[k]) return;
+        var at = spare.indexOf(t.p);
+        if (at >= 0 && MOVABLE.indexOf(t.p) >= 0 && !/day$/.test(t.p)) { spare.splice(at, 1); hit[k] = true; return; }
         miss.push(t.p);
         if (leftover.some(function (x) { return grammarTwin(t.p, x); })) why = why || "form:" + t.p;
+        else if (t.proper || /day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) why = why || "fact:" + t.p;
         else if (CRITICAL.indexOf(t.p) >= 0) why = why || "small:" + t.p;
       });
       var res = tw.map(function (raw, ri) {
@@ -121,8 +159,12 @@
         return { w: raw, ok: ok };
       });
       var okN = n - miss.length;
-      var allowed = n <= 5 ? 0 : 1;
+      // a longer sentence said another natural way ("so much" for "a lot of", "normally" for "usually") still counts
+      var allowed = n <= 5 ? 0 : n < 10 ? 1 : n < 12 ? 2 : 3;
+      // "missing a small word" only when the misses are small words — otherwise it was said another way
+      if (/^small:/.test(why) && miss.some(function (x) { return CRITICAL.indexOf(x) < 0; })) why = "";
       var cand = { words: res, ok: okN, total: n, miss: miss, why: why, pass: !why && miss.length <= allowed };
+      if (/^fact:/.test(why)) cand.pass = false;
       if (!best || (cand.pass && !best.pass) || (cand.pass === best.pass && okN > best.ok)) best = cand;
     });
     return best;

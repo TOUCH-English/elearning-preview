@@ -52,25 +52,25 @@ Object.keys(UI_LESSON).forEach(k=>Object.assign(UI[k], UI_LESSON[k]));
 const UI_L1 = {
  zh:{gistK:"先听一段对话",gistSub:"没有字，只用听的。听完回答下面的问题。",gistPlay:"▶ 播放对话",gistStop:"■ 停止",
   loK:"只听不看",loSub:"听这一句（没有字），然后回答。",loWas:"刚才那一句是：",
-  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
+  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
   missionK:"Boss 任务：连说几句",missionSub:"按麦克风，一口气说完；说完再按一下。",missionModel:"看示范",missionHide:"收起示范",missionRetry:"再说完整一点——把上面要求的每一样都说到。",missionNeed:"至少说 {n} 个英文单词",missionGaps:"还缺：{g}。",missionShort:"你说了 {n} 个英文单词，至少要 {m} 个。",
-  whySmall:"少了一个小字：{w}。英文句子里这种字不能省，再说一次。",whyForm:"注意词尾：这里要说 {w}。再说一次。",whyMissing:"红色的字漏掉了或没听清楚，再说一次。",
+  whyFact:"注意：这里要说 {w}。再说一次。",whySmall:"少了一个小字：{w}。英文句子里这种字不能省，再说一次。",whyForm:"注意词尾：这里要说 {w}。再说一次。",whyMissing:"红色的字漏掉了或没听清楚，再说一次。",
   skippedN:"这一课你跳过了 {n} 个开口／听力练习——方便的时候再做一次。",missionGood:"任务完成！说得很完整。",missionS1:"先看上面的要求，想好要说的每一样",
   resumeQ:"上次这一课做到第 {n} 步，要接着做吗？",resumeYes:"接着做",resumeNo:"重新开始",
   roleNote:"练习对话：句子里的年龄、地方照题目说就好，不一定是你自己的情况。",gistEase:"听不懂也没关系，先猜猜看——等一下会学到这些字。"},
  ms:{gistK:"Dengar perbualan dahulu",gistSub:"Tiada teks — dengar sahaja, kemudian jawab soalan di bawah.",gistPlay:"▶ Main perbualan",gistStop:"■ Berhenti",
   loK:"Dengar sahaja",loSub:"Dengar ayat ini (tiada teks), kemudian jawab.",loWas:"Ayat tadi ialah:",
-  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
+  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
   missionK:"Misi Boss: cakap beberapa ayat",missionSub:"Tekan mikrofon dan cakap semuanya; tekan sekali lagi bila selesai.",missionModel:"Lihat contoh",missionHide:"Tutup contoh",missionRetry:"Cakap dengan lebih lengkap — sebut setiap perkara yang diminta.",missionNeed:"Sekurang-kurangnya {n} perkataan Inggeris",missionGaps:"Masih kurang: {g}.",missionShort:"Anda sebut {n} perkataan Inggeris; perlu sekurang-kurangnya {m}.",
-  whySmall:"Kurang satu perkataan kecil: {w}. Dalam ayat Inggeris perkataan ini tidak boleh ditinggalkan. Cuba lagi.",whyForm:"Perhatikan hujung perkataan: sebut {w}. Cuba lagi.",whyMissing:"Perkataan merah tertinggal atau kurang jelas. Cuba lagi.",
+  whyFact:"Perhatian: di sini sebut {w}. Cuba lagi.",whySmall:"Kurang satu perkataan kecil: {w}. Dalam ayat Inggeris perkataan ini tidak boleh ditinggalkan. Cuba lagi.",whyForm:"Perhatikan hujung perkataan: sebut {w}. Cuba lagi.",whyMissing:"Perkataan merah tertinggal atau kurang jelas. Cuba lagi.",
   skippedN:"Anda melangkau {n} latihan bercakap/mendengar dalam pelajaran ini — cuba lagi bila sesuai.",missionGood:"Misi selesai! Lengkap sekali.",missionS1:"Baca tugasan di atas dan fikir setiap perkara yang perlu disebut",
   resumeQ:"Kali lepas anda berhenti di langkah {n} pelajaran ini. Sambung?",resumeYes:"Sambung",resumeNo:"Mula semula",
   roleNote:"Dialog latihan: umur dan tempat dalam ayat ikut soalan sahaja, bukan semestinya tentang anda.",gistEase:"Tak faham pun tak apa — teka dahulu. Perkataan ini akan diajar sekejap lagi."},
  en:{gistK:"Listen to the conversation first",gistSub:"No text — just listen, then answer the question below.",gistPlay:"▶ Play the conversation",gistStop:"■ Stop",
   loK:"Listen only",loSub:"Listen to this sentence (no text), then answer.",loWas:"The sentence was:",
-  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
+  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
   missionK:"Boss mission: say a few sentences",missionSub:"Tap the mic and say it all; tap again when you finish.",missionModel:"See an example",missionHide:"Hide the example",missionRetry:"Say a bit more — cover everything the task asks for.",missionNeed:"At least {n} English words",missionGaps:"Still missing: {g}.",missionShort:"You said {n} English words; at least {m} are needed.",
-  whySmall:"A small word is missing: {w}. English sentences need it — say it again.",whyForm:"Check the ending: say {w} here. Try again.",whyMissing:"The red words were missing or unclear. Say it again.",
+  whyFact:"Check: it should be {w} here. Try again.",whySmall:"A small word is missing: {w}. English sentences need it — say it again.",whyForm:"Check the ending: say {w} here. Try again.",whyMissing:"The red words were missing or unclear. Say it again.",
   skippedN:"You skipped {n} speaking/listening steps in this lesson — try them when you can.",missionGood:"Mission complete! Very full answer.",missionS1:"Read the task above and plan each thing you need to say",
   resumeQ:"Last time you stopped at step {n} of this lesson. Carry on?",resumeYes:"Carry on",resumeNo:"Start again",
   roleNote:"Practice dialogue: the ages and places are part of the exercise, not necessarily about you.",gistEase:"It's fine not to understand yet — have a guess. You'll learn these words next."}
@@ -734,6 +734,7 @@ function whyText(why, hidden){
  const t = T(), w = String(why||"").split(":")[1] || "";
  if(/^small:/.test(why)) return fmt(t.whySmall, {w});
  if(/^form:/.test(why)) return fmt(t.whyForm, {w});
+ if(/^fact:/.test(why)) return fmt(t.whyFact, {w: w.charAt(0).toUpperCase()+w.slice(1)});
  return hidden ? t.stransRetry : t.whyMissing;
 }
 function ex0(){ return (P && lessonExtra(P.mi, P.li)) || {}; }
@@ -1213,7 +1214,15 @@ if(TESTMODE){
  setTimeout(testBar, 300);
 }
 
+/* a double tap on Continue must not skip the next screen (round 2: two new-word screens in a
+   row, and a double tap jumped over three words). Its Continue answers only after 450 ms. */
+let STEP_AT = 0;
+document.addEventListener("click", e=>{
+ const b = e.target.closest && e.target.closest("#go");
+ if(b && Date.now()-STEP_AT < 450){ e.stopPropagation(); e.preventDefault(); }
+}, true);
 function nextStep(){
+ STEP_AT = Date.now();
  P.idx++;
  if(P.idx>=P.steps.length){ try{ store.set("run", null); }catch(e){} return finishLesson(); }
  saveRun();
@@ -1314,10 +1323,12 @@ function greetFits(line, n){
    repeat and translation); here what counts is saying the thing. */
 function lemma(t){
  return " "+String(t).replace(/\b(am|is|are)\s+(\w+ing)\b/g, "$2").split(/\s+/).filter(Boolean)
-  .map(w=>w.length>4 ? w.replace(/(ing|ed|es|s)$/, "") : w).join(" ")+" ";
+  .map(w=>w.length>4 ? w.replace(/(ing|ed|es|s)$/, "").replace(/e$/, "") : w).join(" ")+" ";
 }
 function lemmaHit(hay, key){ const k = spNorm(px(key)); return hay.includes(" "+k+" ") || lemma(hay.trim()).includes(lemma(k)); }
 const QWORD = /^(where|when|what|which|who|whose|why|how|do|does|did|are|is|was|were|can|could|would|will|have|has)\b/;
+/* a question word straight into its subject — "where you live", "how you today": are/do/did is missing */
+const NOAUX = /^(how|where|what|when|which|who|why)( (time|much|many|long|often))? (you|he|she|they|it|we)\b/;
 const STOPW = new Set("i you he she it we they a an the do does did is are am was were to in at on of for and but my your his her our what where when which who how can could would will have has please".split(" "));
 function ownHit(h, keys, line, ask){
  const n = spNorm(h);
@@ -1330,12 +1341,17 @@ function ownHit(h, keys, line, ask){
  if(!ask && GREET.test(L) && !/\?\s*$/.test(String(line||"")) && GREET.test(n)) return greetFits(L, n);
  const hay = " "+n+" ";
  const name = spNorm(S.name || PRACTICE_NAME);
- const content = [...new Set((keys||[]).flatMap(k=>spNorm(px(k)).split(" ")).filter(w=>w && !STOPW.has(w)))];
- const shares = content.some(c=>lemma(n).includes(lemma(c)));
- // an "ask them" turn: any real question about the right thing
- if(ask && QWORD.test(n) && n.split(" ").length>=3 && shares) return true;
- // an answer: a sentence of four words or more that talks about the right thing
- if(!ask && n.split(" ").length>=4 && shares && !(L && (" "+L+" ").includes(" "+n+" "))) return true;
+ /* An "ask them" turn: a real question (with its are/do/did) that covers most of what one of the
+    keys asks about — "When do you wake up?" meets "what time do you wake up"; "What time do you
+    start work?" does not. (Round 2 of the student test: matching on ONE shared word let "Could
+    you speak English?" and "So the meeting is on Tuesday…" through.) An answer needs one of its
+    key phrases, word stems allowed ("I'm working in" meets "i work in"). */
+ if(ask && NOAUX.test(n)) return false;
+ if(ask && QWORD.test(n) && n.split(" ").length>=3){
+  const mine = lemma(n);
+  const cover = k=>{ const cw = spNorm(px(k)).split(" ").filter(w=>w && !STOPW.has(w)); return cw.length ? cw.filter(w=>mine.includes(lemma(w))).length/cw.length : 0; };
+  if((keys||[]).some(k=>cover(k) >= 0.6)) return true;
+ }
  return (keys||[]).some(k=>{
   // the learner's own name is spelled freely by recognisers: match the words around it
   const nk = spNorm(px(k));
@@ -1690,7 +1706,10 @@ function renderStep(){
   $("go").onclick = ()=>{ if(st.tries2) pay(); nextStep(); };
   const missing = heard=>{
    const h = " "+spNorm((heard||[]).join(" "))+" ", n = h.trim() ? h.trim().split(/\s+/).length : 0;
-   const gaps = M.groups.filter(g=>!g.some(k=>lemmaHit(h, k))).map(g=>g[0]);
+   const said = new Set(h.trim().split(/\s+/));
+   const closest = g=>g.slice().sort((a,b)=>spNorm(px(b)).split(" ").filter(w=>said.has(w)).length - spNorm(px(a)).split(" ").filter(w=>said.has(w)).length)[0];
+   const cap = x=>{ const v = px(x); return v.charAt(0).toUpperCase()+v.slice(1).replace(/\bi\b/g, "I"); };
+   const gaps = M.groups.filter(g=>!g.some(k=>lemmaHit(h, k))).map(g=>cap(closest(g)));
    return (gaps.length ? fmt(t.missionGaps, {g: gaps.join(" · ")})+" " : "") + (n < M.minWords ? fmt(t.missionShort, {n, m:M.minWords}) : "");
   };
   mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-mission", long: true, good: t.missionGood,
@@ -1908,7 +1927,8 @@ function renderStep(){
      screen as a red ✗ (walkthrough 2026-09-25). 「现在不方便说」 earns nothing. */
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); };
   $("go").onclick = ()=>{ if(st.tried && st.tries2) pay(); nextStep(); };
-  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: heard=>{ const q = (heard||[]).some(h=>QWORD.test(spNorm(h))); return st.ask ? (q ? t.ownAskTopic : t.ownAskRetry) : t.ownRetry; }, good: t.ownGood,
+  mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.ask && hs.some(h=>NOAUX.test(h))) return t.ownAskAux;
+    const q = hs.some(h=>QWORD.test(h)); return st.ask ? (q ? t.ownAskTopic : t.ownAskRetry) : t.ownRetry; }, good: t.ownGood,
    model: ()=>speak(st.line, null, false, true), hearLabel: t.hearModel2,
    reveal: st.keys[0] ? st.keys[0].charAt(0).toUpperCase()+st.keys[0].slice(1)+(st.ask ? "?" : " …") : "",
    s1: ({zh:"先听对方说什么（点对话泡泡可以再听）", ms:"Dengar apa yang dia kata (tekan gelembung untuk dengar lagi)", en:"Listen to what they say (tap the bubble to hear it again)"})[S.lang],
@@ -2181,7 +2201,7 @@ function renderDialog(box, stepNum, l){
  function pushYou(text){
   /* 学生刚拼好的那一句 —— 让他听一次正确的念法，再进下一句 */
   const sayable = String(text).replace(/\s+([.,!?;:])/g,"$1").trim();
-  rendered.push(`<div class="dline you"><span class="who">${esc(t.you[0]||"Y")}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" role="button" tabindex="0">${esc(text)}</span></span></div>`);
+  rendered.push(`<div class="dline you"><span class="who">${esc(t.you||"Y")}</span><span class="bub"><span class="en" data-say="${esc(sayable)}" role="button" tabindex="0">${esc(text)}</span></span></div>`);
  }
  /* the other person's new lines, played one after another once the screen is drawn */
  let pendingSay = [];
