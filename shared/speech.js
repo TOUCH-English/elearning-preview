@@ -91,7 +91,13 @@
      "audio-capture" or never starts): noRecording() switches recording off on this
      device for good, and listening goes on as before. */
   var NOREC = "touch-speech-norecord";
+  /* Never on iPhone / iPad: tried there on 2026-09-25 and the second recognition was
+     aborted, listening started late and his voice came back twice — the phone will not
+     share the microphone. There the course offers a separate record-and-play instead. */
+  var IOS = /iP(hone|ad|od)/.test(global.navigator && global.navigator.userAgent || "") ||
+    (/Macintosh/.test(global.navigator && global.navigator.userAgent || "") && (global.navigator.maxTouchPoints || 0) > 1);
   function canRecord() {
+    if (IOS) return false;
     try { if (global.localStorage && global.localStorage.getItem(NOREC)) return false; } catch (e) {}
     return !!(global.MediaRecorder && global.navigator && global.navigator.mediaDevices && global.navigator.mediaDevices.getUserMedia);
   }

@@ -127,6 +127,7 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .spsteps{margin:14px auto 4px;padding:0 0 0 20px;max-width:320px;text-align:left;color:#51607A;font-size:13.5px;line-height:1.7}
 .spres{margin:12px 0 4px;border-radius:16px;padding:12px 14px;text-align:left}
 .spres.ok{background:#DDF6E6;color:#1E6B43}.spres.no{background:#FDECEC;color:#9E2E47}
+.sprecbox{margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.08)}
 .spres .spcode{margin-top:4px;font-size:11px;color:#8C97A8}
 .spres .sph{font-weight:800;font-size:16px}.spres .spb{margin-top:4px;font-size:14px;color:#33415C}
 .spres .spbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.spres .spbtns .btn{min-width:30%}.spres .spbtns .btn{flex:1;padding:9px 10px;font-size:14px}
@@ -1912,9 +1913,9 @@ const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
    and after listening a result card — what it heard, a clear verdict, try again / hear it. */
 function SPK_TXT(){
  return ({
-  zh:{mine:"听我自己", s1:"先听示范（上面的喇叭）", s2:"按麦克风，看到「正在听」再说", s3:"说完再按一下，结果会出现在这里", you:"我听到你说：", none:"我没有听到声音。", noneTip:"等画面出现「正在听」再开口，嘴巴离手机近一点。", again:"再说一次", hear:"听示范", ok:"说得很清楚！", red:"红色的字没听清楚，再说一次。"},
-  ms:{mine:"Dengar suara saya", s1:"Dengar contoh dahulu (pembesar suara di atas)", s2:"Tekan mikrofon, tunggu “Sedang mendengar”, kemudian bercakap", s3:"Selesai? Tekan sekali lagi — keputusan muncul di sini", you:"Saya dengar:", none:"Saya tidak dengar suara anda.", noneTip:"Tunggu “Sedang mendengar” dahulu, dan dekatkan telefon.", again:"Cuba lagi", hear:"Dengar contoh", ok:"Sangat jelas!", red:"Perkataan merah tidak jelas — sebut sekali lagi."},
-  en:{mine:"Hear myself", s1:"Listen to the model first (the speaker above)", s2:"Tap the mic, wait for “Listening”, then speak", s3:"Tap again when you finish — the result appears here", you:"I heard:", none:"I didn't hear anything.", noneTip:"Wait for “Listening” before you speak, and hold the phone closer.", again:"Say it again", hear:"Hear the model", ok:"Very clear!", red:"The red words didn't come through — say it again."}
+  zh:{recMe:"录下来听听自己", mine:"听我自己", s1:"先听示范（上面的喇叭）", s2:"按麦克风，看到「正在听」再说", s3:"说完再按一下，结果会出现在这里", you:"我听到你说：", none:"我没有听到声音。", noneTip:"等画面出现「正在听」再开口，嘴巴离手机近一点。", again:"再说一次", hear:"听示范", ok:"说得很清楚！", red:"红色的字没听清楚，再说一次。"},
+  ms:{recMe:"Rakam & dengar diri sendiri", mine:"Dengar suara saya", s1:"Dengar contoh dahulu (pembesar suara di atas)", s2:"Tekan mikrofon, tunggu “Sedang mendengar”, kemudian bercakap", s3:"Selesai? Tekan sekali lagi — keputusan muncul di sini", you:"Saya dengar:", none:"Saya tidak dengar suara anda.", noneTip:"Tunggu “Sedang mendengar” dahulu, dan dekatkan telefon.", again:"Cuba lagi", hear:"Dengar contoh", ok:"Sangat jelas!", red:"Perkataan merah tidak jelas — sebut sekali lagi."},
+  en:{recMe:"Record and hear myself", mine:"Hear myself", s1:"Listen to the model first (the speaker above)", s2:"Tap the mic, wait for “Listening”, then speak", s3:"Tap again when you finish — the result appears here", you:"I heard:", none:"I didn't hear anything.", noneTip:"Wait for “Listening” before you speak, and hold the phone closer.", again:"Say it again", hear:"Hear the model", ok:"Very clear!", red:"The red words didn't come through — say it again."}
  })[S.lang] || {s1:"",s2:"",s3:"",you:"",none:"",noneTip:"",again:"",hear:"",ok:"",red:""};
 }
 function mountSpeech(host, o){
@@ -1948,6 +1949,7 @@ function mountSpeech(host, o){
   const W = ({zh:{wait:"准备中…", stop:"说完再按一下麦克风"}, ms:{wait:"Bersedia…", stop:"Tekan mikrofon sekali lagi bila selesai"}, en:{wait:"Getting ready…", stop:"Tap the mic again when you finish"}})[S.lang] || {wait:"…", stop:""};
   const mic = $("mic"), hd = $("spheard");
   mic.classList.add("on", "wait"); msg(W.wait, ""); if(hd) hd.textContent = "";
+  { const old = $("spres"); if(old){ old.className = "spres hidden"; old.innerHTML = ""; } }   // the last try's card goes
   if(COACH) COACH.pose("listen");
   let heard = [], err = "", started = false, mine = null;
   const recTried = TouchSpeech.canRecord && TouchSpeech.canRecord();
@@ -1990,6 +1992,17 @@ function mountSpeech(host, o){
    res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(X.hear)}</button>` : ""}</div>`;
    $("spagain").onclick = ()=>$("mic").click();
    addMine();
+   /* where the phone cannot record while it recognises (iPhone), hearing yourself is a
+      separate recording: the record-and-play used before speech recognition came in */
+   if(!recTried && CANREC && !$("sprec")){
+    res.querySelector(".spbtns").insertAdjacentHTML("afterbegin", `<button type="button" class="btn btn-ghost" id="sprec">🎙 ${esc(SPK_TXT().recMe)}</button>`);
+    $("sprec").onclick = ()=>{
+     try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){}
+     const box2 = document.createElement("div"); box2.className = "sprecbox";
+     res.appendChild(box2); $("sprec").remove();
+     mountRecorder(box2, o.key+"-me", ()=>{});
+    };
+   }
    if(o.model && $("sphear")) $("sphear").onclick = ()=>o.model();
   };
   const more = tries>=2 ? " "+t.spMoveOn : "";
