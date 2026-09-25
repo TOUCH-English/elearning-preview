@@ -132,7 +132,6 @@ body.sound-off .spk{opacity:.3;pointer-events:none}
 .spres .sph{font-weight:800;font-size:16px}.spres .spb{margin-top:4px;font-size:14px;color:#33415C}
 .spres .spbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.spres .spbtns .btn{min-width:30%}.spres .spbtns .btn{flex:1;padding:9px 10px;font-size:14px}
 .bzrow{display:flex;align-items:flex-start;gap:8px}.bzrow .buildzone{flex:1}
-.bzspk{flex:none;width:40px;height:40px;margin-top:6px;border-radius:50%;border:0;background:var(--te-brand-soft,#EAF0FB);color:var(--te-brand,#15357B);display:grid;place-items:center;cursor:pointer}.bzspk svg{width:20px;height:20px}
 .dplay{margin-top:12px}
 .dline.playing .bub{outline:3px solid #84C1F0;outline-offset:2px;border-radius:14px}
 .spheard{min-height:22px;margin-top:6px;text-align:center;font-weight:700;color:#33415C;font-size:15px}
@@ -1627,6 +1626,10 @@ function showFeedback(ok, opts){
  const corrTxt = ok ? (opts.also ? t.alsoCorrect+" "+opts.also : "") : (opts.correct || "");
  $("fbcorr").textContent = corrTxt;
  $("fbcorr").style.display = corrTxt ? "" : "none";
+ /* a wrong answer's right sentence can be heard, on purpose (English only) */
+ const sayCorr = !ok && corrTxt && /[A-Za-z]/.test(corrTxt) && !/[\u3400-\u9fff]/.test(corrTxt) ? corrTxt.replace(/\s+([.,!?;:])/g,"$1").trim() : "";
+ if(sayCorr){ $("fbcorr").setAttribute("data-say", sayCorr); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = "🔊 "+corrTxt; }
+ else { $("fbcorr").removeAttribute("data-say"); $("fbcorr").removeAttribute("role"); }
  $("fbexpl").textContent = opts.expl || "";
  $("fbexpl").style.display = opts.expl ? "" : "none";
  const pooled = !ok && P && P.last && P.last.pooled;
@@ -2430,9 +2433,12 @@ function norm(arr){ return words(arr).join(" ").toLowerCase().replace(/[.,!?;:'"
 function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, display, meta, bubble){
  const t = T();
  /* Tapping a tile is silent (Marco 2026-09-25: reading every tapped word got in the way;
-    Duolingo reads the sentence). The small speaker beside the answer reads what has been
-    built so far — one tile placed, it says that word — and Check plays the whole sentence. */
- const inner = `${bubble||""}<div class="bzrow"><div class="buildzone" id="bz"></div><button type="button" class="bzspk hidden" id="bzspk" aria-label="play">${SPK_SVG}</button></div>
+    Duolingo reads the sentence). Nothing reads the learner's own arrangement: a wrong order
+    read aloud is a wrong sentence heard in a real voice, and heard often enough it sticks
+    (Marco 2026-09-25: 「如果我做错…硬按那个喇叭…以后我的语音就会很奇怪」). So the sentence
+    is read only once Check says it is right; when it is wrong, the right one is on the
+    answer sheet with a speaker, for the learner to hear on purpose. */
+ const inner = `${bubble||""}<div class="bzrow"><div class="buildzone" id="bz"></div></div>
   <div class="bank" id="bk">${pool.map((w,i)=>`<button class="wchip" data-i="${i}" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div>
   <div id="fbslot"></div>`;
  box.innerHTML = stepShell(lbl, title, sub, inner,
@@ -2445,12 +2451,10 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
     document.querySelector(`#bk .wchip[data-i="${p.i}"]`).classList.remove("used"); redraw(); };
   });
   $("go").disabled = placed.length===0;
-  const sp = $("bzspk"); if(sp) sp.classList.toggle("hidden", placed.length===0);
  }
  document.querySelectorAll("#bk .wchip").forEach(b=>{
   b.onclick=()=>{ if(b.classList.contains("used"))return; b.classList.add("used"); placed.push({v:b.dataset.v,i:b.dataset.i}); redraw(); };
  });
- $("bzspk").onclick = ()=>{ const txt = placed.map(p=>p.v).join(" ").replace(/\s+([.,!?;:])/g,"$1"); if(txt) speak(txt, $("bzspk")); };
  $("go").onclick=()=>{
   /* 同一组词块常常不只拼得出一句对的话（「Now it is ten o'clock」「At six o'clock I go home」）。
      题目可以带 alt：[另一种完整的正确答案…]，用同一套 norm() 比对，对上任何一句都算对。
@@ -2461,8 +2465,8 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
   if(viaAlt) ok = true;
   const std = display || answer.join(" ");
   document.querySelectorAll(".wchip").forEach(b=>b.disabled=true);
-  // the whole sentence, read once it is checked — the learner's own when it was another right way
-  speak(String(viaAlt || std).replace(/\s+([.,!?;:])/g,"$1"));
+  // the whole sentence, read only when it is right — the learner's own when it was another right way
+  if(ok) speak(String(viaAlt || std).replace(/\s+([.,!?;:])/g,"$1"));
   $("go").disabled = true;
   if(meta) trackAnswer(ok, meta.ref, meta.q, std, expl, placed.map(p=>p.v).join(" "), (title && title!==meta.q ? title+" · " : "")+meta.q+" ["+pool.join(" / ")+"]");
   if(onDone){ onDone(ok, viaAlt); }
