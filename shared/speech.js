@@ -102,6 +102,14 @@
      ("I good", "I twenty-eight years old", "I from Ipoh and I work…"). Every one of them in
      the model must be heard. Articles are not in the list: a missing "a"/"the" is the one
      slip a long, otherwise right sentence may keep. */
+  /* How a place name SOUNDS, for comparing what the phone wrote (Marco's iPhone, 2026-09-25:
+     he said "Ipoh", the phone wrote "Ippo", and the lesson told him 「这里要说 Ipoh」). Letters
+     that sound alike are merged, h/w/y and doubled letters dropped, vowels after the first
+     letter dropped: Ipoh / Ippo → "ip", Kulai / Coolie → "kl", but Kuantan → "kntn". */
+  function soundKey(w) {
+    w = String(w).toLowerCase().replace(/ph/g, "f").replace(/[cq]/g, "k").replace(/z/g, "s").replace(/[hwy]/g, "").replace(/(.)\1+/g, "$1");
+    return w.charAt(0) + w.slice(1).replace(/[aeiou]/g, "");
+  }
   var CRITICAL = ["am", "is", "are", "was", "were", "be", "been", "do", "does", "did", "have", "has", "had",
     "can", "could", "will", "would", "should", "not", "never", "because", "to",
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
@@ -131,7 +139,7 @@
         parts.forEach(function (p) { tv.push({ p: p, ri: ri, name: isName, proper: proper }); });
       });
       var n = tv.length, m = hw.length, i, j;
-      var eq = function (a, b) { return near(a.p, b) || (a.name && !!b); };
+      var eq = function (a, b) { return near(a.p, b) || (a.name && !!b) || (a.proper && b && b.length > 2 && soundKey(a.p) === soundKey(b)); };
       var L = []; for (i = 0; i <= n; i++) { L[i] = []; for (j = 0; j <= m; j++) L[i][j] = 0; }
       for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
         L[i][j] = eq(tv[i], hw[j]) ? 1 + L[i + 1][j + 1] : Math.max(L[i + 1][j], L[i][j + 1]);
