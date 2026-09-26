@@ -208,3 +208,18 @@ input.ios::-moz-range-thumb{ width:28px; height:28px; border:0; border-radius:50
 #fbcorr .rt, .fb-diffwhy .rt{ background:rgba(224,146,46,.26); border-radius:4px; padding:0 3px; }
 .fb-diffwhy{ background:rgba(255,255,255,.65); border-radius:12px; padding:8px 12px; margin:6px 0; font-size:14.5px; display:grid; gap:4px; }
 .fb-diffwhy b{ font-weight:800; }
+
+/* ---------- 🔥 and XP explain themselves when tapped (Marco 2026-09-26) ---------- */
+#combochip, .pxp{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.chipcard{ position:fixed; z-index:61; left:50%; top:74px; transform:translateX(-50%); width:min(340px, calc(100vw - 32px));
+  background:var(--te-surface,#fff); border-radius:20px; padding:18px 18px 16px; box-shadow:0 16px 48px rgba(14,36,86,.2),0 0 0 .5px rgba(0,0,0,.05);
+  display:grid; gap:12px; animation:ccIn .18s ease-out; }
+@keyframes ccIn{ from{ opacity:0; transform:translate(-50%,-6px); } to{ opacity:1; transform:translate(-50%,0); } }
+.chipcard .cc-h{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; color:var(--te-ink,#16202E); }
+.chipcard .cc-ic{ font-size:24px; }
+.chipcard .cc-dots{ display:flex; gap:10px; justify-content:center; }
+.chipcard .cc-dots span{ width:38px; height:38px; border-radius:50%; background:#EFEDE8; display:grid; place-items:center; font-size:18px; }
+.chipcard .cc-dots span.on{ background:#FCE3C4; }
+.chipcard .cc-dots span.mark{ box-shadow:0 0 0 2px var(--te-gold,#D9B56B); }
+.chipcard ul{ margin:0; padding-left:18px; display:grid; gap:6px; font-size:15px; color:var(--te-ink,#16202E); }
+@media (prefers-reduced-motion: reduce){ .chipcard{ animation:none; } }

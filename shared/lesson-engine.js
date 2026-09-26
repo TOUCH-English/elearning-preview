@@ -555,7 +555,7 @@ function openVoicePanel(anchor){
  pn = document.createElement("div"); pn.id = "vpanel"; pn.className = "vpanel";
  const row = (id, min, max, val, left, right, fmtv, label)=>`<div class="ios-row">${left}<div class="ios-track"><input class="ios" id="${id}" type="range" min="${min}" max="${max}" step="0.05" value="${val}" aria-label="${label}" data-fmt="${fmtv}"><output class="ios-tip"></output></div>${right}</div>`;
  const L = ({zh:["音量","速度"], ms:["Kelantangan","Kelajuan"], en:["Volume","Speed"]})[S.lang] || ["Volume","Speed"];
- pn.innerHTML = row("vvol", 0.1, 1, u.volume, `<button type="button" class="vmute${S.sound?"":" off"}" id="vmute" aria-label="sound on/off">${S.sound ? VOL_LO_SVG : SPK_OFF_SVG}</button>`, SPK_ON_SVG, "%", L[0])
+ pn.innerHTML = row("vvol", 0, 1, S.sound ? u.volume : 0, `<button type="button" class="vmute${S.sound?"":" off"}" id="vmute" aria-label="sound on/off">${S.sound ? VOL_LO_SVG : SPK_OFF_SVG}</button>`, SPK_ON_SVG, "%", L[0])
   + row("vspd", 0.75, 1.25, u.speed, TORT_SVG, HARE_SVG, "x", L[1]);
  document.body.appendChild(pn);
  const r = anchor.getBoundingClientRect();
@@ -564,25 +564,55 @@ function openVoicePanel(anchor){
  pn.querySelectorAll("input.ios").forEach(sl=>{
   const tip = sl.parentNode.querySelector(".ios-tip");
   const put = ()=>{ const lo=+sl.min, hi=+sl.max, v=+sl.value, q=(v-lo)/(hi-lo); sl.style.setProperty("--p", (q*100)+"%");
-   tip.textContent = sl.dataset.fmt==="%" ? Math.round(v*100)+"%" : v.toFixed(2).replace(/0$/,"")+"×"; tip.style.left = `calc(${q*100}% + ${(0.5-q)*28}px)`; };
+   tip.textContent = sl.dataset.fmt==="%" ? (v<=0.02 ? ({zh:"静音",ms:"Senyap",en:"Mute"})[S.lang] : Math.round(v*100)+"%") : v.toFixed(2).replace(/0$/,"")+"×"; tip.style.left = `calc(${q*100}% + ${(0.5-q)*28}px)`; };
   put();
   const show = ()=>{ put(); tip.classList.add("show"); };
   sl.addEventListener("pointerdown", show); sl.addEventListener("touchstart", show, {passive:true}); sl.addEventListener("input", show);
   sl.addEventListener("change", ()=>{
    setTimeout(()=>tip.classList.remove("show"), 700);
+   /* the volume slider all the way left is "sound off" — what anyone expects a volume to do;
+      a web page cannot read or set the phone's own volume, so this is the course's sound only */
+   if(sl.id==="vvol" && +sl.value<=0.02){ if(S.sound) toggleSound(); const m=$("vmute"); if(m){ m.classList.add("off"); m.innerHTML = SPK_OFF_SVG; } return; }
    TouchVoice.setUser(sl.id==="vvol" ? {volume:+sl.value} : {speed:+sl.value});
    if(!S.sound){ S.sound = true; save(); applySound(); const m=$("vmute"); if(m){ m.classList.remove("off"); m.innerHTML = VOL_LO_SVG; } }
    try{ TouchVoice.stop(); }catch(e){}
    TouchVoice.say(SAMPLE_SAY, {fallbackMaxWords:12});
   });
  });
- $("vmute").onclick = ()=>{ toggleSound(); const m=$("vmute"); m.classList.toggle("off", !S.sound); m.innerHTML = S.sound ? VOL_LO_SVG : SPK_OFF_SVG; };
+ $("vmute").onclick = ()=>{ toggleSound(); const m=$("vmute"); m.classList.toggle("off", !S.sound); m.innerHTML = S.sound ? VOL_LO_SVG : SPK_OFF_SVG;
+  const v = $("vvol"); if(v){ v.value = S.sound ? TouchVoice.user().volume : 0; v.dispatchEvent(new Event("input")); setTimeout(()=>{ const t2=v.parentNode.querySelector(".ios-tip"); if(t2) t2.classList.remove("show"); }, 700); } };
  setTimeout(()=>{
   const away = e=>{ if(!pn.isConnected){ document.removeEventListener("pointerdown", away, true); return; }
    if(!pn.contains(e.target) && e.target!==anchor && !anchor.contains(e.target)){ pn.remove(); document.removeEventListener("pointerdown", away, true); } };
   document.addEventListener("pointerdown", away, true);
  }, 0);
 }
+function explainChip(kind){
+ const old = $("chipcard"); if(old){ old.remove(); if(old.dataset.kind===kind) return; }
+ const n = P ? (kind==="combo" ? (P.combo||0) : (P.xp||0)) : 0;
+ const X = ({zh:{
+   combo:{h:`连续答对 ${n} 题`, b:["每连续答对一题，火就多一格。", "连续答对 3 题以上，每题多拿 +2 XP。", "答错一题，火就重新开始算。"]},
+   xp:{h:`这一课拿到 ${n} XP`, b:["XP 是经验值：答对题目、开口说、完成一课都会加。", "XP 越多，首页的成长树就长得越大。", "答错不会扣分，放心练。"]}, ok:"知道了"},
+  ms:{
+   combo:{h:`${n} betul berturut-turut`, b:["Setiap jawapan betul berturut-turut menambah api.", "3 betul berturut-turut atau lebih: +2 XP untuk setiap jawapan.", "Satu jawapan salah, kiraan bermula semula."]},
+   xp:{h:`${n} XP dalam pelajaran ini`, b:["XP ialah mata pengalaman: jawab betul, bercakap dan tamatkan pelajaran.", "Lebih banyak XP, lebih besar pokok di laman utama.", "Jawapan salah tidak menolak markah — berlatihlah."]}, ok:"Faham"},
+  en:{
+   combo:{h:`${n} right in a row`, b:["Every right answer in a row makes the fire bigger.", "3 or more in a row: +2 XP on each right answer.", "One wrong answer and the count starts again."]},
+   xp:{h:`${n} XP in this lesson`, b:["XP is experience: right answers, speaking and finishing a lesson all add it.", "The more XP, the bigger your growth tree on the home page.", "A wrong answer takes nothing away — keep practising."]}, ok:"Got it"}})[S.lang];
+ const c = X[kind];
+ const card = document.createElement("div"); card.id = "chipcard"; card.className = "chipcard"; card.dataset.kind = kind;
+ card.innerHTML = `<div class="cc-h"><span class="cc-ic">${kind==="combo" ? "🔥" : "⭐"}</span>${esc(c.h)}</div>`
+  + (kind==="combo" ? `<div class="cc-dots">${[1,2,3,4,5].map(i=>`<span class="${i<=n?"on":""}${i===3?" mark":""}">${i<=n?"🔥":""}</span>`).join("")}</div>` : "")
+  + `<ul>${c.b.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><button type="button" class="btn btn-primary btn-block cc-ok">${esc(X.ok)}</button>`;
+ document.body.appendChild(card);
+ card.querySelector(".cc-ok").onclick = ()=>card.remove();
+ setTimeout(()=>{ const away = e=>{ if(!card.isConnected){ document.removeEventListener("pointerdown", away, true); return; }
+  if(!card.contains(e.target) && !e.target.closest("#combochip,.pxp")){ card.remove(); document.removeEventListener("pointerdown", away, true); } };
+  document.addEventListener("pointerdown", away, true); }, 0);
+}
+{ const cc = $("combochip"), px_ = document.querySelector(".pxp");
+  if(cc){ cc.setAttribute("role","button"); cc.addEventListener("click", ()=>explainChip("combo")); }
+  if(px_){ px_.setAttribute("role","button"); px_.addEventListener("click", ()=>explainChip("xp")); } }
 $("soundbtn").addEventListener("click", e=>openVoicePanel(e.currentTarget));
 $("psound").addEventListener("click", e=>openVoicePanel(e.currentTarget));   // no redraw: it would throw away a half-built answer
 applySound();
