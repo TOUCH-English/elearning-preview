@@ -828,14 +828,15 @@ function whyText(why, hidden){
  const W = ({zh:{irr:"注意：这里要说 {w}（不规则变化，要记住）。再说一次。", swap:"意思不一样了：这里要说 {w}。再说一次。", not:"意思相反了：原句没有 not。再说一次。"},
   ms:{irr:"Perhatian: sebut {w} di sini (bentuk tak sekata, perlu diingat). Cuba lagi.", swap:"Maksudnya berubah: di sini sebut {w}. Cuba lagi.", not:"Maksudnya terbalik: ayat asal tiada not. Cuba lagi."},
   en:{irr:"Check: say {w} here (an irregular form to remember). Try again.", swap:"The meaning changed: say {w} here. Try again.", not:"The meaning is the opposite: the sentence has no not. Try again."}})[S.lang];
- if(/^slip:/.test(why)) return fmt(t.slipTip, {t: w0});
+ // a slip that FAILS the answer is a correction, not a 「小提醒」 (Mei Ling / Ravi, round 3)
+ if(/^slip:/.test(why)) return fmt(({zh:"这里要改：{t}", ms:"Betulkan: {t}", en:"Fix this: {t}"})[S.lang], {t: w0});
  if(/^not:/.test(why)) return w0;
  if(/^meaning:/.test(why)) return fmt(({zh:"意思不对：这里要说 {w}。再说一次。", ms:"Maksudnya salah: di sini sebut {w}. Cuba lagi.", en:"The meaning is off: say {w} here. Try again."})[S.lang], {w: w0});
  if(/^decoy:/.test(why)) return w0;
  if(why==="fact:not") return W.not;
  if(/^swap:/.test(why)) return fmt(W.swap, {w});
  if(/^form:/.test(why) && Object.values((window.TouchSpeech && TouchSpeech.irregular) || {}).includes(w)) return fmt(W.irr, {w});
- if(hidden && typeof CONF!=="undefined" && CONF.flow==="l2" && ideaCheck.slip && !/^(slip|decoy):/.test(why)) return fmt(t.ownNot, {w: ideaCheck.slip});
+ if(hidden && typeof CONF!=="undefined" && CONF.flow==="l2" && ideaCheck.slip && !/^(slip|decoy):/.test(why)) return notMsg(ideaCheck.slip);
  if(/^small:/.test(why)) return fmt(t.whySmall, {w});
  if(/^form:/.test(why)) return fmt(t.whyForm, {w});
  if(/^fact:/.test(why)) return fmt(t.whyFact, {w: w.charAt(0).toUpperCase()+w.slice(1)});
@@ -856,7 +857,7 @@ const SLIPS = [
  [/\bi (good|busy|tired|happy|fine|okay|sad|sick|free|ready|sure|late|hungry|sleepy|worried|from|very)\b/, m=>`I ${m[1]} → ${m[1]==="from" ? "I am from / I come from" : "I am "+m[1]}`],
  [/\b(he|she|it) (very|so|a|an|from|good|busy|tired|happy|sick|late|friendly|helpful)\b/, (m, h)=> /\b(is|was|are|were|am|isn't|wasn't)\s+$/.test(h.slice(0, m.index)) ? "" : `${m[1]} ${m[2]} → ${m[1]} is ${m[2]}`],
  [/\bi have (\d+|\w+ty|\w+teen|ten|eleven|twelve)( \w+)? years? old\b/, m=>`I have … years old → I am ${m[1]} years old`],
- [/\bmy name (?!is\b)([a-z]+)\b/, m=>`my name ${m[1]} → my name is ${m[1]}`],
+ [/\bmy name (?!is\b)([a-z]+)\b/, m=> /^(are|am|was|were|be)$/.test(m[1]) ? `my name ${m[1]} → my name is` : `my name ${m[1]} → my name is ${m[1]}`],
  [/\b(am|is|are) (agree|have|like|want|need|go|come|work|live)\b/, m=> m[2]==="have" ? `${m[1]} have → ${m[1]} (without have)` : `${m[1]} ${m[2]} → ${m[2]}`],
  [/\bdid (you|i|he|she|we|they) (went|ate|bought|saw|came|took|met|had|did|made|got)\b/, (m, h)=> /\b(i|you|he|she|we|they|yes|no)\s+$/.test(h.slice(0, m.index)) ? "" : `did ${m[1]} ${m[2]} → did ${m[1]} + base form`],
  [/\bcan help (me|us)\b/, (m, h)=> /\b(you|i|we|they|he|she)\s+$/.test(h.slice(0, m.index)) ? "" : `can help ${m[1]} → can you help ${m[1]}`],
@@ -864,6 +865,7 @@ const SLIPS = [
  [/\byesterday i (go|eat|buy|see|take|come|meet|visit|watch|play|cook)\b/, m=>`yesterday I ${m[1]} → the past form`],
  [/\bvery like\b/, ()=>`very like → really like`],
  [/\bnice meet\b/, ()=>`nice meet → nice to meet`],
+ [/\bbecause (is|was) (?!it\b)/, m=>`because ${m[1]} → because it ${m[1]}`],
  [/\b(go|goes|come|comes|travel|get|went|came)( to [a-z]+)? with (the )?(bus|car|train|taxi|grab|motorcycle|motorbike|lrt|mrt)\b/, m=>`with ${m[4]} → by ${m[4]}`],
  [/\bit (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+) o ?'?clock\b/, m=>`it ${m[1]} o'clock → it is ${m[1]} o'clock`],
  [/\b(two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|[2-9]|\d\d+) (minute|hour|day|week|month|year)\b(?!s)/, m=>`${m[1]} ${m[2]} → ${m[1]} ${m[2]}s`],
@@ -878,6 +880,70 @@ const SLIPS = [
  [/\b(i|we|they|you) go work\b/, m=>`go work → go to work`],
  [/\btoday is on (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/, m=>`today is on ${m[1]} → today is ${m[1]}`],
 ];
+/* What to say instead of a lesson's `not` phrase — read off the phrase itself, so that
+   「这里不能说「need doctor」」 also says "→ need a doctor" (Chen / Aisyah / Hafiz, round 3).
+   A phrase with no rule here (a question to rephrase, "good night") keeps the plain message. */
+const N_ = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\\d+";
+const NOTFIX = [
+ [/^i (\d+|\w+teen|twenty|thirty|forty|fifty|sixty|seventy|eighty)$/, m=>`I am ${m[1]} years old`],
+ [/^years old (\S+)$/, m=>`I am ${m[1]} years old`],
+ [new RegExp(`^o'clock (${N_})$`), m=>`${m[1]} o'clock`],
+ [new RegExp(`^(?:in|on) (${N_}) o'clock$`), m=>`at ${m[1]} o'clock`],
+ [new RegExp(`^wake up (${N_})$`), m=>`wake up at ${m[1]}`],
+ [/^i (is|are)$/, ()=>`I am`],
+ [/^a (operator|engineer|accountant|office)$/, m=>`an ${m[1]}`],
+ [/^and little$/, ()=>`and a little`],
+ [/^i can speaking$/, ()=>`I can speak`],
+ [/^am speak$/, ()=>`I speak`],
+ [/^i job$/, ()=>`my job`],
+ [/^live at in$/, ()=>`live in`],
+ [/^i live (\w+)$/, m=>`I live in ${m[1].replace(/^./, c=>c.toUpperCase())}`],
+ [/^(?:i (?:no|not)|am not) (have|like|understand)$/, m=>`I don't ${m[1]}`],
+ [/^(bank|it) (near|far)$/, m=>`${m[1]==="bank" ? "the bank" : "it"} is ${m[2]}`],
+ [/^go to home$/, ()=>`go home`],
+ [/^by (walk|foot)$/, ()=>`on foot`],
+ [/^go (market|office)$/, m=>`go to the ${m[1]}`],
+ [/^can i want$/, ()=>`can I have`],
+ [/^(want a|need) doctor$/, ()=>`I need a doctor`],
+ [/^i not (feeling|well)$/, m=>`I am not ${m[1]}`],
+ [/^(she|he) working$/, m=>`${m[1]} is working`],
+ [/^my (\w+) work$/, m=>`my ${m[1]} works`],
+ [/^does (she|he) works$/, m=>`does ${m[1]} work`],
+ [/^i can to$/, ()=>`I can + verb`],
+ [/^at (johor bahru|jb|kulai|ipoh|penang|melaka|kuala lumpur|kl|skudai|singapore)$/, m=>`in ${m[1].replace(/\b(jb|kl)\b/, x=>x.toUpperCase()).replace(/\b[a-z]/g, c=>c.toUpperCase())}`],
+ [/^for (count|check|calculate|write|print|send|call|make|do)$/, m=>`to ${m[1]}`],
+ [/^(?:you )?(like|enjoy) go to$/, m=>`${m[1]} going to`],
+ [/^i am (feel|drive|think)$/, m=>`I ${m[1]}`],
+ [/^i goed$/, ()=>`I went`],
+ [/^(there got|got one|got a clinic|have one clinic)$/, ()=>`there is a…`],
+ [/^siti can help$/, ()=>`Siti, can you help`],
+ [/^(said|talked) me$/, m=> m[1]==="said" ? `told me / said to me` : `talked to me`],
+ [/^would rather to$/, ()=>`would rather + verb`],
+ [/^more prefer$/, ()=>`prefer`],
+ [/^i am not agree$/, ()=>`I don't agree`],
+ [/^more (lighter|heavier)$/, m=>m[1]],
+ [/^is broken since$/, ()=>`has been broken since`],
+ [/^got problem$/, ()=>`there is a problem`],
+ [/^is spoil$/, ()=>`is broken`],
+ [/^was stop$/, ()=>`stopped`],
+ [/^should to$/, ()=>`should + verb`],
+ [/^let us (to|going)$/, m=> m[1]==="to" ? `let's + verb` : `let's go`],
+ [/^i will calling$/, ()=>`I will call`],
+ [/^can repeat$/, ()=>`can you repeat`],
+ [/^lend from$/, ()=>`borrow from`],
+ [/^borrow you$/, ()=>`lend you`],
+ [/^(finish|finished|finish it|finish them|finish the list|ready|done) until$/, m=>`${m[1]} by`],
+ [/^(return|refund) back$/, m=>m[1]],
+ [/^(discuss|discussed) about$/, m=>m[1]],
+ [/^wants? we$/, m=>m[0].replace(/we$/, "us")],
+ [/^(colleagues|staff|customers) was$/, m=>`${m[1]} were`],
+ [/^the app save me$/, ()=>`the app saves me`],
+ [/^everyone get one$/, ()=>`everyone gets one`],
+ [/^also can$/, ()=>`can also`],
+ [/^thank you for listen$/, ()=>`thank you for listening`],
+ [/^i will to$/, ()=>`I will + verb`],
+];
+function notFix(bad){ const k = spNorm(bad); for(const [re, fx] of NOTFIX){ const m = k.match(re); if(m) return fx(m); } return ""; }
 const PASTCTX = /\b(yesterday|last (weekend|week|night|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|ago|in the end|was|were|went|had|did)\b/;
 function pastOf(v){ const I = (window.TouchSpeech && TouchSpeech.irregular) || {}; return I[v] || (/e$/.test(v) ? v+"d" : /[^aeiou]y$/.test(v) ? v.slice(0,-1)+"ied" : v+"ed"); }
 function slipTip(heard){
@@ -902,9 +968,16 @@ function slipTip1(heard){
 /* A spoken answer that matches the words can still carry the lesson's own mistake: the
    lesson's `not` phrases, a named slip, or one of the item's decoy tiles (the wrong words it
    was built around, each with its reason). Any of them fails it, and says which. */
+/* "Don't say X here" — and, when the slip rules know it, what to say instead (Chen and Aisyah,
+   round 3: 「这里不能说「need doctor」」 never said what to say) */
+function notMsg(bad, heard){
+ const w = String(bad).replace(/\bi\b/g, "I"), m = fmt(T().ownNot, {w});
+ const fx = notFix(bad), tip = fx ? w+" → "+fx : heard ? slipTip(heard) : "";
+ return tip ? m+" 💡 "+tip : m;
+}
 function hardSlip(heard){
  const nots = lessonNots();
- for(const h of (heard||[]).map(x=>spNorm(x))){ const bad = nots.find(k=>(" "+h+" ").includes(" "+k+" ")); if(bad) return "not:"+fmt(T().ownNot, {w: bad.replace(/\bi\b/g, "I")}); }
+ for(const h of (heard||[]).map(x=>spNorm(x))){ const bad = nots.find(k=>(" "+h+" ").includes(" "+k+" ")); if(bad) return "not:"+notMsg(bad, heard); }
  /* Level 2 is Convey: a clear message with a small slip passes, with the slip as a tip; only the
     lesson's own mistakes fail it (round 2, Mei Ling: "it deliver", "the pipe very old") */
  if(typeof CONF!=="undefined" && CONF.flow==="l2") return "";
@@ -947,6 +1020,8 @@ function decoyHit(heard, item, targets){
    「missing: and」). Level 1 is Construct — the sentence itself is the point, so it stays
    word-for-word; Level 2 is Convey — the message is. Passes when at least 70% of a model's
    content words (stems) are there, in 4+ words; days and numbers must still be right. */
+// words of a mission prompt that say HOW to speak, not what about — they are in every answer, on topic or not
+const MISSION_HOW = new Set("first then after that finally next usually always sometimes because felt feel feels speak talk tell give start take takes like went what where when which does with from your yours about real sentences sentence linked least once reason explain describe tells says think thought example opinion agree understand suggest because instance addition however also then before until could would please should will".split(" "));
 function lessonNots(){
  const ex = ex0(); return [].concat((ex && ex.own) || []).flatMap(o=>o.not||[])   // Pre-Beginner's own is one object, not a list
  .map(k=>spNorm(k)).filter(Boolean);
@@ -1527,7 +1602,7 @@ function stepShell(lbl, title, sub, inner, footBtn){
    Marco 2026-09-25: staff see the student's screens but must not get stuck the way a
    student does — every lesson opens (no locks, no off-path suggestion) and a Skip
    button walks through a lesson step by step. Real students never have PREVIEW. */
-if(PREVIEW){ const sk = document.getElementById("pskip"); if(sk){ sk.classList.remove("hidden"); sk.onclick = ()=>{ try{ hideFeedback(); }catch(e){} nextStep(); }; } }
+if(PREVIEW){ const sk = document.getElementById("pskip"); if(sk){ sk.classList.remove("hidden"); sk.textContent = ({zh:"跳过 ›", ms:"Langkau ›", en:"Skip ›"})[S.lang] || "Skip ›"; sk.onclick = ()=>{ try{ hideFeedback(); }catch(e){} nextStep(); }; } }
 
 /* ---- Amy in the lesson (shared/coach.js) ----
    Marco 2026-09-24: the character should fit what is on screen, like Duolingo.
@@ -2057,8 +2132,9 @@ function renderStep(){
    const cap = x=>{ const v = px(x); return v.charAt(0).toUpperCase()+v.slice(1).replace(/\bi\b/g, "I"); };
    // a group may carry a label in the learner's language (mission.labels[i]); else its closest phrase
    const gaps = M.groups.map((g,i)=>[g,i]).filter(([g])=>!g.some(k=>lemmaHit(h, k))).map(([g,i])=>M.labels && M.labels[i] ? tri(M.labels[i])+" ("+cap(closest(g))+"…)" : cap(closest(g)));
-   const offT = (()=>{ const ws2 = h.trim().split(/\s+/); const fw = new Set(M.groups.flat().flatMap(k=>spNorm(px(k)).split(" ")).map(w=>lemma(w).trim())); const mw = new Set(spNorm(px(M.model.join(" "))).split(" ").filter(w=>w.length>3 && !STOPW.has(w)).map(w=>lemma(w).trim()).filter(w=>!fw.has(w))); return [...new Set(ws2.filter(w=>w.length>3).map(w=>lemma(w).trim()))].filter(w=>mw.has(w)).length < 3; })();
-   if(st.notHit) return fmt(t.ownNot, {w: st.notHit});
+   // the judge's own verdict: a short answer about the task is short, not off-topic (Hafiz, round 3)
+   const offT = st.offTopic;
+   if(st.notHit) return notMsg(st.notHit, heard);
    if(offT) return t.missionOff;
    return (gaps.length ? fmt(t.missionGaps, {g: gaps.join(" · ")})+" " : "") + (n < M.minWords ? fmt(t.missionShort, {n, m:M.minWords}) : "");
   };
@@ -2076,11 +2152,19 @@ function renderStep(){
     /* "introduce yourself" must pass with the learner's own life (walkthrough 2026-09-26: only the
        model's Ipoh / Siti passed) — the task's own words count, and two are enough */
     spNorm([M.prompt && M.prompt.en, M.prompt && tri(M.prompt)].filter(Boolean).join(" ")).split(" ").filter(w=>w.length>3 && !STOPW.has(w)).map(w=>lemma(w).trim()).filter(w=>!formulaW.has(w)).forEach(w=>modelW.add(w));
-    const onTopic = [...new Set(ws.filter(w=>w.length>3).map(w=>lemma(w).trim()))].filter(w=>modelW.has(w)).length;
+    /* the English prompt's own subject words count even when a group uses them — "hometown",
+       "colleague", "name" ARE the topic of an introduction (a full, true intro with his own town
+       and colleague was called off-topic); the quoted formula ('because', 'I think') is not */
+    if(M.prompt && M.prompt.en) spNorm(M.prompt.en.replace(/'[^']*'|"[^"]*"|“[^”]*”|‘[^’]*’/g, " ")).split(" ").filter(w=>w.length>3 && !STOPW.has(w) && !MISSION_HOW.has(w)).map(w=>lemma(w).trim()).forEach(w=>modelW.add(w));
+    /* a part of the task said in its own words is on topic too ("my name is", "this is my colleague",
+       "she works") — but not a linking formula (because, I think, for example), which fits any subject */
+    const partsSaid = M.groups.filter(g=>g.some(k=>lemmaHit(h, k) && spNorm(px(k)).split(" ").some(w=>w.length>3 && !STOPW.has(w) && !MISSION_HOW.has(w)))).length;
+    const onTopic = [...new Set(ws.filter(w=>w.length>3).map(w=>lemma(w).trim()))].filter(w=>modelW.has(w)).length + (partsSaid >= 2 ? partsSaid : 0);   // one topic word alone proves little
     /* "I think because for example I understand let us. My cat is orange…" hit every group (Hafiz):
        it must also be about the task — at least three of the model answer's content words */
     const small = ws.filter(w=>STOPW.has(w)).length / Math.max(1, ws.length);
-    st.offTopic = ws.length >= M.minWords * 0.6 && (onTopic < 3 || small < 0.25);
+    // under the minimum it is short, and the gaps say what to add (Hafiz, round 3: his own name and town are not the model's words)
+    st.offTopic = ws.length >= M.minWords && (onTopic < 3 || small < 0.25);
     st.notHit = lessonNots().find(k=>h.includes(" "+k+" ")) || "";
     const ok = !st.notHit && !st.offTopic && M.groups.every(g=>g.some(k=>lemmaHit(h, k))) && ws.length >= M.minWords && distinct >= Math.min(ws.length, M.minWords) * 0.6;
     if(ok) pay();
@@ -2174,7 +2258,7 @@ function renderStep(){
     st.byIdea = ok && !exact;
     st.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || "");
     { const bad = hardSlip(heard) || decoyHit(heard, it, [ans].concat(alts)) || (ok ? meaningGuard(ans, heard) : ""); if(bad){ ok = false; st.byIdea = false; st.why = bad; } }
-    if(ok && it.must && it.must.length && !heard.some(h=>it.must.some(k=>lemmaHit(" "+spNorm(h)+" ", k)))){ ok = false; st.byIdea = false; st.why = "slip:"+fmt(t.ownMust, {w: it.must.slice(0,2).join(" / ")}).replace(/[。.]?\s*$/,""); }
+    if(ok && it.must && it.must.length && !heard.some(h=>it.must.some(k=>lemmaHit(" "+spNorm(h)+" ", k)))){ ok = false; st.byIdea = false; st.why = "not:"+fmt(t.ownMust, {w: it.must.slice(0,2).join(" / ")}).replace(/[。.]?\s*$/,""); }
     if(!ok && CONF.flow!=="l2") ideaCheck.slip = "";
     if(ok){ pay(); speak(ans); }
     return ok;
@@ -2304,7 +2388,7 @@ function renderStep(){
   const k0 = st.model ? px(st.model).split(/\s+/).slice(0, 4).join(" ").replace(/[,.!?;:]+$/,"") + "…"
    : (st.keys || [])[0] ? String(st.keys[0]).replace(/^./, c=>c.toUpperCase()) + "…" : "";
   mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", hints: [k0, st.model ? px(st.model) : ""], retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ").replace(/\bi\b/g, "I")});
-    if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort;
+    if(st.hitNot) return notMsg(st.hitNot, heard); if(st.tooShort) return t.ownShort;
     if(st.slip) return whyText(st.slip);
     if(st.wrongWho) return fmt(({zh:"你是在直接问 {who}，要用 you，不是 he / she。", ms:"Anda bertanya terus kepada {who}: guna you, bukan he / she.", en:"You are asking {who} directly: use you, not he / she."})[S.lang], {who: WHO_NAME[st.who] || "them"}); if(st.ask && hs.some(h=>NOAUX.test(questionPart(h)) || NOAUX2.test(questionPart(h)))) return t.ownAskAux;
     const q = hs.some(h=>QWORD.test(questionPart(h)));
@@ -2569,8 +2653,16 @@ function builtDiff(built, answer, xw, display, alts){
  const restW = wrong.filter(i=>!usedW.has(i)), restM = missing.filter(j=>!usedM.has(j));
  // one wrong and one missing left in the same place is a swap; otherwise each is said on its own
  if(restW.length === 1 && restM.length === 1) pairs.push([restW[0], restM[0]]);
+ // one wrong word for a missing phrase ("sorry" for "Excuse me") is a swap too
+ else if(restW.length === 1 && restM.length > 1 && restM.every((j,x)=>!x || j===restM[x-1]+1)) { pairs.push([restW[0], restM[0]]); pairs.phrase = restM[0]; }
  else { restW.forEach(i=>pairs.push([i, -1])); restM.forEach(j=>pairs.push([-1, j])); }
  const clean = v=>String(v).replace(/[.,!?;:]+$/,"");
+ // fold each missing word into the listed missing word just before it: one line per phrase
+ // (a swap found by likeness — live for lives — stays one word)
+ const listed = new Set(pairs.filter(p=>p[0]<0 || p[1]===pairs.phrase).map(p=>p[1])), tail = new Set();
+ for(const j of missing) if((listed.has(j-1) || tail.has(j-1)) && !pairs.some(p=>p[1]===j && p[0]>=0)) tail.add(j);
+ const runOf = j=>{ const o = []; for(let x=j+1; tail.has(x); x++) o.push(A[x]); return o; };
+ for(let x=pairs.length-1; x>=0; x--) if(pairs[x][0]<0 && tail.has(pairs[x][1])) pairs.splice(x, 1);
  const lines = [];
  if(sorted(B)===sorted(A)){
   lines.push(esc(W.order));
@@ -2581,7 +2673,8 @@ function builtDiff(built, answer, xw, display, alts){
  }
  else if(pairs.length > 3) lines.push(esc(W.many));
  else pairs.slice(0,3).forEach(([i, j])=>{
-  const w = i>=0 ? B[i] : "", r = j>=0 ? A[j] : "";
+  // a run of missing words next to each other is one phrase ("Excuse me", not 「少了 Excuse」 and 「少了 me」)
+  const w = i>=0 ? B[i] : "", r = j>=0 ? [A[j]].concat(runOf(j)).join(" ") : "";
   let line = w && r && k(w)===k(r) ? fmt(({zh:"「{w}」的位置不对。", ms:"Kedudukan “{w}” salah.", en:"“{w}” is in the wrong place."})[S.lang], {w:`<b class="wr">${esc(clean(w))}</b>`})
    : w && r ? fmt(W.swap, {w:`<b class="wr">${esc(clean(w))}</b>`, r:`<b class="rt">${esc(clean(r))}</b>`})
    : w ? fmt(W.extra, {w:`<b class="wr">${esc(clean(w))}</b>`}) : fmt(W.miss, {r:`<b class="rt">${esc(clean(r))}</b>`});
