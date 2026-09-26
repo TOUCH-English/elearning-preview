@@ -52,7 +52,7 @@ Object.keys(UI_LESSON).forEach(k=>Object.assign(UI[k], UI_LESSON[k]));
 const UI_L1 = {
  zh:{gistK:"先听一段对话",gistSub:"没有字，只用听的。听完回答下面的问题。",gistPlay:"▶ 播放对话",gistStop:"■ 停止",
   loK:"只听不看",loSub:"听这一句（没有字），然后回答。",loWas:"刚才那一句是：",
-  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问他。",compareModel:"对照一下示范：",ownNot:"这里不能说「{w}」——这正是这一课要改的说法，再说一次。",ownShort:"请说一个完整的句子，至少四个字。",missionOff:"要说的是上面这个题目——多用题目里的事来说。",stransSubL2:"看情境，按麦克风用英文说出来——用你自己的话也可以。",ownMust:"还要说出这一部分：{w}…，再说一次。",slipTip:"小提醒：{t}",planStory:"开口前先想 15 秒：先发生什么？然后呢？结果怎样？",planPPF:"开口前先想 15 秒：重点是什么？为什么？下一步是什么？",planLoop:"开口前先想 15 秒：怎么回答？加什么细节？反问什么？",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
+  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问 {who}。",compareModel:"对照一下示范：",ownNot:"这里不能说「{w}」——这正是这一课要改的说法，再说一次。",ownShort:"请说一个完整的句子，至少四个字。",missionOff:"要说的是上面这个题目——多用题目里的事来说。",stransSubL2:"看情境，按麦克风用英文说出来——用你自己的话也可以。",ownMust:"还要说出这一部分：{w}…，再说一次。",slipTip:"小提醒：{t}",planStory:"开口前先想 15 秒：先发生什么？然后呢？结果怎样？",planPPF:"开口前先想 15 秒：重点是什么？为什么？下一步是什么？",planLoop:"开口前先想 15 秒：怎么回答？加什么细节？反问什么？",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
   wholeK:"一次说完整",missionK:"Boss 任务：连说几句",missionSub:"按麦克风，一口气说完；说完再按一下。",missionModel:"看示范",missionHide:"收起示范",missionRetry:"再说完整一点——把上面要求的每一样都说到。",missionNeed:"至少说 {n} 个英文单词",missionGaps:"还缺：{g}。",missionShort:"你说了 {n} 个英文单词，至少要 {m} 个。",
   whyFact:"注意：这里要说 {w}。再说一次。",whySmall:"少了一个小字：{w}。英文句子里这种字不能省，再说一次。",whyForm:"注意词尾：这里要说 {w}。再说一次。",whyMissing:"红色的字漏掉了或没听清楚，再说一次。",
   skippedN:"这一课你跳过了 {n} 个开口／听力练习——方便的时候再做一次。",missionGood:"任务完成！说得很完整。",missionS1:"先看上面的要求，想好要说的每一样",
@@ -60,7 +60,7 @@ const UI_L1 = {
   roleNote:"练习对话：句子里的年龄、地方照题目说就好，不一定是你自己的情况。",gistEase:"听不懂也没关系，先猜猜看——等一下会学到这些字。"},
  ms:{gistK:"Dengar perbualan dahulu",gistSub:"Tiada teks — dengar sahaja, kemudian jawab soalan di bawah.",gistPlay:"▶ Main perbualan",gistStop:"■ Berhenti",
   loK:"Dengar sahaja",loSub:"Dengar ayat ini (tiada teks), kemudian jawab.",loWas:"Ayat tadi ialah:",
-  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya dia dengan soalan.",compareModel:"Bandingkan dengan contoh:",ownNot:"Jangan sebut “{w}” di sini — itulah yang pelajaran ini betulkan. Cuba lagi.",ownShort:"Sebut satu ayat lengkap, sekurang-kurangnya empat perkataan.",missionOff:"Cakap tentang tugasan di atas — guna perkara dalam tugasan itu.",stransSubL2:"Baca situasi, tekan mikrofon dan sebut dalam Bahasa Inggeris — boleh guna ayat anda sendiri.",ownMust:"Sebut juga bahagian ini: {w}… Cuba lagi.",slipTip:"Tip: {t}",planStory:"Fikir 15 saat: apa berlaku dahulu? Kemudian? Kesudahannya?",planPPF:"Fikir 15 saat: apa perkara utama? Kenapa? Apa langkah seterusnya?",planLoop:"Fikir 15 saat: jawapan anda? Butiran apa? Soalan balas apa?",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
+  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya {who} dengan soalan.",compareModel:"Bandingkan dengan contoh:",ownNot:"Jangan sebut “{w}” di sini — itulah yang pelajaran ini betulkan. Cuba lagi.",ownShort:"Sebut satu ayat lengkap, sekurang-kurangnya empat perkataan.",missionOff:"Cakap tentang tugasan di atas — guna perkara dalam tugasan itu.",stransSubL2:"Baca situasi, tekan mikrofon dan sebut dalam Bahasa Inggeris — boleh guna ayat anda sendiri.",ownMust:"Sebut juga bahagian ini: {w}… Cuba lagi.",slipTip:"Tip: {t}",planStory:"Fikir 15 saat: apa berlaku dahulu? Kemudian? Kesudahannya?",planPPF:"Fikir 15 saat: apa perkara utama? Kenapa? Apa langkah seterusnya?",planLoop:"Fikir 15 saat: jawapan anda? Butiran apa? Soalan balas apa?",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
   wholeK:"Cakap semuanya sekali gus",missionK:"Misi Boss: cakap beberapa ayat",missionSub:"Tekan mikrofon dan cakap semuanya; tekan sekali lagi bila selesai.",missionModel:"Lihat contoh",missionHide:"Tutup contoh",missionRetry:"Cakap dengan lebih lengkap — sebut setiap perkara yang diminta.",missionNeed:"Sekurang-kurangnya {n} perkataan Inggeris",missionGaps:"Masih kurang: {g}.",missionShort:"Anda sebut {n} perkataan Inggeris; perlu sekurang-kurangnya {m}.",
   whyFact:"Perhatian: di sini sebut {w}. Cuba lagi.",whySmall:"Kurang satu perkataan kecil: {w}. Dalam ayat Inggeris perkataan ini tidak boleh ditinggalkan. Cuba lagi.",whyForm:"Perhatikan hujung perkataan: sebut {w}. Cuba lagi.",whyMissing:"Perkataan merah tertinggal atau kurang jelas. Cuba lagi.",
   skippedN:"Anda melangkau {n} latihan bercakap/mendengar dalam pelajaran ini — cuba lagi bila sesuai.",missionGood:"Misi selesai! Lengkap sekali.",missionS1:"Baca tugasan di atas dan fikir setiap perkara yang perlu disebut",
@@ -68,7 +68,7 @@ const UI_L1 = {
   roleNote:"Dialog latihan: umur dan tempat dalam ayat ikut soalan sahaja, bukan semestinya tentang anda.",gistEase:"Tak faham pun tak apa — teka dahulu. Perkataan ini akan diajar sekejap lagi."},
  en:{gistK:"Listen to the conversation first",gistSub:"No text — just listen, then answer the question below.",gistPlay:"▶ Play the conversation",gistStop:"■ Stop",
   loK:"Listen only",loSub:"Listen to this sentence (no text), then answer.",loWas:"The sentence was:",
-  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask them a question.",compareModel:"Compare with the model:",ownNot:"Don't say “{w}” here — that is exactly what this lesson corrects. Try again.",ownShort:"Please say a full sentence, at least four words.",missionOff:"Talk about the task above — use the things in the task.",stransSubL2:"Read the situation, tap the mic and say it in English — your own words are fine.",ownMust:"Say this part too: {w}… Try again.",slipTip:"Tip: {t}",planStory:"Take 15 seconds: what happened first? Then? How did it end?",planPPF:"Take 15 seconds: what is the point? Why? What is the next step?",planLoop:"Take 15 seconds: your answer? One detail? A question back?",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
+  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask {who} a question.",compareModel:"Compare with the model:",ownNot:"Don't say “{w}” here — that is exactly what this lesson corrects. Try again.",ownShort:"Please say a full sentence, at least four words.",missionOff:"Talk about the task above — use the things in the task.",stransSubL2:"Read the situation, tap the mic and say it in English — your own words are fine.",ownMust:"Say this part too: {w}… Try again.",slipTip:"Tip: {t}",planStory:"Take 15 seconds: what happened first? Then? How did it end?",planPPF:"Take 15 seconds: what is the point? Why? What is the next step?",planLoop:"Take 15 seconds: your answer? One detail? A question back?",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
   wholeK:"Say it all in one go",missionK:"Boss mission: say a few sentences",missionSub:"Tap the mic and say it all; tap again when you finish.",missionModel:"See an example",missionHide:"Hide the example",missionRetry:"Say a bit more — cover everything the task asks for.",missionNeed:"At least {n} English words",missionGaps:"Still missing: {g}.",missionShort:"You said {n} English words; at least {m} are needed.",
   whyFact:"Check: it should be {w} here. Try again.",whySmall:"A small word is missing: {w}. English sentences need it — say it again.",whyForm:"Check the ending: say {w} here. Try again.",whyMissing:"The red words were missing or unclear. Say it again.",
   skippedN:"You skipped {n} speaking/listening steps in this lesson — try them when you can.",missionGood:"Mission complete! Very full answer.",missionS1:"Read the task above and plan each thing you need to say",
@@ -183,6 +183,7 @@ if(TTS){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
    are "xm" / "xf" (Chris / Matilda — no character's voice). A recording of a character's
    line is "<code>-<key>.mp3". tools/build-audio.mjs reads this same line, so it stays one
    JSON object on one line. */
+const WHO_NAME = {tan:"Mr. Tan", kumar:"Kumar", ali:"Ali", siti:"Siti", meiling:"Mei Ling", amy:"Amy"};
 const VOICE_OF = {"Mr. Tan":"tan","Kumar":"kumar","Ali":"ali","Siti":"siti","Mei Ling":"meiling","Amy":"amy","tan":"tan","kumar":"kumar","ali":"ali","siti":"siti","meiling":"meiling","amy":"amy","New colleague":"xm","Trainee":"xf","Receptionist":"xf","Friend":"xf","Customer":"xm","Landlord":"xm"};
 /* Pre-Beginner has a recording of every option and every built sentence. Level 1 and 2 record
    only what a learner must or should hear (Marco 2026-09-25, A+B): there an option is not read
@@ -1428,6 +1429,12 @@ const STOPW = new Set("i you he she it we they a an the do does did is are am wa
 /* own.exact: a turn that teaches a TENSE matches its keys word for word — stems would let
    "I work in the office" pass for "I am working…", or "I visit" for "I visited". */
 let OWN_EXACT = false;
+/* the part of what was said from its first question word on, when at least three words follow */
+function questionPart(n){
+ const w = n.split(" ");
+ for(let i=0;i<w.length-2;i++) if(QWORD.test(w[i])) return w.slice(i).join(" ");
+ return n;
+}
 function ownHit(h, keys, line, ask){
  const n = spNorm(h);
  if(!n) return false;
@@ -1444,12 +1451,17 @@ function ownHit(h, keys, line, ask){
     start work?" does not. (Round 2 of the student test: matching on ONE shared word let "Could
     you speak English?" and "So the meeting is on Tuesday…" through.) An answer needs one of its
     key phrases, word stems allowed ("I'm working in" meets "i work in"). */
- if(ask && NOAUX.test(n)) return false;
- if(ask && QWORD.test(n) && n.split(" ").length>=3){
-  const mine = lemma(n);
+ /* the question can follow a greeting ("Hi, nice to meet you, how are you?" — walkthrough
+    2026-09-26: judged from its first word, "Hi", it was told it was not a question) */
+ const qn = ask ? questionPart(n) : n;
+ if(ask && NOAUX.test(qn)) return false;
+ if(ask && QWORD.test(qn) && qn.split(" ").length>=3){
+  const mine = lemma(qn);
   const cover = k=>{ const cw = spNorm(px(k)).split(" ").filter(w=>w && !STOPW.has(w)); return cw.length ? cw.filter(w=>mine.includes(lemma(w))).length/cw.length : 0; };
   if((keys||[]).some(k=>cover(k) >= 0.6)) return true;
  }
+ /* asking how someone is: "Are you good / fine / well / alright?" asks it too (Marco 2026-09-26) */
+ if(ask && (keys||[]).some(k=>/\bhow are you\b|\bare you ok/.test(k)) && /\bare you (good|fine|well|alright|all right|ok|okay|doing well|doing good)\b/.test(qn)) return true;
  return (keys||[]).some(k=>{
   // the learner's own name is spelled freely by recognisers: match the words around it
   const nk = spNorm(px(k));
@@ -2049,8 +2061,8 @@ function renderStep(){
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); };
   $("go").onclick = ()=>{ if(st.tried && st.tries2) pay(); nextStep(); };
   mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ")});
-    if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort; if(st.ask && hs.some(h=>NOAUX.test(h))) return t.ownAskAux;
-    const q = hs.some(h=>QWORD.test(h)); return st.ask ? (q ? t.ownAskTopic : t.ownAskRetry) : t.ownRetry; }, good: t.ownGood,
+    if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort; if(st.ask && hs.some(h=>NOAUX.test(questionPart(h)))) return t.ownAskAux;
+    const q = hs.some(h=>QWORD.test(questionPart(h))); return st.ask ? (q ? t.ownAskTopic : fmt(t.ownAskRetry, {who: WHO_NAME[st.who] || ({zh:"对方",ms:"dia",en:"them"})[S.lang]})) : t.ownRetry; }, good: t.ownGood,
    model: ()=>speak(st.line, null, false, true, voiceOf(st.who)), hearLabel: t.hearModel2,
    reveal: st.model ? px(st.model) : "",
    s1: ({zh:"先听对方说什么（点对话泡泡可以再听）", ms:"Dengar apa yang dia kata (tekan gelembung untuk dengar lagi)", en:"Listen to what they say (tap the bubble to hear it again)"})[S.lang],
