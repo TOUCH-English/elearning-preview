@@ -539,8 +539,52 @@ function toggleSound(){
  if(!S.sound){ try{ if(window.TouchVoice) TouchVoice.stop(); }catch(e){} try{ if(TTS && window.speechSynthesis) speechSynthesis.cancel(); }catch(e){} }
  toast(S.sound ? T().soundOn : T().soundOff);
 }
-$("soundbtn").addEventListener("click", toggleSound);
-$("psound").addEventListener("click", toggleSound);   // no redraw: it would throw away a half-built answer
+/* The speaker opens a small panel (Marco 2026-09-26, 5B): the course's volume and the
+   learner's own speed, two iPhone-style sliders. The number shows only while a slider is
+   held; letting go plays a sample sentence at the new setting (like choosing a ringtone).
+   The little speaker at the left turns the sound off and on, as the button used to. */
+const TORT_SVG = '<span class="vemo" aria-hidden="true">🐢</span>';
+const HARE_SVG = '<span class="vemo" aria-hidden="true">🐇</span>';
+const VOL_LO_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z" fill="currentColor"/></svg>';
+const SAMPLE_SAY = "Nice to meet you. I'm happy to be here.";
+function openVoicePanel(anchor){
+ let pn = $("vpanel");
+ if(pn){ pn.remove(); return; }
+ if(!window.TouchVoice || !TouchVoice.user) return toggleSound();
+ const u = TouchVoice.user();
+ pn = document.createElement("div"); pn.id = "vpanel"; pn.className = "vpanel";
+ const row = (id, min, max, val, left, right, fmtv, label)=>`<div class="ios-row">${left}<div class="ios-track"><input class="ios" id="${id}" type="range" min="${min}" max="${max}" step="0.05" value="${val}" aria-label="${label}" data-fmt="${fmtv}"><output class="ios-tip"></output></div>${right}</div>`;
+ const L = ({zh:["音量","速度"], ms:["Kelantangan","Kelajuan"], en:["Volume","Speed"]})[S.lang] || ["Volume","Speed"];
+ pn.innerHTML = row("vvol", 0.1, 1, u.volume, `<button type="button" class="vmute${S.sound?"":" off"}" id="vmute" aria-label="sound on/off">${S.sound ? VOL_LO_SVG : SPK_OFF_SVG}</button>`, SPK_ON_SVG, "%", L[0])
+  + row("vspd", 0.75, 1.25, u.speed, TORT_SVG, HARE_SVG, "x", L[1]);
+ document.body.appendChild(pn);
+ const r = anchor.getBoundingClientRect();
+ pn.style.top = (r.bottom + 8) + "px";
+ pn.style.right = Math.max(12, window.innerWidth - r.right - 8) + "px";
+ pn.querySelectorAll("input.ios").forEach(sl=>{
+  const tip = sl.parentNode.querySelector(".ios-tip");
+  const put = ()=>{ const lo=+sl.min, hi=+sl.max, v=+sl.value, q=(v-lo)/(hi-lo); sl.style.setProperty("--p", (q*100)+"%");
+   tip.textContent = sl.dataset.fmt==="%" ? Math.round(v*100)+"%" : v.toFixed(2).replace(/0$/,"")+"×"; tip.style.left = `calc(${q*100}% + ${(0.5-q)*28}px)`; };
+  put();
+  const show = ()=>{ put(); tip.classList.add("show"); };
+  sl.addEventListener("pointerdown", show); sl.addEventListener("touchstart", show, {passive:true}); sl.addEventListener("input", show);
+  sl.addEventListener("change", ()=>{
+   setTimeout(()=>tip.classList.remove("show"), 700);
+   TouchVoice.setUser(sl.id==="vvol" ? {volume:+sl.value} : {speed:+sl.value});
+   if(!S.sound){ S.sound = true; save(); applySound(); const m=$("vmute"); if(m){ m.classList.remove("off"); m.innerHTML = VOL_LO_SVG; } }
+   try{ TouchVoice.stop(); }catch(e){}
+   TouchVoice.say(SAMPLE_SAY, {fallbackMaxWords:12});
+  });
+ });
+ $("vmute").onclick = ()=>{ toggleSound(); const m=$("vmute"); m.classList.toggle("off", !S.sound); m.innerHTML = S.sound ? VOL_LO_SVG : SPK_OFF_SVG; };
+ setTimeout(()=>{
+  const away = e=>{ if(!pn.isConnected){ document.removeEventListener("pointerdown", away, true); return; }
+   if(!pn.contains(e.target) && e.target!==anchor && !anchor.contains(e.target)){ pn.remove(); document.removeEventListener("pointerdown", away, true); } };
+  document.addEventListener("pointerdown", away, true);
+ }, 0);
+}
+$("soundbtn").addEventListener("click", e=>openVoicePanel(e.currentTarget));
+$("psound").addEventListener("click", e=>openVoicePanel(e.currentTarget));   // no redraw: it would throw away a half-built answer
 applySound();
 
 /* ---------- home ----------
@@ -1120,7 +1164,11 @@ function showFeedback(ok, opts){
  $("fbcorr").style.display = corrTxt ? "" : "none";
  /* a wrong answer's right sentence can be heard, on purpose (English only) */
  const sayCorr = !opts.quiet && !ok && corrTxt && /[A-Za-z]/.test(corrTxt) && !/[\u3400-\u9fff]/.test(corrTxt) ? corrTxt.replace(/\s+([.,!?;:])/g,"$1").trim() : "";
- if(sayCorr){ $("fbcorr").setAttribute("data-say", sayCorr); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = "🔊 "+corrTxt; }
+ /* a right built sentence can be heard again (Marco 2026-09-26): the sentence, with its ♪ */
+ const replay = (ok && opts.replay && !opts.quiet && !corrTxt) ? String(opts.replay).replace(/\s+([.,!?;:])/g,"$1").trim() : "";
+ $("fbcorr").classList.remove("heard");
+ if(sayCorr){ $("fbcorr").setAttribute("data-say", sayCorr); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = px(corrTxt); }
+ else if(replay){ $("fbcorr").setAttribute("data-say", replay); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = px(replay); $("fbcorr").style.display = ""; $("fbcorr").classList.add("heard"); }
  else { $("fbcorr").removeAttribute("data-say"); $("fbcorr").removeAttribute("role"); }
  $("fbexpl").textContent = px(opts.expl || "");
  $("fbexpl").style.display = opts.expl ? "" : "none";
@@ -1504,19 +1552,50 @@ function mountSpeech(host, o){
  // asked here, not in the tap: anything awaited inside the tap loses it, and iPhone needs the tap to start listening
  try{ if(!MIC_OK && navigator.permissions && navigator.permissions.query) navigator.permissions.query({name:"microphone"}).then(p=>{ MIC_OK = p.state==="granted"; }, ()=>{}); }catch(e){}
  let tries = 0, busy = false;
- host.innerHTML = `<button class="micbig" id="mic" type="button" aria-label="${esc(t.micTap)}">${MIC_SVG}</button>
+ const HT = ({zh:{start:"可以用这样的开头：", full:"可以这样说：", std:"标准说法：", legend:"绿色＝你说对的；空格＝还少了的字。", missed:"橙底＝你少了的字。点句子可以听。", bulb:"提示"},
+  ms:{start:"Boleh mula begini:", full:"Boleh sebut begini:", std:"Ayat standard:", legend:"Hijau = betul; ruang kosong = perkataan yang tertinggal.", missed:"Latar oren = perkataan yang tertinggal. Tekan ayat untuk dengar.", bulb:"Petunjuk"},
+  en:{start:"You could start with:", full:"You can say:", std:"The model sentence:", legend:"Green = you said it; a gap = a word still missing.", missed:"Orange = the words you left out. Tap the sentence to hear it.", bulb:"Hint"}})[S.lang];
+ const hints = (o.hints || []).filter(Boolean);
+ host.innerHTML = `<div class="microw"><button class="micbig" id="mic" type="button" aria-label="${esc(t.micTap)}">${MIC_SVG}</button>${hints.length ? `<button class="hintbulb" id="bulb" type="button" aria-label="${esc(HT.bulb)}">💡</button>` : ""}</div>
   <div class="spmsg" id="spmsg">${esc(t.micTap)}</div>
+  <div class="hintbox hidden" id="sphint"></div>
   <div class="spheard" id="spheard"></div>
   <div class="spres hidden" id="spres"></div>
   <ol class="spsteps" id="spsteps"><li>${esc(o.s1 || SPK_TXT().s1)}</li><li>${esc(SPK_TXT().s2)}</li><li>${esc(SPK_TXT().s3)}</li></ol>
   <button class="linkbtn" id="later" type="button">${esc(t.spLater)}</button>`;
+ /* 💡 (Marco 2026-09-26): one tap, a start; a second, the whole sentence — no need to skip
+    to see how it is said */
+ if(hints.length){ let hn = 0; $("bulb").onclick = ()=>{ hn = Math.min(hn+1, hints.length); const h = hints[hn-1], box2 = $("sphint");
+  $("bulb").classList.add("on"); box2.classList.remove("hidden");
+  box2.innerHTML = `${esc(hn===hints.length && hints.length>1 ? HT.full : HT.start)} <b${hn===hints.length && /[A-Za-z]/.test(h) ? ` data-say="${esc(sayable(h))}" role="button"` : ""}>${esc(px(h))}</b>`; }; }
+ /* what was said against the sentence it should be (Marco 2026-09-26): the right words
+    green and the missing ones a gap on the first miss, the whole sentence with the missed
+    words marked from the second, and the model beside a pass that was not word for word */
+ const cmp = heard=>{
+  if(!o.targets || !window.TouchSpeech) return null;
+  /* always against the lesson's own sentence (the first), so the gaps on the first miss
+     and the answer on the second are the same sentence; `pass` says whether ANY right form
+     was met (the alternatives still count as right) */
+  const tg = o.targets.filter(Boolean)[0], c = TouchSpeech.check(tg, heard);
+  c.target = tg; c.pass = o.targets.filter(Boolean).some(x=>TouchSpeech.check(x, heard).pass);
+  return c;
+ };
+ const struck = (h, c)=>{ const inT = new Set();
+  /* "I am" is in "I'm": a contraction's parts count as in the sentence */
+  const EXP = {"m":"am","re":"are","s":"is","ll":"will","ve":"have","d":"would"};
+  TouchSpeech.tokens(c.target).forEach(w=>{ inT.add(w); const m = /^(.+?)'(m|re|s|ll|ve|d)$/.exec(w), n = /^(.+)n't$/.exec(w);
+   if(m){ inT.add(m[1]); inT.add(EXP[m[2]]); if(m[2]==="s") inT.add("has"); if(m[2]==="d") inT.add("had"); }
+   if(n){ inT.add("not"); inT.add(n[1]==="won" ? "will" : n[1]==="ca" ? "can" : n[1]); } });
+  return String(h).split(/\s+/).map(w=>{ const n = TouchSpeech.tokens(w)[0]; return n && !inT.has(n) ? `<span class="cx">${esc(w)}</span>` : esc(w); }).join(" "); };
+ const gaps = c=>c.words.map(x=>x.ok ? `<span class="chit">${esc(x.w)}</span>` : `<span class="cgap"></span>`).join(" ");
+ const full = c=>`<b class="cfull" data-say="${esc(sayable(c.target))}" role="button">${c.words.map(x=>x.ok ? esc(x.w) : `<span class="cmiss">${esc(x.w)}</span>`).join(" ")}</b>`;
  const msg = (s, cls)=>{ const m = $("spmsg"); if(m){ m.textContent = s; m.className = "spmsg"+(cls?" "+cls:""); } };
  /* Skipping still shows how it is said, when the step has one sentence to say (student test
     2026-09-25: the spoken translation moved on with no answer at all); the lesson's end
     says how many speaking steps were skipped. */
  $("later").onclick = ()=>{
   if(o.reveal && !$("laterans")){
-   host.insertAdjacentHTML("beforeend", `<div class="spres" id="laterans"><div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">🔊 ${esc(px(o.reveal))}</b></div></div>`);
+   host.insertAdjacentHTML("beforeend", `<div class="spres" id="laterans"><div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">${esc(px(o.reveal))}</b></div></div>`);
    $("later").remove(); allow(); if(P) P.skipped = (P.skipped||0)+1; return;
   }
   if(P) P.skipped = (P.skipped||0)+1; allow(); if(go) go.click();
@@ -1597,16 +1676,20 @@ function mountSpeech(host, o){
    card("no", "🤔 "+esc(X.none), `<div class="spb">${esc(X.noneTip)}${esc(more)}</div>`);
    if(tries>=2) allow(); if(COACH) COACH.pose("think"); return;
   }
-  const said = `<div class="spb">${esc(X.you)} <b>“${esc(heard[0])}”</b></div>`;
+  const C = cmp(heard);
+  const said = `<div class="spb">${esc(X.you)} <b>“${C && !C.pass ? struck(heard[0], C) : esc(heard[0])}”</b></div>`;
   const tip = o.tips ? slipTip(heard) : "";
   const pm = o.passModel ? o.passModel() : "";
-  const modelNote = pm ? `<div class="spb">${esc(T().compareModel)} <b data-say="${esc(pm)}" role="button">🔊 ${esc(pm)}</b></div>` : "";
+  const modelNote = pm ? `<div class="spb">${esc(T().compareModel)} <b data-say="${esc(pm)}" role="button">${esc(pm)}</b></div>` : "";
   const tipHTML = tip ? `<div class="spb">💡 ${esc(fmt(T().slipTip, {t: tip}))}</div>` : "";
   if(o.judge(heard)){
-   card("ok", "✓ "+esc(o.good || X.ok), said+tipHTML+modelNote);
+   const near = (!pm && C && C.words.some(x=>!x.ok)) ? `<div class="spb">${esc(HT.std)} ${full(C)}</div>` : "";
+   card("ok", "✓ "+esc(o.good || X.ok), said+tipHTML+modelNote+near);
    allow(); if(COACH) COACH.pose("celebrate");
   } else {
-   const reveal = (o.reveal && tries>=2) ? `<div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">🔊 ${esc(o.reveal)}</b></div>` : "";
+   const reveal = C ? (tries>=2 ? `<div class="spb">${esc(T().stransAns)} ${full(C)}</div><div class="spb csmall">${esc(HT.missed)}</div>`
+                               : `<div class="spb cgaps">${gaps(C)}</div><div class="spb csmall">${esc(HT.legend)}</div>`)
+    : (o.reveal && tries>=2) ? `<div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">${esc(o.reveal)}</b></div>` : "";
    const retry = typeof o.retry==="function" ? o.retry(heard) : o.retry;
    card("no", "✗ "+esc(retry || X.red), said+reveal+(more ? `<div class="spb">${esc(more)}</div>` : ""));
    if(tries>=2) allow(); if(COACH) COACH.pose("think");
@@ -1931,7 +2014,8 @@ function renderStep(){
   if($("cuebtn")) $("cuebtn").onclick = ()=>{ $("cuezh").classList.remove("hidden"); $("cuebtn").remove(); };
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 10; $("sessxp").textContent = P.xp; xpFloat(10); };
   $("go").onclick = ()=>{ if(st.tries2) pay(); nextStep(); };
-  mountSpeech($("sparea"), {st, tips: CONF.flow==="l2", passModel: ()=>st.byIdea ? ans : "", key: COURSE[P.mi].id+"-"+P.li+"-st"+st.n, reveal: ans, retry: ()=>whyText(st.why, true),
+  mountSpeech($("sparea"), {st, tips: CONF.flow==="l2", passModel: ()=>st.byIdea ? ans : "", key: COURSE[P.mi].id+"-"+P.li+"-st"+st.n, reveal: ans,
+   targets: CONF.flow==="l2" ? null : [ans].concat(alts), hints: [String(ans).split(/\s+/).slice(0,3).join(" ").replace(/[,.!?;:]+$/,"")+"…", ans], retry: ()=>whyText(st.why, true),
    s1: ({zh:"先想一想英文怎么说", ms:"Fikir dahulu bagaimana menyebutnya", en:"First think how to say it in English"})[S.lang],
    onTries: n=>{ if(n>=2) st.tries2 = true; },
    judge: heard=>{
@@ -2060,7 +2144,8 @@ function renderStep(){
      screen as a red ✗ (walkthrough 2026-09-25). 「现在不方便说」 earns nothing. */
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); };
   $("go").onclick = ()=>{ if(st.tried && st.tries2) pay(); nextStep(); };
-  mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ")});
+  const k0 = (st.keys || [])[0] ? String(st.keys[0]).replace(/^./, c=>c.toUpperCase()) + "…" : "";
+  mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", hints: [k0, st.model ? px(st.model) : ""], retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ")});
     if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort; if(st.ask && hs.some(h=>NOAUX.test(questionPart(h)))) return t.ownAskAux;
     const q = hs.some(h=>QWORD.test(questionPart(h))); return st.ask ? (q ? t.ownAskTopic : fmt(t.ownAskRetry, {who: WHO_NAME[st.who] || ({zh:"对方",ms:"dia",en:"them"})[S.lang]})) : t.ownRetry; }, good: t.ownGood,
    model: ()=>speak(st.line, null, false, true, voiceOf(st.who)), hearLabel: t.hearModel2,
@@ -2309,7 +2394,7 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
   if(onDone){ onDone(ok, viaAlt); }
   else {
    const gained = award(xp, ok);
-   showFeedback(ok, {correct:std, also:viaAlt?std:"", expl:expl, xp:gained, quiet:!!(meta && meta.quiet),
+   showFeedback(ok, {correct:std, also:viaAlt?std:"", replay: viaAlt || std, expl:expl, xp:gained, quiet:!!(meta && meta.quiet),
     meaning:(meta&&meta.meaning)||"", onContinue:()=>nextStep()});
   }
  };
@@ -2410,6 +2495,7 @@ function renderDialog(box, stepNum, l){
     `<button class="btn btn-primary btn-block" id="go" disabled>${t.continue}</button>`);
    $("go").onclick = ()=>{ pushYou(disp); li++; advance(); };
    mountSpeech($("sparea"), {st:stD, key: COURSE[P.mi].id+"-"+P.li+"-dl", reveal: disp,
+    targets: CONF.flow==="l2" ? null : targets, hints: [String(disp).split(/\s+/).slice(0,3).join(" ").replace(/[,.!?;:]+$/,"")+"…", disp],
     retry: ()=>whyText(stD.why, true),
     tips: CONF.flow==="l2", passModel: ()=>stD.byIdea ? disp : "",
     judge: heard=>{ const cs = targets.map(x=>TouchSpeech.check(x, heard)); const exact = cs.some(c=>c.pass); const ok = exact || (CONF.flow==="l2" && ideaCheck(targets, heard)); stD.byIdea = ok && !exact;

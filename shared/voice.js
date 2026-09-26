@@ -80,8 +80,24 @@
     /* 挡住设定档打错字（0 或负数会让音档整个不动、听起来像坏掉） */
     return (isFinite(v) && v >= 0.5 && v <= 1.5) ? v : 1;
   }
+  /* The learner's own speed and volume (Marco 2026-09-26: a slider each, so a learner can
+     start slow and move up as they get used to it). Speed multiplies the course's rate
+     (0.75–1.25); volume is the course's sound only (0.1–1), the phone's buttons still set
+     the phone. Kept on this phone. */
+  var USER = (function () {
+    var u = { speed: 1, volume: 1 };
+    try { var v = JSON.parse(global.localStorage.getItem("touchVoiceUser") || "{}"); if (v.speed) u.speed = v.speed; if (v.volume) u.volume = v.volume; } catch (e) {}
+    u.speed = Math.min(1.25, Math.max(0.75, Number(u.speed) || 1));
+    u.volume = Math.min(1, Math.max(0.1, Number(u.volume) || 1));
+    return u;
+  })();
+  function setUser(o) {
+    if (o && o.speed != null) USER.speed = Math.min(1.25, Math.max(0.75, Number(o.speed) || 1));
+    if (o && o.volume != null) USER.volume = Math.min(1, Math.max(0.1, Number(o.volume) || 1));
+    try { global.localStorage.setItem("touchVoiceUser", JSON.stringify(USER)); } catch (e) {}
+  }
   function rateFor(slow) {
-    var r = baseRate();
+    var r = baseRate() * USER.speed;
     return slow ? Math.max(0.5, r * config().slowFactor) : r;
   }
 
@@ -262,7 +278,7 @@
     return SLOW[k];
   }
   function clip(url) {
-    if (!IOS || !actx() || !global.fetch) return new Audio(url);
+    if (!IOS || !actx() || !global.fetch) { var tag = new Audio(url); tag.volume = USER.volume; return tag; }
     var c = { playbackRate: 1, onended: null, onerror: null, _src: null, _off: false };
     c.play = function () {
       return bufferFor(url).then(function (buf) {
@@ -271,7 +287,8 @@
         var b = Math.abs(r - 1) < 0.02 ? buf : slowCopy(url, buf, r);
         var s = AC.createBufferSource();
         s.buffer = b;
-        s.connect(AC.destination);
+        var g = AC.createGain(); g.gain.value = USER.volume;
+        s.connect(g); g.connect(AC.destination);
         var end = started();
         s.onended = function () { end(); if (!c._off && c.onended) c.onended(); };
         c._src = s; c._end = end;
@@ -334,7 +351,8 @@
       var v = vs.filter(function (x) { return /^en[-_]?(US|GB)/i.test(x.lang); })[0] ||
               vs.filter(function (x) { return /^en/i.test(x.lang); })[0];
       if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
-      u.rate = (opt.rate != null ? opt.rate : rateFor(opt.slow)) * 0.85;   // 机械音本来就要再慢一点才听得懂
+      u.rate = (opt.rate != null ? opt.rate : rateFor(opt.slow)) * 0.85;
+      u.volume = USER.volume;   // 机械音本来就要再慢一点才听得懂
       if (opt.btn) { curBtn = opt.btn; curBtn.classList.add("playing"); }
       u.onend = u.onerror = function () { if (opt.btn) clearBtn(); if (opt.onDone) opt.onDone(); };
       global.speechSynthesis.speak(u);
@@ -533,6 +551,9 @@
     course: COURSE,
     rate: baseRate,          /* 这个课程现在用的速度 */
     rateFor: rateFor,
+    /* the learner's own speed / volume: TouchVoice.user() → {speed, volume}; setUser({…}) */
+    user: function () { return { speed: USER.speed, volume: USER.volume }; },
+    setUser: setUser,
     /* 这一条有没有音档（manifest 还没载到时回传 null＝不知道） */
     has: function (t, voice) { return have ? !!have[fileKey(t, voice)] : null; },
     /* 学生自己的名字（课程在知道名字後设定）：这些字不念，句子在这里切开 */
