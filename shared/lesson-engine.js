@@ -714,7 +714,7 @@ function resolveRef(r){
   const task = ln.c || ln.g || lesson.d.scene;
   const src = {};
   ["zh","ms","en"].forEach(k=>{ const tk = task[k]||task.en||""; src[k] = prev ? `${prev.who}: “${prev.en}” → ${tk}` : tk; });
-  return {kind:"trans", it:{src, ans:ln.ans, x:ln.x||[], alt:ln.alt||[], e:ln.c||ln.g||null}, n:r.n, ref:r};
+  return {kind:"trans", it:{src, ans:ln.ans, x:ln.x||[], alt:ln.alt||[], xw:ln.xw||null, e:ln.c||ln.g||null}, n:r.n, ref:r};
  }
  const arr = lesson[KMAP[r.k]];
  if(!arr || !arr[r.n]) return null;
@@ -1170,6 +1170,14 @@ function showFeedback(ok, opts){
  if(sayCorr){ $("fbcorr").setAttribute("data-say", sayCorr); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = px(corrTxt); }
  else if(replay){ $("fbcorr").setAttribute("data-say", replay); $("fbcorr").setAttribute("role","button"); $("fbcorr").textContent = px(replay); $("fbcorr").style.display = ""; $("fbcorr").classList.add("heard"); }
  else { $("fbcorr").removeAttribute("data-say"); $("fbcorr").removeAttribute("role"); }
+ /* a wrongly built sentence: what was built, the answer with the replaced words marked, why */
+ const D = (!ok && BUILT_DIFF) ? BUILT_DIFF : null; BUILT_DIFF = null;
+ let dv = $("fbdiff"), dw = $("fbdiffwhy");
+ if(!dv){ dv = document.createElement("div"); dv.id = "fbdiff"; dv.className = "fb-diff"; $("fbcorr").before(dv); }
+ if(!dw){ dw = document.createElement("div"); dw.id = "fbdiffwhy"; dw.className = "fb-diffwhy"; $("fbcorr").after(dw); }
+ dv.innerHTML = D ? `<span class="fbd-l">${D.you}</span> <span class="fbd-s">${D.built}</span>` : ""; dv.style.display = D ? "" : "none";
+ dw.innerHTML = D ? D.lines.map(l=>`<div>${l}</div>`).join("") : ""; dw.style.display = D && D.lines.length ? "" : "none";
+ if(D && sayCorr) $("fbcorr").innerHTML = px(D.answer);
  $("fbexpl").textContent = px(opts.expl || "");
  $("fbexpl").style.display = opts.expl ? "" : "none";
  const pooled = !ok && P && P.last && P.last.pooled;
@@ -2304,7 +2312,7 @@ function renderStep(){
   const sub = sent ? t.sorderSub : isO ? t.orderSub : t.transSub;
   const bubble = sent ? mascotBubble(esc(px(tri(it.q)))) : isO ? "" : mascotBubble(esc(px(tri(it.src))));
   const display = px(isO ? it.w.join(" ") : it.ans).replace(/\s+([.,!?;:])/g,"$1");
-  const meta = {ref: st.ref||{m:P.mi,l:P.li,k:st.kind,n:st.n}, q: isO ? T().order : px(tri(it.src)), alts:(it.alt||[]).map(px)};
+  const meta = {ref: st.ref||{m:P.mi,l:P.li,k:st.kind,n:st.n}, q: isO ? T().order : px(tri(it.src)), alts:(it.alt||[]).map(px), xw: it.xw || null};
   if(!isO) meta.meaning = px(tri(it.src));
   /* Level 2 orders whole sentences: the joined paragraph has no recording (C, not made) */
   if(sent && !ALL_AUDIO()) meta.quiet = true;
@@ -2351,6 +2359,40 @@ function words(arr){ return arr.filter(w=>!isPunct(w)); }
 function norm(arr){ return words(arr).join(" ").toLowerCase().replace(/[.,!?;:'"]/g,"").replace(/\s+/g," ").trim(); }
 
 /* tap-to-build (order / translation / dialogue lines) */
+/* A built sentence that is wrong says where (Marco 2026-09-26: 「学生可能会不知道他错在哪里」):
+   the learner's words against the answer by their longest common order — a tile that is
+   not in the answer is struck, the answer's words it replaced are marked, and each pair is
+   said in a line ("here it is meet, not meets"). All the right words in the wrong order
+   says so. An item may carry a reason for its decoy tiles (xw: {tile: tri}), added as 💡.
+   Set by renderBuilder, read once by the next showFeedback. */
+let BUILT_DIFF = null;
+function builtDiff(built, answer, xw, display){
+ const k = w=>String(w).toLowerCase().replace(/[’]/g,"'").replace(/[^a-z0-9']/g,"");
+ const B = built.filter(w=>k(w)), A = answer.filter(w=>k(w)), n = B.length, m = A.length;
+ const L = Array.from({length:n+1}, ()=>new Array(m+1).fill(0));
+ for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) L[i][j] = k(B[i])===k(A[j]) ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
+ const inB = new Array(n).fill(false), inA = new Array(m).fill(false);
+ for(let i=0,j=0;i<n&&j<m;){ if(k(B[i])===k(A[j])){ inB[i]=inA[j]=true; i++; j++; } else if(L[i+1][j]>=L[i][j+1]) i++; else j++; }
+ const W = ({zh:{you:"你拼的：", swap:"这里要用 {r}，不是 {w}。", extra:"这里不用 {w}。", miss:"少了 {r}。", order:"字都对了，只是顺序不对。"},
+  ms:{you:"Susunan anda:", swap:"Di sini guna {r}, bukan {w}.", extra:"{w} tidak perlu di sini.", miss:"Tertinggal {r}.", order:"Semua perkataan betul, cuma susunannya salah."},
+  en:{you:"You built:", swap:"Here it is {r}, not {w}.", extra:"No {w} here.", miss:"Missing: {r}.", order:"The words are right; the order is not."}})[S.lang];
+ const sorted = x=>x.map(k).sort().join(" ");
+ const wrong = B.map((w,i)=>inB[i]?-1:i).filter(i=>i>=0), missing = A.map((w,j)=>inA[j]?-1:j).filter(j=>j>=0);
+ const lines = [];
+ if(sorted(B)===sorted(A)) lines.push(esc(W.order));
+ else for(let x=0; x<Math.max(wrong.length, missing.length) && lines.length<2; x++){
+  const w = wrong[x]!=null ? B[wrong[x]] : "", r = missing[x]!=null ? A[missing[x]] : "";
+  const clean = v=>String(v).replace(/[.,!?;:]+$/,"");
+  let line = w && r ? fmt(W.swap, {w:`<b class="wr">${esc(clean(w))}</b>`, r:`<b class="rt">${esc(clean(r))}</b>`})
+   : w ? fmt(W.extra, {w:`<b class="wr">${esc(clean(w))}</b>`}) : fmt(W.miss, {r:`<b class="rt">${esc(clean(r))}</b>`});
+  const why = w && xw && (xw[clean(w)] || xw[clean(w).toLowerCase()]);
+  if(why) line += `<br>💡 ${esc(px(tri(why)))}`;
+  lines.push(line);
+ }
+ return { you: esc(W.you), built: B.map((w,i)=>inB[i] ? esc(w) : `<span class="wr">${esc(w)}</span>`).join(" "),
+  // the answer in full, punctuation tiles included, with the words the learner lacked marked
+  answer: (()=>{ let j = 0; return (display ? String(display).split(/\s+/) : answer).map(w=>{ if(!k(w)) return esc(w); const hit = inA[j++]; return hit ? esc(w) : `<span class="rt">${esc(w)}</span>`; }).join(" ").replace(/\s+([.,!?;:])/g,"$1"); })(), lines };
+}
 function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, display, meta, bubble){
  const t = T();
  /* Tapping a tile is silent (Marco 2026-09-25: reading every tapped word got in the way;
@@ -2385,6 +2427,7 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
   if(!ok) viaAlt = ((meta&&meta.alts)||[]).find(a=>norm(String(a).split(/\s+/))===built) || "";
   if(viaAlt) ok = true;
   const std = display || answer.join(" ");
+  BUILT_DIFF = ok ? null : builtDiff(placed.map(p=>p.v), answer, meta && meta.xw, std);
   document.querySelectorAll(".wchip").forEach(b=>b.disabled=true);
   $("bz").classList.add(ok ? "bzok" : "bzno");
   // the whole sentence, read only when it is right — the learner's own when it was another right way
@@ -2522,7 +2565,7 @@ function renderDialog(box, stepNum, l){
     /* 用另一种说法答对的，对话纪录里留他自己拼的那句 */
     onContinue:()=>{ pushYou(viaAlt ? viaAlt.replace(/\s+([.,!?;:])/g,"$1") : disp); li++; advance(); }});
   }, disp,
-  {ref:{m:P.mi,l:P.li,k:"dlg",n:li}, q:px(tri(line.c||line.g||d.scene)), alts:(line.alt||[]).map(px)});
+  {ref:{m:P.mi,l:P.li,k:"dlg",n:li}, q:px(tri(line.c||line.g||d.scene)), alts:(line.alt||[]).map(px), xw: line.xw || null});
   window.scrollTo(0,document.body.scrollHeight);
  }
  advance();

@@ -199,3 +199,12 @@ input.ios::-moz-range-thumb{ width:28px; height:28px; border:0; border-radius:50
 .ios-tip{ position:absolute; top:-30px; transform:translateX(-50%); background:rgba(28,28,30,.86); color:#fff; border-radius:8px;
   padding:3px 9px; font:600 13px/1.2 -apple-system,system-ui,sans-serif; font-variant-numeric:tabular-nums; opacity:0; transition:opacity .15s; pointer-events:none; white-space:nowrap; }
 .ios-tip.show{ opacity:1; }
+
+/* ---------- a wrongly built sentence: where it went wrong (Marco 2026-09-26) ---------- */
+.fb-diff{ font-size:15px; margin-bottom:6px; }
+.fb-diff .fbd-l{ opacity:.7; font-size:13px; }
+.fb-diff .fbd-s{ font-weight:700; }
+.fb-diff .wr, .fb-diffwhy .wr{ color:var(--te-bad,#C0405C); text-decoration:line-through; text-decoration-thickness:2px; }
+#fbcorr .rt, .fb-diffwhy .rt{ background:rgba(224,146,46,.26); border-radius:4px; padding:0 3px; }
+.fb-diffwhy{ background:rgba(255,255,255,.65); border-radius:12px; padding:8px 12px; margin:6px 0; font-size:14.5px; display:grid; gap:4px; }
+.fb-diffwhy b{ font-weight:800; }
