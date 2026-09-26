@@ -191,6 +191,8 @@ const ALL_AUDIO = ()=> typeof CONF==="undefined" || CONF.flow==="pb";
 function voiceOf(who){ return (who && who!=="Y" && VOICE_OF[who]) || "xm"; }
 /* heard lines with no speaker of their own (listen, ls, cm): the lesson's dialogue partner */
 function lessonVoice(l){ const x = ((l && l.d && l.d.lines) || []).find(y=>y.who && y.who!=="Y"); return voiceOf(x && x.who); }
+/* a sentence's ♪ stops breathing once it has been heard (lesson-frame.css .heard) */
+document.addEventListener("click", e=>{ const el = e.target.closest && e.target.closest("[data-say],[data-sayit]"); if(el) el.classList.add("heard"); }, true);
 function speak(txt, btn, slow, mustHear, voice){
  if(!S.sound) return;
  if(NOSPEAK.has(String(txt).trim())) return;

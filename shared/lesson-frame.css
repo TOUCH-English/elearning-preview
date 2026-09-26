@@ -125,3 +125,33 @@ body.embedded .player{padding-bottom:40px}
 .cmgrid .cqt{display:block;font-size:13px;font-weight:600;line-height:1.35;text-align:left}
 .cuezh{margin-top:6px;font-size:14px;color:var(--subtle,#6B7A90)}
 .cmgrid .pw,.pairgrid .pw{white-space:normal;overflow-wrap:anywhere;word-break:normal;min-width:0}
+
+/* ---------- ♪ = "tap to hear this sentence" (Marco 2026-09-26, A) ----------
+   The blue speaker plays a word; the ♪ plays a sentence. It was a faint grey ♪ that
+   nobody tapped. Now it is the same ♪, amber, with a soft glow that breathes until the
+   sentence has been heard once (.heard, set by lesson-engine.js), then rests — a dialogue
+   of eight lines must not keep eight things glowing. Amber: not the word speaker's blue,
+   not the green / red of right and wrong. One colour for every course: change --note. */
+:root{ --note:#E0922E; --note-glow:224,146,46; }
+.meetw .ex[data-say]::after,
+.vrow .ex[data-say]::after,
+.fb .corr[data-say]::after,
+.dline .en[data-say]::after,
+.ownrow .bubble .bt[data-sayit]::after{
+  content:"♪"; display:inline-block; margin-left:6px;
+  color:var(--note); opacity:1; font-weight:800; font-style:normal; font-size:1.15em;
+  animation:noteGlow 2.4s ease-in-out infinite;
+}
+.meetw .ex[data-say].heard::after,
+.vrow .ex[data-say].heard::after,
+.fb .corr[data-say].heard::after,
+.dline .en[data-say].heard::after,
+.ownrow .bubble .bt[data-sayit].heard::after{ animation:none; text-shadow:none; }
+@keyframes noteGlow{
+  0%,100%{ text-shadow:0 0 3px rgba(var(--note-glow),.35); }
+  50%    { text-shadow:0 0 8px rgba(var(--note-glow),.9), 0 0 14px rgba(var(--note-glow),.5); }
+}
+@media (prefers-reduced-motion: reduce){
+  .meetw .ex[data-say]::after, .vrow .ex[data-say]::after, .fb .corr[data-say]::after,
+  .dline .en[data-say]::after, .ownrow .bubble .bt[data-sayit]::after{ animation:none; }
+}
