@@ -425,8 +425,10 @@
   }
 
   /* 主要入口。回传 "audio" / "tts" / false，方便测试与除错。 */
+  var MUTED = false;   // the course's sound switch (lesson-engine applySound): a tapped ♪ stays silent too
   function say(text, opt) {
     opt = opt || {};
+    if (MUTED) { if (opt.onDone) setTimeout(opt.onDone, 0); return false; }
     /* opt.onDone: called once when this line has finished (or could not play), so a
        caller can play lines one after another — the whole dialogue at once (Marco
        2026-09-25: 「完成全部的时候…一键播放来回对话」). Not called when stop() cut it. */
@@ -554,6 +556,8 @@
     /* the learner's own speed / volume: TouchVoice.user() → {speed, volume}; setUser({…}) */
     user: function () { return { speed: USER.speed, volume: USER.volume }; },
     setUser: setUser,
+    get muted() { return MUTED; },
+    set muted(v) { MUTED = !!v; if (MUTED) stop(); },
     /* 这一条有没有音档（manifest 还没载到时回传 null＝不知道） */
     has: function (t, voice) { return have ? !!have[fileKey(t, voice)] : null; },
     /* 学生自己的名字（课程在知道名字後设定）：这些字不念，句子在这里切开 */

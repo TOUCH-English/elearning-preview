@@ -52,7 +52,7 @@ Object.keys(UI_LESSON).forEach(k=>Object.assign(UI[k], UI_LESSON[k]));
 const UI_L1 = {
  zh:{gistK:"先听一段对话",gistSub:"没有字，只用听的。听完回答下面的问题。",gistPlay:"▶ 播放对话",gistStop:"■ 停止",
   loK:"只听不看",loSub:"听这一句（没有字），然后回答。",loWas:"刚才那一句是：",
-  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问 {who}。",compareModel:"对照一下示范：",ownNot:"这里不能说「{w}」——这正是这一课要改的说法，再说一次。",ownShort:"请说一个完整的句子，至少四个字。",missionOff:"要说的是上面这个题目——多用题目里的事来说。",stransSubL2:"看情境，按麦克风用英文说出来——用你自己的话也可以。",ownMust:"还要说出这一部分：{w}…，再说一次。",slipTip:"小提醒：{t}",planStory:"开口前先想 15 秒：先发生什么？然后呢？结果怎样？",planPPF:"开口前先想 15 秒：重点是什么？为什么？下一步是什么？",planLoop:"开口前先想 15 秒：怎么回答？加什么细节？反问什么？",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
+  stransK:"用英文说出来",stransSub:"看中文，按麦克风用英文说出来。",stransAns:"可以这样说：",stransRetry:"还不太对。想一想，再说一次。",ownAskRetry:"差一点——要用问句问 {who}。",compareModel:"对照一下示范：",ownNot:"这里不能说「{w}」——这正是这一课要改的说法，再说一次。",ownShort:"请用一句完整的英文回答，不要只说一个字。",missionOff:"要说的是上面这个题目——多用题目里的事来说。",stransSubL2:"看情境，按麦克风用英文说出来——用你自己的话也可以。",ownMust:"还要说出这一部分：{w}…，再说一次。",slipTip:"小提醒：{t}",planStory:"开口前先想 15 秒：先发生什么？然后呢？结果怎样？",planPPF:"开口前先想 15 秒：重点是什么？为什么？下一步是什么？",planLoop:"开口前先想 15 秒：怎么回答？加什么细节？反问什么？",ownAskAux:"问句里少了一个字：例如 Where DO you…? / How ARE you…?，再问一次。",ownAskTopic:"是问句没错，不过要问题目要你问的那件事，再试一次。",dlgSay:"这一句用说的：按麦克风，把它说出来。",
   wholeK:"一次说完整",missionK:"Boss 任务：连说几句",missionSub:"按麦克风，一口气说完；说完再按一下。",missionModel:"看示范",missionHide:"收起示范",missionRetry:"再说完整一点——把上面要求的每一样都说到。",missionNeed:"至少说 {n} 个英文单词",missionGaps:"还缺：{g}。",missionShort:"你说了 {n} 个英文单词，至少要 {m} 个。",
   whyFact:"注意：这里要说 {w}。再说一次。",whySmall:"少了一个小字：{w}。英文句子里这种字不能省，再说一次。",whyForm:"注意词尾：这里要说 {w}。再说一次。",whyMissing:"红色的字漏掉了或没听清楚，再说一次。",
   skippedN:"这一课你跳过了 {n} 个开口／听力练习——方便的时候再做一次。",missionGood:"任务完成！说得很完整。",missionS1:"先看上面的要求，想好要说的每一样",
@@ -60,7 +60,7 @@ const UI_L1 = {
   roleNote:"练习对话：句子里的年龄、地方照题目说就好，不一定是你自己的情况。",gistEase:"听不懂也没关系，先猜猜看——等一下会学到这些字。"},
  ms:{gistK:"Dengar perbualan dahulu",gistSub:"Tiada teks — dengar sahaja, kemudian jawab soalan di bawah.",gistPlay:"▶ Main perbualan",gistStop:"■ Berhenti",
   loK:"Dengar sahaja",loSub:"Dengar ayat ini (tiada teks), kemudian jawab.",loWas:"Ayat tadi ialah:",
-  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya {who} dengan soalan.",compareModel:"Bandingkan dengan contoh:",ownNot:"Jangan sebut “{w}” di sini — itulah yang pelajaran ini betulkan. Cuba lagi.",ownShort:"Sebut satu ayat lengkap, sekurang-kurangnya empat perkataan.",missionOff:"Cakap tentang tugasan di atas — guna perkara dalam tugasan itu.",stransSubL2:"Baca situasi, tekan mikrofon dan sebut dalam Bahasa Inggeris — boleh guna ayat anda sendiri.",ownMust:"Sebut juga bahagian ini: {w}… Cuba lagi.",slipTip:"Tip: {t}",planStory:"Fikir 15 saat: apa berlaku dahulu? Kemudian? Kesudahannya?",planPPF:"Fikir 15 saat: apa perkara utama? Kenapa? Apa langkah seterusnya?",planLoop:"Fikir 15 saat: jawapan anda? Butiran apa? Soalan balas apa?",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
+  stransK:"Sebut dalam Bahasa Inggeris",stransSub:"Baca ayat ini, tekan mikrofon dan sebut dalam Bahasa Inggeris.",stransAns:"Boleh sebut begini:",stransRetry:"Belum tepat. Fikir sekejap, kemudian cuba lagi.",ownAskRetry:"Hampir — tanya {who} dengan soalan.",compareModel:"Bandingkan dengan contoh:",ownNot:"Jangan sebut “{w}” di sini — itulah yang pelajaran ini betulkan. Cuba lagi.",ownShort:"Jawab dengan ayat Inggeris yang lengkap, bukan satu perkataan sahaja.",missionOff:"Cakap tentang tugasan di atas — guna perkara dalam tugasan itu.",stransSubL2:"Baca situasi, tekan mikrofon dan sebut dalam Bahasa Inggeris — boleh guna ayat anda sendiri.",ownMust:"Sebut juga bahagian ini: {w}… Cuba lagi.",slipTip:"Tip: {t}",planStory:"Fikir 15 saat: apa berlaku dahulu? Kemudian? Kesudahannya?",planPPF:"Fikir 15 saat: apa perkara utama? Kenapa? Apa langkah seterusnya?",planLoop:"Fikir 15 saat: jawapan anda? Butiran apa? Soalan balas apa?",ownAskAux:"Soalan anda kurang satu perkataan: contohnya Where DO you…? / How ARE you…? Cuba lagi.",ownAskTopic:"Betul, itu soalan — tapi tanya perkara yang diminta dalam tugasan. Cuba lagi.",dlgSay:"Ayat ini disebut: tekan mikrofon dan cakap.",
   wholeK:"Cakap semuanya sekali gus",missionK:"Misi Boss: cakap beberapa ayat",missionSub:"Tekan mikrofon dan cakap semuanya; tekan sekali lagi bila selesai.",missionModel:"Lihat contoh",missionHide:"Tutup contoh",missionRetry:"Cakap dengan lebih lengkap — sebut setiap perkara yang diminta.",missionNeed:"Sekurang-kurangnya {n} perkataan Inggeris",missionGaps:"Masih kurang: {g}.",missionShort:"Anda sebut {n} perkataan Inggeris; perlu sekurang-kurangnya {m}.",
   whyFact:"Perhatian: di sini sebut {w}. Cuba lagi.",whySmall:"Kurang satu perkataan kecil: {w}. Dalam ayat Inggeris perkataan ini tidak boleh ditinggalkan. Cuba lagi.",whyForm:"Perhatikan hujung perkataan: sebut {w}. Cuba lagi.",whyMissing:"Perkataan merah tertinggal atau kurang jelas. Cuba lagi.",
   skippedN:"Anda melangkau {n} latihan bercakap/mendengar dalam pelajaran ini — cuba lagi bila sesuai.",missionGood:"Misi selesai! Lengkap sekali.",missionS1:"Baca tugasan di atas dan fikir setiap perkara yang perlu disebut",
@@ -68,7 +68,7 @@ const UI_L1 = {
   roleNote:"Dialog latihan: umur dan tempat dalam ayat ikut soalan sahaja, bukan semestinya tentang anda.",gistEase:"Tak faham pun tak apa — teka dahulu. Perkataan ini akan diajar sekejap lagi."},
  en:{gistK:"Listen to the conversation first",gistSub:"No text — just listen, then answer the question below.",gistPlay:"▶ Play the conversation",gistStop:"■ Stop",
   loK:"Listen only",loSub:"Listen to this sentence (no text), then answer.",loWas:"The sentence was:",
-  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask {who} a question.",compareModel:"Compare with the model:",ownNot:"Don't say “{w}” here — that is exactly what this lesson corrects. Try again.",ownShort:"Please say a full sentence, at least four words.",missionOff:"Talk about the task above — use the things in the task.",stransSubL2:"Read the situation, tap the mic and say it in English — your own words are fine.",ownMust:"Say this part too: {w}… Try again.",slipTip:"Tip: {t}",planStory:"Take 15 seconds: what happened first? Then? How did it end?",planPPF:"Take 15 seconds: what is the point? Why? What is the next step?",planLoop:"Take 15 seconds: your answer? One detail? A question back?",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
+  stransK:"Say it in English",stransSub:"Read this, tap the mic and say it in English.",stransAns:"You can say:",stransRetry:"Not quite. Think, then say it again.",ownAskRetry:"Almost — ask {who} a question.",compareModel:"Compare with the model:",ownNot:"Don't say “{w}” here — that is exactly what this lesson corrects. Try again.",ownShort:"Answer with a full English sentence, not just one word.",missionOff:"Talk about the task above — use the things in the task.",stransSubL2:"Read the situation, tap the mic and say it in English — your own words are fine.",ownMust:"Say this part too: {w}… Try again.",slipTip:"Tip: {t}",planStory:"Take 15 seconds: what happened first? Then? How did it end?",planPPF:"Take 15 seconds: what is the point? Why? What is the next step?",planLoop:"Take 15 seconds: your answer? One detail? A question back?",ownAskAux:"Your question is missing a word: e.g. Where DO you…? / How ARE you…? Ask again.",ownAskTopic:"That is a question — but ask about what the task says. Try again.",dlgSay:"Say this line: tap the mic and speak.",
   wholeK:"Say it all in one go",missionK:"Boss mission: say a few sentences",missionSub:"Tap the mic and say it all; tap again when you finish.",missionModel:"See an example",missionHide:"Hide the example",missionRetry:"Say a bit more — cover everything the task asks for.",missionNeed:"At least {n} English words",missionGaps:"Still missing: {g}.",missionShort:"You said {n} English words; at least {m} are needed.",
   whyFact:"Check: it should be {w} here. Try again.",whySmall:"A small word is missing: {w}. English sentences need it — say it again.",whyForm:"Check the ending: say {w} here. Try again.",whyMissing:"The red words were missing or unclear. Say it again.",
   skippedN:"You skipped {n} speaking/listening steps in this lesson — try them when you can.",missionGood:"Mission complete! Very full answer.",missionS1:"Read the task above and plan each thing you need to say",
@@ -527,6 +527,7 @@ $("langswitch").addEventListener("click", openMenu);
    stop the autoplay, and 「在右上角打开声音」 pointed at nothing). */
 function applySound(){
  document.body.classList.toggle("sound-off", !S.sound);
+ try{ if(window.TouchVoice) TouchVoice.muted = !S.sound; }catch(e){}
  ["soundbtn","psound"].forEach(id=>{
   const b=$(id); if(!b) return;
   b.innerHTML = S.sound ? SPK_ON_SVG : SPK_OFF_SVG;
@@ -823,8 +824,18 @@ function skillCardHTML(l){
 /* What went wrong in a spoken sentence, in the learner's language (walkthrough 2026-09-25:
    "I a little tired" was told 「红色的字没听清楚」 — blaming the voice for a missing word). */
 function whyText(why, hidden){
- const t = T(), w = String(why||"").split(":")[1] || "";
- if(hidden && typeof CONF!=="undefined" && CONF.flow==="l2" && ideaCheck.slip) return fmt(t.ownNot, {w: ideaCheck.slip});
+ const t = T(), w0 = String(why||"").split(":").slice(1).join(":"), w = w0==="i" ? "I" : w0;
+ const W = ({zh:{irr:"注意：这里要说 {w}（不规则变化，要记住）。再说一次。", swap:"意思不一样了：这里要说 {w}。再说一次。", not:"意思相反了：原句没有 not。再说一次。"},
+  ms:{irr:"Perhatian: sebut {w} di sini (bentuk tak sekata, perlu diingat). Cuba lagi.", swap:"Maksudnya berubah: di sini sebut {w}. Cuba lagi.", not:"Maksudnya terbalik: ayat asal tiada not. Cuba lagi."},
+  en:{irr:"Check: say {w} here (an irregular form to remember). Try again.", swap:"The meaning changed: say {w} here. Try again.", not:"The meaning is the opposite: the sentence has no not. Try again."}})[S.lang];
+ if(/^slip:/.test(why)) return fmt(t.slipTip, {t: w0});
+ if(/^not:/.test(why)) return w0;
+ if(/^meaning:/.test(why)) return fmt(({zh:"意思不对：这里要说 {w}。再说一次。", ms:"Maksudnya salah: di sini sebut {w}. Cuba lagi.", en:"The meaning is off: say {w} here. Try again."})[S.lang], {w: w0});
+ if(/^decoy:/.test(why)) return w0;
+ if(why==="fact:not") return W.not;
+ if(/^swap:/.test(why)) return fmt(W.swap, {w});
+ if(/^form:/.test(why) && Object.values((window.TouchSpeech && TouchSpeech.irregular) || {}).includes(w)) return fmt(W.irr, {w});
+ if(hidden && typeof CONF!=="undefined" && CONF.flow==="l2" && ideaCheck.slip && !/^(slip|decoy):/.test(why)) return fmt(t.ownNot, {w: ideaCheck.slip});
  if(/^small:/.test(why)) return fmt(t.whySmall, {w});
  if(/^form:/.test(why)) return fmt(t.whyForm, {w});
  if(/^fact:/.test(why)) return fmt(t.whyFact, {w: w.charAt(0).toUpperCase()+w.slice(1)});
@@ -832,24 +843,103 @@ function whyText(why, hidden){
 }
 /* Common slips of Malaysian learners, spotted in free speech (a mission or SAY IT YOURSELF can
    pass on content and still deserve one correction — Mei Fong's "more lighter", "she clean"). */
+/* walkthrough 2026-09-26: the tips "corrected" right English ("How long does it take?" →
+   takes, "I have finished" → had, "more manpower", "I think… yesterday" → thought) and missed
+   the real slips. A verb after does / did / can / to / let… is the base form; a comparative
+   is a known one; and the beginner slips (I have 56 years old, I from, am agree…) are named. */
+const S3 = v=>v==="go"?"goes":v==="do"?"does":v==="have"?"has":/(s|sh|ch|x|z|o)$/.test(v)?v+"es":/[^aeiou]y$/.test(v)?v.slice(0,-1)+"ies":v+"s";
+const BASEOK = /\b(does|did|do|can|could|will|would|should|must|may|might|to|let|make|makes|made|help|helps|helped|lets|don't|doesn't|didn't|won't|can't|how long|how much|what time|where|when|why|what)\s+(\w+\s+){0,2}$/;
+const COMPAR = "better|bigger|smaller|faster|cheaper|easier|harder|longer|shorter|nicer|cleaner|higher|lower|older|newer|closer|busier|happier|quicker|safer|stronger|warmer|colder|hotter|larger|earlier|later|slower|worse";
 const SLIPS = [
- [/\bmore (\w+er)\b/, m=>`more ${m[1]} → ${m[1]}`],
- [/\b(he|she|it|my \w+[^s ]|the (?:customer|manager|boss|report|machine|printer|driver)|mr tan|siti|kumar|ali|mei ling) (clean|buy|go|work|like|want|need|help|use|live|come|take|make|say|know|think|feel|love|eat|drink|play|watch|start|finish)\b(?! to\b)/, m=>`${m[1]} ${m[2]} → ${m[1]} ${m[2]}s`],
- [/\bi (good|busy|tired|happy|fine|okay|sad|sick|free|ready|sure|late)\b/, m=>`I ${m[1]} → I am ${m[1]}`],
- [/\byesterday i (go|eat|buy|see|have|take|come|meet|visit|watch|play|cook)\b/, m=>`yesterday I ${m[1]} → the past form`],
+ [new RegExp("\\bmore ("+COMPAR+")\\b"), m=>`more ${m[1]} → ${m[1]}`],
+ [/\b(he|she|it|mr tan|siti|kumar|ali|mei ling|my (?:boss|manager|colleague|friend|sister|brother|mother|father|son|daughter)) (clean|buy|go|work|like|want|need|help|use|live|come|take|make|say|know|think|love|eat|drink|play|watch|start|finish|fix|check|have|do)\b(?! to\b)(?! (you|we|they|i)\b)/, (m, h)=> BASEOK.test(h.slice(0, m.index)) ? "" : `${m[1]} ${m[2]} → ${m[1]} ${S3(m[2])}`],
+ [/\bi (good|busy|tired|happy|fine|okay|sad|sick|free|ready|sure|late|hungry|sleepy|worried|from|very)\b/, m=>`I ${m[1]} → ${m[1]==="from" ? "I am from / I come from" : "I am "+m[1]}`],
+ [/\b(he|she|it) (very|so|a|an|from|good|busy|tired|happy|sick|late|friendly|helpful)\b/, (m, h)=> /\b(is|was|are|were|am|isn't|wasn't)\s+$/.test(h.slice(0, m.index)) ? "" : `${m[1]} ${m[2]} → ${m[1]} is ${m[2]}`],
+ [/\bi have (\d+|\w+ty|\w+teen|ten|eleven|twelve)( \w+)? years? old\b/, m=>`I have … years old → I am ${m[1]} years old`],
+ [/\bmy name (?!is\b)([a-z]+)\b/, m=>`my name ${m[1]} → my name is ${m[1]}`],
+ [/\b(am|is|are) (agree|have|like|want|need|go|come|work|live)\b/, m=> m[2]==="have" ? `${m[1]} have → ${m[1]} (without have)` : `${m[1]} ${m[2]} → ${m[2]}`],
+ [/\bdid (you|i|he|she|we|they) (went|ate|bought|saw|came|took|met|had|did|made|got)\b/, (m, h)=> /\b(i|you|he|she|we|they|yes|no)\s+$/.test(h.slice(0, m.index)) ? "" : `did ${m[1]} ${m[2]} → did ${m[1]} + base form`],
+ [/\bcan help (me|us)\b/, (m, h)=> /\b(you|i|we|they|he|she)\s+$/.test(h.slice(0, m.index)) ? "" : `can help ${m[1]} → can you help ${m[1]}`],
+ [/\bi (likes|wants|needs|works|lives|goes|has|does|checks|takes)\b/, m=>`I ${m[1]} → I ${m[1].replace(/ies$/,"y").replace(/(ss|sh|ch|x|o)es$/,"$1").replace(/s$/,"").replace(/^ha$/,"have")}`],
+ [/\byesterday i (go|eat|buy|see|take|come|meet|visit|watch|play|cook)\b/, m=>`yesterday I ${m[1]} → the past form`],
  [/\bvery like\b/, ()=>`very like → really like`],
+ [/\bnice meet\b/, ()=>`nice meet → nice to meet`],
+ [/\b(go|goes|come|comes|travel|get|went|came)( to [a-z]+)? with (the )?(bus|car|train|taxi|grab|motorcycle|motorbike|lrt|mrt)\b/, m=>`with ${m[4]} → by ${m[4]}`],
+ [/\bit (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+) o ?'?clock\b/, m=>`it ${m[1]} o'clock → it is ${m[1]} o'clock`],
+ [/\b(two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|[2-9]|\d\d+) (minute|hour|day|week|month|year)\b(?!s)/, m=>`${m[1]} ${m[2]} → ${m[1]} ${m[2]}s`],
+ [/\bi (\d+|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|\w+teen)( \w+)? years? old\b/, m=>`I ${m[1]} years old → I am ${m[1]} years old`],
+ [/\bon (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+) o ?'?clock\b/, m=>`on ${m[1]} o'clock → at ${m[1]} o'clock`],
+ [/\b(speak|know|understand) little\b/, m=>`${m[1]} little → ${m[1]} a little`],
+ [/\bnow (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+) o ?'?clock\b/, m=>`now ${m[1]} o'clock → it is ${m[1]} o'clock now`],
+ [/\b(start|starts|begin|finish|finishes) work (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\b/, m=>`${m[1]} work ${m[2]} → ${m[1]} work at ${m[2]}`],
+ [/\b(start|starts|begin|finish|finishes|wake up|go home) on (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\b/, m=>`${m[1]} on ${m[2]} → ${m[1]} at ${m[2]}`],
+ [/\bby the (bus|car|train|taxi|grab|motorcycle|motorbike|lrt|mrt)\b/, m=>`by the ${m[1]} → by ${m[1]}`],
+ [/\bthe (\w+) (very|so|too) (\w+)\b/, (m, h)=> /^(is|was|are|were|not|also)$/.test(m[1]) ? "" : `the ${m[1]} ${m[2]} → the ${m[1]} is ${m[2]}`],
+ [/\b(i|we|they|you) go work\b/, m=>`go work → go to work`],
+ [/\btoday is on (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/, m=>`today is on ${m[1]} → today is ${m[1]}`],
 ];
-const PASTCTX = /\b(yesterday|last (week|night|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|ago|in the end|was|were|went|had|did|on (monday|tuesday|wednesday|thursday|friday|saturday|sunday) (i|my|we|he|she|the))\b/;
+const PASTCTX = /\b(yesterday|last (weekend|week|night|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|ago|in the end|was|were|went|had|did)\b/;
 function pastOf(v){ const I = (window.TouchSpeech && TouchSpeech.irregular) || {}; return I[v] || (/e$/.test(v) ? v+"d" : /[^aeiou]y$/.test(v) ? v.slice(0,-1)+"ied" : v+"ed"); }
 function slipTip(heard){
+ /* sentence by sentence, when the words came with full stops ("Yes, I did. I had nasi lemak" is
+    two sentences, not "did I had") */
+ const parts = String((heard||[])[0]||"").split(/[.?!]+\s+/).filter(Boolean);
+ if(parts.length > 1){ for(const p of parts){ const t = slipTip1([p]); if(t) return t; } return ""; }
+ return slipTip1(heard);
+}
+function slipTip1(heard){
  const h = spNorm((heard||[]).join(" "));
  /* in a story about the past, a base verb after its subject is the slip — and the advice is
     the PAST form (Mei Fong: "my brother help me" was told "helps" in a story about last week) */
  if(PASTCTX.test(h)){
-  const m = h.match(/\b(i|he|she|it|we|they|my \w+|the \w+|mr tan|siti|kumar|ali) (break|go|eat|buy|see|come|take|make|get|meet|have|drive|leave|lose|forget|help|call|wait|lock|open|close|walk|finish|start|stay|visit|watch|play|cook|clean|tell|say|give|find|feel|think|know|bring|send|pay|ride|run|fall)\b(?! to\b)/);
-  if(m && !/\b(will|can|could|would|should|must|to|did|do|does|not)\s*$/.test(h.slice(0, m.index))) return `${m[1]} ${m[2]} → ${m[1]} ${pastOf(m[2])}`;
+  // opinions stay present in a past story ("I think it was good"); "I have finished" is right
+  const m = h.match(/\b(i|he|she|we|they|my (?:boss|manager|colleague|friend|sister|brother|mother|father|son|daughter)|mr tan|siti|kumar|ali) (?:(?:just|also|only|then|really) )?(break|go|eat|buy|come|take|make|get|meet|drive|leave|lose|forget|help|call|wait|lock|open|close|walk|finish|start|stay|visit|watch|play|cook|clean|tell|say|give|find|bring|send|pay|ride|run|fall|rest)\b(?! to\b)(?! (\w+ed|been|done|gone|seen|finished|already|just|to)\b)/);
+  if(m && !/\b(will|can|could|would|should|must|to|did|do|does|not|when|if|let's|usually|always|often|every|help|helped)\s*$/.test(h.slice(0, m.index))) return `${m[1]} ${m[2]} → ${m[1]} ${pastOf(m[2])}`.replace(/\bi\b/g, "I");
  }
- for(const [re, fx] of SLIPS){ const m = h.match(re); if(m) return fx(m); }
+ for(const [re, fx] of SLIPS){ const m = h.match(re); if(m){ const r = fx(m, h); if(r) return r.replace(/\bi\b/g, "I"); } }
+ return "";
+}
+/* A spoken answer that matches the words can still carry the lesson's own mistake: the
+   lesson's `not` phrases, a named slip, or one of the item's decoy tiles (the wrong words it
+   was built around, each with its reason). Any of them fails it, and says which. */
+function hardSlip(heard){
+ const nots = lessonNots();
+ for(const h of (heard||[]).map(x=>spNorm(x))){ const bad = nots.find(k=>(" "+h+" ").includes(" "+k+" ")); if(bad) return "not:"+fmt(T().ownNot, {w: bad.replace(/\bi\b/g, "I")}); }
+ /* Level 2 is Convey: a clear message with a small slip passes, with the slip as a tip; only the
+    lesson's own mistakes fail it (round 2, Mei Ling: "it deliver", "the pipe very old") */
+ if(typeof CONF!=="undefined" && CONF.flow==="l2") return "";
+ const sl = slipTip(heard);
+ return sl ? "slip:"+sl : "";
+}
+/* Whatever path passed (word for word, an alternative, the idea), the answer must not say the
+   opposite of the lesson's own sentence, a different number, or a different place (round 3, Mei
+   Ling: "the old supplier" passed via an alternative that has both old and new) */
+function meaningGuard(main, heard){
+ const TS = window.TouchSpeech; if(!TS || !TS.tokens) return "";
+ const tt = TS.tokens(px(main)), P = ["ipoh","penang","kulai","kuantan","melaka","malacca","johor","kl","singapore","seremban","klang","muar","kluang","batu","pahat","segamat","skudai","gudang"];
+ for(const h of (heard||[]).slice(0,1)){
+  const hw = TS.tokens(h);
+  for(const x of hw){ if(tt.includes(x)) continue; const y = tt.find(w=>!hw.includes(w) && TS.opposite(w, x)); if(y) return "meaning:"+y; }
+  const tn = tt.filter(TS.isNumber), hn = hw.filter(TS.isNumber);
+  // a number of the sentence said differently ("five" for three); an extra one ("eight thirty" for half past eight) is not
+  if(hn.length && tn.some(x=>!hn.includes(x))) return "meaning:"+tn.find(x=>!hn.includes(x));
+  const tp = tt.filter(w=>P.includes(w)), hp = hw.filter(w=>P.includes(w));
+  if(tp.length && hp.some(x=>!tp.includes(x))) return "meaning:"+tp.find(x=>!hp.includes(x)).replace(/^./, c=>c.toUpperCase());
+ }
+ return "";
+}
+function decoyHit(heard, item, targets){
+ if(!item || !item.x || !item.x.length) return "";
+ if(typeof CONF!=="undefined" && CONF.flow==="l2") return "";   // Convey: "we're having a team lunch" is right in his own words
+ const tt = " "+targets.map(x=>spNorm(x)).join(" | ")+" ";
+ for(const d of item.x){
+  const k = spNorm(px(d)); if(!k || /^[a-z]$/.test(k) || (STOPW.has(k) && !k.includes(" "))) continue;
+  if(tt.includes(" "+k+" ")) continue;                         // a right answer has it too
+  if(!heard.some(h=>(" "+spNorm(h)+" ").includes(" "+k+" "))) continue;
+  const why = item.xw && (item.xw[d] || item.xw[k]);
+  const W = ({zh:"这里不用 {w}。", ms:"{w} tidak sesuai di sini.", en:"Not {w} here."})[S.lang];
+  return "decoy:"+fmt(W, {w: d})+(why ? " 💡 "+px(tri(why)) : "");
+ }
  return "";
 }
 /* LEVEL 2 judges a spoken answer to a situation on its IDEAS, not its wording (Hafiz,
@@ -858,7 +948,8 @@ function slipTip(heard){
    word-for-word; Level 2 is Convey — the message is. Passes when at least 70% of a model's
    content words (stems) are there, in 4+ words; days and numbers must still be right. */
 function lessonNots(){
- const ex = ex0(); return ((ex && ex.own) || []).flatMap(o=>o.not||[]).map(k=>spNorm(k)).filter(Boolean);
+ const ex = ex0(); return [].concat((ex && ex.own) || []).flatMap(o=>o.not||[])   // Pre-Beginner's own is one object, not a list
+ .map(k=>spNorm(k)).filter(Boolean);
 }
 function ideaCheck(targets, heard){
  /* judging the idea must not let the lesson's own target mistake through (Hafiz, round 2:
@@ -870,7 +961,7 @@ function ideaCheck(targets, heard){
   const bad = nots.find(k=>(" "+h+" ").includes(" "+k+" "));
   if(bad){ ideaCheck.slip = bad; return false; }
  }
- if(slipTip(heard)){ ideaCheck.slip = slipTip(heard); return false; }
+ // a common slip is a tip at Level 2, not a fail (the lesson's own mistakes are the nots above)
  /* everyday synonyms a learner says instead of the model's word (Mei Fong: "reached the office…
     my boss understood" for "got to work… my manager understood") */
  const SYN = {boss:"manager",supervisor:"manager",reached:"got",reach:"get",arrived:"got",arrive:"get",office:"work",workplace:"work",
@@ -881,7 +972,7 @@ function ideaCheck(targets, heard){
  const tok = x=>((window.TouchSpeech && TouchSpeech.tokens) ? TouchSpeech.tokens(px(x)) : spNorm(px(x)).split(" ")).map(w=>SYN[w]||w);
  const cw = x=>tok(x).filter(w=>w && !STOPW.has(w) && !/^(the|a|an|and|but|so|very|really|just|also|too|now|then|that|this|it|is|am|are|was|were|be|of|on|at|in|for|to|with|by)$/.test(w));
  const said = (heard||[]).map(h=>tok(h).join(" ")).filter(Boolean);
- const NEG = /\b(not|never|no|nobody|nothing|cannot)\b/;
+ const NEG = /\b(not|never|no|nobody|nothing|cannot)\b|n't\b/;
  const DAY = /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^\d+$/;
  let best = 0;
  for(const h of said){
@@ -891,6 +982,11 @@ function ideaCheck(targets, heard){
   for(const t of targets){ const ws = cw(t); if(!ws.length) continue;
    // "my manager NEVER understood" is not "my manager understood": negation must agree
    if(NEG.test(tok(t).join(" ")) !== NEG.test(h)) continue;
+   /* nor may one word turn it round: "the old supplier" for the new one, "angry" for happy, the
+      night shift for the morning one; nor a different number (round 2, Mei Ling) */
+   const TS = window.TouchSpeech, tt = tok(t);
+   if(TS && TS.opposite && hWords.some(hw=>!tt.includes(hw) && tt.some(tw=>!hWords.includes(tw) && TS.opposite(tw, hw)))) continue;
+   if(TS && TS.isNumber){ const tn = TS.tokens(t).filter(TS.isNumber), hn = TS.tokens(h).filter(TS.isNumber); if(hn.some(x=>!tn.includes(x)) && tn.length) continue; }
    // a day or a number: saying a DIFFERENT one is wrong; leaving it out (context gave it) is not
    const tDays = ws.filter(w=>DAY.test(w)), hDays = hWords.filter(w=>DAY.test(w));
    if(hDays.some(w=>!tDays.includes(w)) && tDays.length) continue;
@@ -948,7 +1044,8 @@ function ownsFor(l, ex){
 /* SAY IT YOURSELF: LESSON_EXTRA.own, else the dialogue's first line and the pattern */
 function ownFor(l, ex){
  if(ex && ex.own && ex.own.line){
-  return {who: ex.own.who || "amy", line: sayable(ex.own.line), prompt: ex.own.prompt || null, keys: ex.own.keys || [], hint:""};
+  return {who: ex.own.who || "amy", line: sayable(ex.own.line), prompt: ex.own.prompt || null, keys: ex.own.keys || [], hint:"",
+   ask: !!ex.own.ask, must: ex.own.must || null, not: ex.own.not || null, model: ex.own.model || "", exact: !!ex.own.exact};
  }
  const lines = (l.d && l.d.lines) || [];
  const ai = lines.findIndex(x=>x.who!=="Y" && x.en);
@@ -1511,6 +1608,8 @@ function lemmaHit(hay, key){ const k = spNorm(px(key)); return hay.includes(" "+
 const QWORD = /^(where|when|what|which|who|whose|why|how|do|does|did|are|is|was|were|can|could|would|will|have|has)\b/;
 /* a question word straight into its subject — "where you live", "how you today": are/do/did is missing */
 const NOAUX = /^(how|where|what|when|which|who|why)( (time|much|many|long|often))? (you|he|she|they|it|we)\b/;
+/* "Where the clinic is?" — the statement order kept in a question (walkthrough 2026-09-26) */
+const NOAUX2 = /^(where|what|when|who|how) (the|a|an|my|your|his|her|our|this|that) [a-z ]+ (is|are)$/;
 const STOPW = new Set("i you he she it we they a an the do does did is are am was were to in at on of for and but my your his her our what where when which who how can could would will have has please".split(" "));
 /* own.exact: a turn that teaches a TENSE matches its keys word for word — stems would let
    "I work in the office" pass for "I am working…", or "I visit" for "I visited". */
@@ -1529,7 +1628,10 @@ function ownHit(h, keys, line, ask){
     Siti says "Good morning!", the learner says "good morning", and was told ✗). Only a
     QUESTION echoed back is not an answer; and any greeting answers a greeting. */
  if(/\?\s*$/.test(String(line||"")) && L && (" "+L+" ").includes(" "+n+" ")) return false;
- if(!ask && GREET.test(L) && !/\?\s*$/.test(String(line||"")) && GREET.test(n)) return greetFits(L, n);
+ /* …but only when the task IS the greeting: "Good morning, boss" does not apologise, and
+    "Hi Ali how are you" does not tell him where you live (walkthrough 2026-09-26) */
+ const keysGreet = !(keys||[]).length || (keys||[]).every(k=>GREET.test(spNorm(px(k))));
+ if(!ask && keysGreet && GREET.test(L) && !/\?\s*$/.test(String(line||"")) && GREET.test(n)) return greetFits(L, n);
  const hay = " "+n+" ";
  const name = spNorm(S.name || PRACTICE_NAME);
  /* An "ask them" turn: a real question (with its are/do/did) that covers most of what one of the
@@ -1540,7 +1642,7 @@ function ownHit(h, keys, line, ask){
  /* the question can follow a greeting ("Hi, nice to meet you, how are you?" — walkthrough
     2026-09-26: judged from its first word, "Hi", it was told it was not a question) */
  const qn = ask ? questionPart(n) : n;
- if(ask && NOAUX.test(qn)) return false;
+ if(ask && (NOAUX.test(qn) || NOAUX2.test(qn))) return false;
  if(ask && QWORD.test(qn) && qn.split(" ").length>=3){
   const mine = lemma(qn);
   const cover = k=>{ const cw = spNorm(px(k)).split(" ").filter(w=>w && !STOPW.has(w)); return cw.length ? cw.filter(w=>mine.includes(lemma(w))).length/cw.length : 0; };
@@ -1548,6 +1650,7 @@ function ownHit(h, keys, line, ask){
  }
  /* asking how someone is: "Are you good / fine / well / alright?" asks it too (Marco 2026-09-26) */
  if(ask && (keys||[]).some(k=>/\bhow are you\b|\bare you ok/.test(k)) && /\bare you (good|fine|well|alright|all right|ok|okay|doing well|doing good)\b/.test(qn)) return true;
+ if((keys||[]).some(k=>/^\d{2,}$/.test(k) && n.split(" ").some(w=>/^\d{7,}$/.test(w) && w.startsWith(k)))) return true;
  return (keys||[]).some(k=>{
   // the learner's own name is spelled freely by recognisers: match the words around it
   const nk = spNorm(px(k));
@@ -1692,7 +1795,7 @@ function mountSpeech(host, o){
   const card = (cls, head, body)=>{
    if(!res) return;
    res.className = "spres "+cls;
-   res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spcode${PREVIEW?"":" hidden"}">${esc(trail.join(" · "))}</div><div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(o.hearLabel || X.hear)}</button>` : ""}</div>`;
+   res.innerHTML = `<div class="sph">${head}</div>${body}<div class="spcode${/[?&]debug\b/.test(location.search)?"":" hidden"}">${esc(trail.join(" · "))}</div><div class="spbtns"><button type="button" class="btn btn-ghost" id="spagain">🎤 ${esc(X.again)}</button>${o.model ? `<button type="button" class="btn btn-ghost" id="sphear">🔊 ${esc(o.hearLabel || X.hear)}</button>` : ""}</div>`;
    $("spagain").onclick = ()=>$("mic").click();
    addMine();
    /* where the phone cannot record while it recognises (iPhone), hearing yourself is a
@@ -1717,19 +1820,22 @@ function mountSpeech(host, o){
   const C = cmp(heard);
   const said = `<div class="spb">${esc(X.you)} <b>“${C && !C.pass ? struck(heard[0], C) : esc(heard[0])}”</b></div>`;
   const tip = o.tips ? slipTip(heard) : "";
+  const passed = o.judge(heard);
   const pm = o.passModel ? o.passModel() : "";
   const modelNote = pm ? `<div class="spb">${esc(T().compareModel)} <b data-say="${esc(pm)}" role="button">${esc(pm)}</b></div>` : "";
   const tipHTML = tip ? `<div class="spb">💡 ${esc(fmt(T().slipTip, {t: tip}))}</div>` : "";
-  if(o.judge(heard)){
+  if(passed){
    const near = (!pm && C && C.words.some(x=>!x.ok)) ? `<div class="spb">${esc(HT.std)} ${full(C)}</div>` : "";
-   card("ok", "✓ "+esc(o.good || X.ok), said+tipHTML+modelNote+near);
+   const partial = o.st && o.st.partial;
+   card("ok", "✓ "+esc(partial ? ({zh:"大致对了——注意标红的字", ms:"Hampir tepat — perhatikan perkataan merah", en:"Nearly — mind the red words"})[S.lang] : (o.good || X.ok)), said+tipHTML+modelNote+near);
    allow(); if(COACH) COACH.pose("celebrate");
   } else {
    const reveal = C ? (tries>=2 ? `<div class="spb">${esc(T().stransAns)} ${full(C)}</div><div class="spb csmall">${esc(HT.missed)}</div>`
                                : `<div class="spb cgaps">${gaps(C)}</div><div class="spb csmall">${esc(HT.legend)}</div>`)
     : (o.reveal && tries>=2) ? `<div class="spb">${esc(T().stransAns)} <b data-say="${esc(o.reveal)}" role="button">${esc(o.reveal)}</b></div>` : "";
    const retry = typeof o.retry==="function" ? o.retry(heard) : o.retry;
-   card("no", "✗ "+esc(retry || X.red), said+reveal+(more ? `<div class="spb">${esc(more)}</div>` : ""));
+   const tipNo = (tip && !String(retry||"").includes(tip)) ? tipHTML : "";
+   card("no", "✗ "+esc(retry || X.red), said+tipNo+reveal+(more ? `<div class="spb">${esc(more)}</div>` : ""));
    if(tries>=2) allow(); if(COACH) COACH.pose("think");
   }
  };
@@ -1952,6 +2058,7 @@ function renderStep(){
    // a group may carry a label in the learner's language (mission.labels[i]); else its closest phrase
    const gaps = M.groups.map((g,i)=>[g,i]).filter(([g])=>!g.some(k=>lemmaHit(h, k))).map(([g,i])=>M.labels && M.labels[i] ? tri(M.labels[i])+" ("+cap(closest(g))+"…)" : cap(closest(g)));
    const offT = (()=>{ const ws2 = h.trim().split(/\s+/); const fw = new Set(M.groups.flat().flatMap(k=>spNorm(px(k)).split(" ")).map(w=>lemma(w).trim())); const mw = new Set(spNorm(px(M.model.join(" "))).split(" ").filter(w=>w.length>3 && !STOPW.has(w)).map(w=>lemma(w).trim()).filter(w=>!fw.has(w))); return [...new Set(ws2.filter(w=>w.length>3).map(w=>lemma(w).trim()))].filter(w=>mw.has(w)).length < 3; })();
+   if(st.notHit) return fmt(t.ownNot, {w: st.notHit});
    if(offT) return t.missionOff;
    return (gaps.length ? fmt(t.missionGaps, {g: gaps.join(" · ")})+" " : "") + (n < M.minWords ? fmt(t.missionShort, {n, m:M.minWords}) : "");
   };
@@ -1966,12 +2073,16 @@ function renderStep(){
     // the task's own words — not the formula's (think, because, example, understand…), which every answer has
     const formulaW = new Set(M.groups.flat().flatMap(k=>spNorm(px(k)).split(" ")).map(w=>lemma(w).trim()));
     const modelW = new Set(spNorm(px(M.model.join(" "))).split(" ").filter(w=>w.length>3 && !STOPW.has(w)).map(w=>lemma(w).trim()).filter(w=>!formulaW.has(w)));
+    /* "introduce yourself" must pass with the learner's own life (walkthrough 2026-09-26: only the
+       model's Ipoh / Siti passed) — the task's own words count, and two are enough */
+    spNorm([M.prompt && M.prompt.en, M.prompt && tri(M.prompt)].filter(Boolean).join(" ")).split(" ").filter(w=>w.length>3 && !STOPW.has(w)).map(w=>lemma(w).trim()).filter(w=>!formulaW.has(w)).forEach(w=>modelW.add(w));
     const onTopic = [...new Set(ws.filter(w=>w.length>3).map(w=>lemma(w).trim()))].filter(w=>modelW.has(w)).length;
     /* "I think because for example I understand let us. My cat is orange…" hit every group (Hafiz):
        it must also be about the task — at least three of the model answer's content words */
     const small = ws.filter(w=>STOPW.has(w)).length / Math.max(1, ws.length);
-    st.offTopic = onTopic < 3 || small < 0.25;
-    const ok = !st.offTopic && M.groups.every(g=>g.some(k=>lemmaHit(h, k))) && ws.length >= M.minWords && distinct >= Math.min(ws.length, M.minWords) * 0.6;
+    st.offTopic = ws.length >= M.minWords * 0.6 && (onTopic < 3 || small < 0.25);
+    st.notHit = lessonNots().find(k=>h.includes(" "+k+" ")) || "";
+    const ok = !st.notHit && !st.offTopic && M.groups.every(g=>g.some(k=>lemmaHit(h, k))) && ws.length >= M.minWords && distinct >= Math.min(ws.length, M.minWords) * 0.6;
     if(ok) pay();
     return ok;
    }});
@@ -2059,9 +2170,11 @@ function renderStep(){
    judge: heard=>{
     const cs = [ans].concat(alts).map(target=>TouchSpeech.check(target, heard));
     const exact = cs.some(c=>c.pass);
-    const ok = exact || (CONF.flow==="l2" && ideaCheck([ans].concat(alts), heard));
+    let ok = exact || (CONF.flow==="l2" && ideaCheck([ans].concat(alts), heard));
     st.byIdea = ok && !exact;
     st.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || "");
+    { const bad = hardSlip(heard) || decoyHit(heard, it, [ans].concat(alts)) || (ok ? meaningGuard(ans, heard) : ""); if(bad){ ok = false; st.byIdea = false; st.why = bad; } }
+    if(ok && it.must && it.must.length && !heard.some(h=>it.must.some(k=>lemmaHit(" "+spNorm(h)+" ", k)))){ ok = false; st.byIdea = false; st.why = "slip:"+fmt(t.ownMust, {w: it.must.slice(0,2).join(" / ")}).replace(/[。.]?\s*$/,""); }
     if(!ok && CONF.flow!=="l2") ideaCheck.slip = "";
     if(ok){ pay(); speak(ans); }
     return ok;
@@ -2160,8 +2273,12 @@ function renderStep(){
   mountSpeech($("sparea"), {st, key: COURSE[P.mi].id+"-"+P.li+"-r"+st.n, model: ()=>speak(st.say, $("hm")),
    retry: ()=>whyText(st.why),
    judge: heard=>{
-    const c = TouchSpeech.check(st.say, heard);
-    st.why = c.why;
+    /* "Can I have this / that?" is two sentences to choose from, not one with a slash
+       (walkthrough 2026-09-26: only "can I have this that" passed) */
+    const vars = slashVariants(st.say);
+    const cs = vars.map(v=>TouchSpeech.check(v, heard)), c = cs.find(x=>x.pass) || cs[0];
+    st.why = c.why; st.partial = c.pass && c.words.some(x=>!x.ok);
+    if(c.pass){ const bad = hardSlip(heard); if(bad){ st.why = bad; st.partial = false; $("repsent").innerHTML = c.words.map(x=>`<span class="w ${x.ok?"hit":"miss"}">${esc(x.w)}</span>`).join(" "); return false; } }
     $("repsent").innerHTML = c.words.map(x=>`<span class="w ${x.ok?"hit":"miss"}">${esc(x.w)}</span>`).join(" ");
     return c.pass;
    }});
@@ -2182,12 +2299,21 @@ function renderStep(){
      screen as a red ✗ (walkthrough 2026-09-25). 「现在不方便说」 earns nothing. */
   const pay = ()=>{ if(st.paid) return; st.paid = true; P.xp += 5; $("sessxp").textContent = P.xp; xpFloat(5); };
   $("go").onclick = ()=>{ if(st.tried && st.tries2) pay(); nextStep(); };
-  const k0 = (st.keys || [])[0] ? String(st.keys[0]).replace(/^./, c=>c.toUpperCase()) + "…" : "";
-  mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", hints: [k0, st.model ? px(st.model) : ""], retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ")});
-    if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort; if(st.ask && hs.some(h=>NOAUX.test(questionPart(h)))) return t.ownAskAux;
-    const q = hs.some(h=>QWORD.test(questionPart(h))); return st.ask ? (q ? t.ownAskTopic : fmt(t.ownAskRetry, {who: WHO_NAME[st.who] || ({zh:"对方",ms:"dia",en:"them"})[S.lang]})) : t.ownRetry; }, good: t.ownGood,
+  /* the first hint is the start of the model sentence — something that can be said as it is
+     ("Nice to meet you, Mei Ling…"), not a bare key ("Do not understand…", walkthrough round 2) */
+  const k0 = st.model ? px(st.model).split(/\s+/).slice(0, 4).join(" ").replace(/[,.!?;:]+$/,"") + "…"
+   : (st.keys || [])[0] ? String(st.keys[0]).replace(/^./, c=>c.toUpperCase()) + "…" : "";
+  mountSpeech($("sparea"), {st, tips: true, key: COURSE[P.mi].id+"-"+P.li+"-own", hints: [k0, st.model ? px(st.model) : ""], retry: heard=>{ const hs = (heard||[]).map(h=>spNorm(h)); if(st.needMust) return fmt(t.ownMust, {w: st.must.slice(0,2).join(" / ").replace(/\bi\b/g, "I")});
+    if(st.hitNot) return fmt(t.ownNot, {w: st.hitNot}); if(st.tooShort) return t.ownShort;
+    if(st.slip) return whyText(st.slip);
+    if(st.wrongWho) return fmt(({zh:"你是在直接问 {who}，要用 you，不是 he / she。", ms:"Anda bertanya terus kepada {who}: guna you, bukan he / she.", en:"You are asking {who} directly: use you, not he / she."})[S.lang], {who: WHO_NAME[st.who] || "them"}); if(st.ask && hs.some(h=>NOAUX.test(questionPart(h)) || NOAUX2.test(questionPart(h)))) return t.ownAskAux;
+    const q = hs.some(h=>QWORD.test(questionPart(h)));
+    // a miss with nothing specific to say points at a way to start (the bulb's first hint)
+    const start = k0 ? " "+fmt(({zh:"可以这样开始：{k}", ms:"Boleh mula begini: {k}", en:"You could start: {k}"})[S.lang], {k: k0}) : "";
+    return st.ask ? (q ? t.ownAskTopic : fmt(t.ownAskRetry, {who: WHO_NAME[st.who] || ({zh:"对方",ms:"dia",en:"them"})[S.lang]})) : t.ownRetry+start; }, good: t.ownGood,
    model: ()=>speak(st.line, null, false, true, voiceOf(st.who)), hearLabel: t.hearModel2,
    reveal: st.model ? px(st.model) : "",
+   passModel: ()=>{ const m = st.model ? px(st.model) : ""; return m && st.lastHeard && window.TouchSpeech && !TouchSpeech.check(m, [st.lastHeard]).pass ? m : ""; },
    s1: ({zh:"先听对方说什么（点对话泡泡可以再听）", ms:"Dengar apa yang dia kata (tekan gelembung untuk dengar lagi)", en:"Listen to what they say (tap the bubble to hear it again)"})[S.lang],
    onTries: n=>{ if(n>=2) st.tries2 = true; },
    judge: heard=>{
@@ -2198,10 +2324,19 @@ function renderStep(){
     st.hitNot = st.not ? (st.not.find(k=>heard.some(h=>(" "+spNorm(h)+" ").includes(" "+spNorm(k)+" "))) || "") : "";
     if(st.hitNot) return false;
     // an answer is a sentence: "We can lah." is not one (a greeting reply may be short)
-    if(!st.ask && !GREET.test(spNorm(st.line)) && !heard.some(h=>spNorm(h).split(" ").length>=4)){ st.tooShort = true; return false; }
+    // "Yes, I do." and "Tea, please." are answers; one word is not (walkthrough 2026-09-26)
+    const oneKey = heard.some(h=>(st.keys||[]).some(k=>spNorm(px(k))===spNorm(h)));
+    if(!oneKey && !st.ask && !GREET.test(spNorm(st.line)) && !heard.some(h=>spNorm(h).split(" ").length>=2)){ st.tooShort = true; return false; }
     st.tooShort = false;
+    // the lesson's mistake, said, is not a pass ("I have 56 years old", "My name Aisyah")
+    st.slip = hardSlip(heard);
+    if(st.slip) return false;
+    /* asking the person in front of you: "how is she today" to Mei Ling is the he/she slip */
+    st.wrongWho = false;
+    if(st.ask && (st.keys||[]).some(k=>/\byou\b/.test(k)) && heard.every(h=>{ const q = questionPart(spNorm(h)); return /\b(he|she|his|her|him)\b/.test(q) && !/\byou\b/.test(q); })){ st.wrongWho = true; return false; }
     OWN_EXACT = !!st.exact;
     const hit = heard.find(h=>ownHit(h, st.keys, st.line, st.ask));
+    st.lastHeard = hit || heard[0] || "";
     OWN_EXACT = false;
     if(hit){ heard.unshift(hit); pay(); }   // the result card shows heard[0]: show the answer that counted
     return !!hit;
@@ -2396,32 +2531,76 @@ function norm(arr){ return words(arr).join(" ").toLowerCase().replace(/[.,!?;:'"
    says so. An item may carry a reason for its decoy tiles (xw: {tile: tri}), added as 💡.
    Set by renderBuilder, read once by the next showFeedback. */
 let BUILT_DIFF = null;
-function builtDiff(built, answer, xw, display){
+const GRAMMAR_WHY = {
+ am:{zh:"英文句子要有 am / is / are：I am tired，不说 I tired。", ms:"Ayat Inggeris perlu am / is / are: I am tired, bukan I tired.", en:"English needs am / is / are: I am tired, not I tired."},
+ is:{zh:"英文句子要有 am / is / are：It is hot，不说 It hot。", ms:"Ayat Inggeris perlu am / is / are: It is hot, bukan It hot.", en:"English needs am / is / are: It is hot, not It hot."},
+ are:{zh:"英文句子要有 am / is / are：They are busy，不说 They busy。", ms:"Ayat Inggeris perlu am / is / are: They are busy, bukan They busy.", en:"English needs am / is / are: They are busy, not They busy."},
+ a:{zh:"一个可数的东西前面要加 a：a bag、a teacher。", ms:"Satu benda yang boleh dikira perlu a: a bag, a teacher.", en:"One countable thing needs a: a bag, a teacher."},
+ an:{zh:"元音开头的字前用 an：an apple、an engineer。", ms:"Sebelum bunyi vokal guna an: an apple, an engineer.", en:"Before a vowel sound use an: an apple, an engineer."},
+ do:{zh:"问句要有 do：Do you…? / Where do you…?", ms:"Soalan perlu do: Do you…? / Where do you…?", en:"A question needs do: Do you…? / Where do you…?"},
+ does:{zh:"he / she 的问句要有 does：Does she…? / Where does he…?", ms:"Soalan untuk he / she perlu does: Does she…?", en:"A he / she question needs does: Does she…?"},
+ to:{zh:"这里要 to 接动词：want to go、need to buy。", ms:"Di sini perlu to sebelum kata kerja: want to go.", en:"Here to goes before the verb: want to go."},
+};
+function builtDiff(built, answer, xw, display, alts){
+ /* word by word (a tile can be a phrase: "Let's going back"), against whichever right sentence
+    is closest to what was built — the answer or one of its alternatives (walkthrough 2026-09-26:
+    building an alternative's order was told the alternative's words were wrong) */
  const k = w=>String(w).toLowerCase().replace(/[’]/g,"'").replace(/[^a-z0-9']/g,"");
- const B = built.filter(w=>k(w)), A = answer.filter(w=>k(w)), n = B.length, m = A.length;
- const L = Array.from({length:n+1}, ()=>new Array(m+1).fill(0));
- for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) L[i][j] = k(B[i])===k(A[j]) ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
+ const tileOf = []; const B = [];
+ built.forEach(t=>String(t).split(/\s+/).forEach(w=>{ if(k(w)){ B.push(w); tileOf.push(t); } }));
+ const cands = [{words: answer.flatMap(t=>String(t).split(/\s+/)), disp: display}].concat((alts||[]).map(a=>({words: String(a).split(/\s+/), disp: a})));
+ const lcs = (X, Y)=>{ const n=X.length, m=Y.length, L=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) L[i][j] = k(X[i])===k(Y[j]) ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]); return L; };
+ let best = null;
+ for(const c of cands){ const A = c.words.filter(w=>k(w)); const L = lcs(B, A); const score = L[0][0]*2 - A.length - B.length;
+  if(!best || score > best.score) best = {A, L, score, disp: c.disp || c.words.join(" ")}; }
+ const {A, L} = best, n = B.length, m = A.length;
  const inB = new Array(n).fill(false), inA = new Array(m).fill(false);
  for(let i=0,j=0;i<n&&j<m;){ if(k(B[i])===k(A[j])){ inB[i]=inA[j]=true; i++; j++; } else if(L[i+1][j]>=L[i][j+1]) i++; else j++; }
- const W = ({zh:{you:"你拼的：", swap:"这里要用 {r}，不是 {w}。", extra:"这里不用 {w}。", miss:"少了 {r}。", order:"字都对了，只是顺序不对。"},
-  ms:{you:"Susunan anda:", swap:"Di sini guna {r}, bukan {w}.", extra:"{w} tidak perlu di sini.", miss:"Tertinggal {r}.", order:"Semua perkataan betul, cuma susunannya salah."},
-  en:{you:"You built:", swap:"Here it is {r}, not {w}.", extra:"No {w} here.", miss:"Missing: {r}.", order:"The words are right; the order is not."}})[S.lang];
+ const W = ({zh:{you:"你拼的：", swap:"这里要用 {r}，不是 {w}。", extra:"这里不用 {w}。", miss:"少了 {r}。", order:"字都对了，只是顺序不对。", many:"好几个地方不一样，对照上面的正确句子。"},
+  ms:{you:"Susunan anda:", swap:"Di sini guna {r}, bukan {w}.", extra:"{w} tidak perlu di sini.", miss:"Tertinggal {r}.", order:"Semua perkataan betul, cuma susunannya salah.", many:"Beberapa tempat berbeza — bandingkan dengan ayat yang betul di atas."},
+  en:{you:"You built:", swap:"Here it is {r}, not {w}.", extra:"No {w} here.", miss:"Missing: {r}.", order:"The words are right; the order is not.", many:"Several places differ — compare with the right sentence above."}})[S.lang];
  const sorted = x=>x.map(k).sort().join(" ");
- const wrong = B.map((w,i)=>inB[i]?-1:i).filter(i=>i>=0), missing = A.map((w,j)=>inA[j]?-1:j).filter(j=>j>=0);
+ let wrong = B.map((w,i)=>inB[i]?-1:i).filter(i=>i>=0), missing = A.map((w,j)=>inA[j]?-1:j).filter(j=>j>=0);
+ // pair each wrong word with the missing word most like it (live ~ lives, go ~ going), else in order
+ const like = (a, b)=>{ a = k(a); b = k(b); if(!a || !b) return 0; if(a===b) return 3; if(a.slice(0,3)===b.slice(0,3)) return 2; return 0; };
+ const pairs = [], usedM = new Set(), usedW = new Set();
+ wrong.forEach(i=>{ let bj = -1, bs = 0; missing.forEach(j=>{ if(usedM.has(j)) return; const s = like(B[i], A[j]); if(s > bs){ bs = s; bj = j; } }); if(bj>=0){ pairs.push([i, bj]); usedM.add(bj); usedW.add(i); } });
+ const restW = wrong.filter(i=>!usedW.has(i)), restM = missing.filter(j=>!usedM.has(j));
+ // one wrong and one missing left in the same place is a swap; otherwise each is said on its own
+ if(restW.length === 1 && restM.length === 1) pairs.push([restW[0], restM[0]]);
+ else { restW.forEach(i=>pairs.push([i, -1])); restM.forEach(j=>pairs.push([-1, j])); }
+ const clean = v=>String(v).replace(/[.,!?;:]+$/,"");
  const lines = [];
- if(sorted(B)===sorted(A)) lines.push(esc(W.order));
- else for(let x=0; x<Math.max(wrong.length, missing.length) && lines.length<2; x++){
-  const w = wrong[x]!=null ? B[wrong[x]] : "", r = missing[x]!=null ? A[missing[x]] : "";
-  const clean = v=>String(v).replace(/[.,!?;:]+$/,"");
-  let line = w && r ? fmt(W.swap, {w:`<b class="wr">${esc(clean(w))}</b>`, r:`<b class="rt">${esc(clean(r))}</b>`})
+ if(sorted(B)===sorted(A)){
+  lines.push(esc(W.order));
+  // two words swapped next to each other (rice chicken, How you are): say the English order
+  for(let i=0;i<Math.min(B.length, A.length)-1;i++) if(k(B[i])===k(A[i+1]) && k(B[i+1])===k(A[i]) && k(B[i])!==k(B[i+1])){
+   lines.push(fmt(({zh:"英文要说 {r}，不是 {w}。", ms:"Dalam bahasa Inggeris: {r}, bukan {w}.", en:"English says {r}, not {w}."})[S.lang],
+    {r:`<b class="rt">${esc(clean(A[i]))} ${esc(clean(A[i+1]))}</b>`, w:`<b class="wr">${esc(clean(B[i]))} ${esc(clean(B[i+1]))}</b>`})); break; }
+ }
+ else if(pairs.length > 3) lines.push(esc(W.many));
+ else pairs.slice(0,3).forEach(([i, j])=>{
+  const w = i>=0 ? B[i] : "", r = j>=0 ? A[j] : "";
+  let line = w && r && k(w)===k(r) ? fmt(({zh:"「{w}」的位置不对。", ms:"Kedudukan “{w}” salah.", en:"“{w}” is in the wrong place."})[S.lang], {w:`<b class="wr">${esc(clean(w))}</b>`})
+   : w && r ? fmt(W.swap, {w:`<b class="wr">${esc(clean(w))}</b>`, r:`<b class="rt">${esc(clean(r))}</b>`})
    : w ? fmt(W.extra, {w:`<b class="wr">${esc(clean(w))}</b>`}) : fmt(W.miss, {r:`<b class="rt">${esc(clean(r))}</b>`});
-  const why = w && xw && (xw[clean(w)] || xw[clean(w).toLowerCase()]);
+  const tile = i>=0 ? tileOf[i] : "";
+  let why = w && xw && (xw[tile] || xw[clean(tile)] || xw[clean(w)] || xw[clean(w).toLowerCase()]);
+  // nothing written for it: a missing grammar word still gets its rule (walkthrough round 2: "Tertinggal am")
+  if(!why && !w && r) why = GRAMMAR_WHY[k(r)] || null;
   if(why) line += `<br>💡 ${esc(px(tri(why)))}`;
   lines.push(line);
- }
+ });
+ // the same tile's reason once, even when the tile was a phrase
+ const seen = new Set(); const uniq = lines.filter(l=>{ const r = l.split("💡")[1]; if(!r) return true; if(seen.has(r)) return false; seen.add(r); return true; });
  return { you: esc(W.you), built: B.map((w,i)=>inB[i] ? esc(w) : `<span class="wr">${esc(w)}</span>`).join(" "),
-  // the answer in full, punctuation tiles included, with the words the learner lacked marked
-  answer: (()=>{ let j = 0; return (display ? String(display).split(/\s+/) : answer).map(w=>{ if(!k(w)) return esc(w); const hit = inA[j++]; return hit ? esc(w) : `<span class="rt">${esc(w)}</span>`; }).join(" ").replace(/\s+([.,!?;:])/g,"$1"); })(), lines };
+  answer: (()=>{ let j = 0; return String(best.disp).split(/\s+/).map(w=>{ if(!k(w)) return esc(w); const hit = inA[j++]; return hit ? esc(w) : `<span class="rt">${esc(w)}</span>`; }).join(" ").replace(/\s+([.,!?;:])/g,"$1"); })(), lines: uniq };
+}
+function slashVariants(s){
+ const m = String(s).match(/(\S+)\s*\/\s*(\S+)/);
+ if(!m) return [s];
+ return [s.replace(m[0], m[1]), s.replace(m[0], m[2].replace(/[.,!?]+$/, "")+(m[2].match(/[.,!?]+$/)||[""])[0])].flatMap(slashVariants);
 }
 function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, display, meta, bubble){
  const t = T();
@@ -2457,7 +2636,7 @@ function renderBuilder(box, lbl, title, sub, pool, answer, xp, expl, onDone, dis
   if(!ok) viaAlt = ((meta&&meta.alts)||[]).find(a=>norm(String(a).split(/\s+/))===built) || "";
   if(viaAlt) ok = true;
   const std = display || answer.join(" ");
-  BUILT_DIFF = ok ? null : builtDiff(placed.map(p=>p.v), answer, meta && meta.xw, std);
+  BUILT_DIFF = ok ? null : builtDiff(placed.map(p=>p.v), answer, meta && meta.xw, std, (meta && meta.alts) || []);
   document.querySelectorAll(".wchip").forEach(b=>b.disabled=true);
   $("bz").classList.add(ok ? "bzok" : "bzno");
   // the whole sentence, read only when it is right — the learner's own when it was another right way
@@ -2571,8 +2750,10 @@ function renderDialog(box, stepNum, l){
     targets: CONF.flow==="l2" ? null : targets, hints: [String(disp).split(/\s+/).slice(0,3).join(" ").replace(/[,.!?;:]+$/,"")+"…", disp],
     retry: ()=>whyText(stD.why, true),
     tips: CONF.flow==="l2", passModel: ()=>stD.byIdea ? disp : "",
-    judge: heard=>{ const cs = targets.map(x=>TouchSpeech.check(x, heard)); const exact = cs.some(c=>c.pass); const ok = exact || (CONF.flow==="l2" && ideaCheck(targets, heard)); stD.byIdea = ok && !exact;
-     stD.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || ""); return ok; }});
+    judge: heard=>{ const cs = targets.map(x=>TouchSpeech.check(x, heard)); const exact = cs.some(c=>c.pass); let ok = exact || (CONF.flow==="l2" && ideaCheck(targets, heard)); stD.byIdea = ok && !exact;
+     stD.why = ok ? "" : (cs.slice().sort((a,b)=>b.ok/b.total - a.ok/a.total)[0].why || "");
+     { const bad = hardSlip(heard) || decoyHit(heard, line, targets) || (ok ? meaningGuard(targets[0], heard) : ""); if(bad){ ok = false; stD.byIdea = false; stD.why = bad; } }
+     return ok; }});
    window.scrollTo(0,document.body.scrollHeight);
    return;
   }

@@ -67,7 +67,7 @@
   // and the usual contractions either way round
   var SAME = { "i'm": "i am", "it's": "it is", "don't": "do not", "doesn't": "does not", "can't": "cannot", "what's": "what is", "i'd": "i would", "i've": "i have", "that's": "that is", "he's": "he is", "she's": "she is", "we're": "we are", "they're": "they are", "you're": "you are", "isn't": "is not", "aren't": "are not",
     "i'll": "i will", "we'll": "we will", "you'll": "you will", "he'll": "he will", "she'll": "she will", "it'll": "it will", "they'll": "they will", "won't": "will not", "we've": "we have", "you've": "you have", "didn't": "did not", "wasn't": "was not", "couldn't": "could not", "shouldn't": "should not",
-    "name's": "name is", "there's": "there is", "here's": "here is", "who's": "who is", "where's": "where is", "how's": "how is", "let's": "let us" };
+    "name's": "name is", "everyday": "every day", "practise": "practice", "practises": "practices", "practised": "practiced", "there's": "there is", "here's": "here is", "who's": "who is", "where's": "where is", "how's": "how is", "let's": "let us" };
   /* The people in the course sentences. Recognisers spell names freely ("Siti" comes back
      as "city", "Kumar" as "Kuma"), so, like the learner's own name, a cast name is never
      marked — it is not an English word the learner can say wrong. */
@@ -96,7 +96,34 @@
     return false;
   }
   function grammarTwin(a, b) { return a !== b && (twinOf(a, b) || twinOf(b, a) || irregTwin(a, b)); }
-  function near(a, b) { return a === b || (a.length >= 5 && !grammarTwin(a, b) && lev(a, b) <= 1); }
+  var NUMW = /^(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|half|quarter)$/;
+  // a number that is a fact to get right: "half past eight" / "eight thirty" and ":00" are ways to say the time
+  var FACTNUM = function (w) { return NUMW.test(w) && !/^(half|quarter|0+)$/.test(w); };
+  /* everyday words said for the model's word with the same meaning (walkthrough 2026-09-26:
+     "fine" for "good", "around" for "about", "a bit" for "a little") — counted as the word */
+  var SYNG = [["good", "fine", "okay", "ok", "alright", "great", "well"], ["about", "around", "roughly"], ["bit", "little"],
+    ["big", "large"], ["begin", "start"], ["boss", "manager"], ["glad", "happy"], ["also", "too"], ["really", "very"],
+    ["thank", "thanks"], ["never", "not"], ["until", "till"], ["tonight", "night"], ["live", "stay"], ["house", "home"], ["motorbike", "motorcycle"], ["colleague", "coworker"], ["colleagues", "coworkers"]];
+  /* a replaced word fails only when it turns the meaning round (round 2, Jason: "co-workers" for
+     "colleagues", "client" for "customer" are right and were told the meaning changed) — the
+     opposites below; any other replacement passes and the model sentence is shown beside it */
+  var OPP = [["old", "new"], ["big", "small"], ["better", "worse"], ["more", "less"], ["agree", "disagree"], ["like", "hate"], ["like", "dislike"],
+    ["early", "late"], ["before", "after"], ["yes", "no"], ["open", "close"], ["open", "closed"], ["hot", "cold"], ["cheap", "expensive"],
+    ["easy", "hard"], ["easy", "difficult"], ["fast", "slow"], ["first", "last"], ["come", "go"], ["buy", "sell"], ["borrow", "lend"],
+    ["send", "receive"], ["start", "finish"], ["start", "end"], ["always", "never"], ["always", "sometimes"], ["many", "few"],
+    ["happy", "sad"], ["happy", "angry"], ["good", "bad"], ["busy", "free"], ["right", "wrong"], ["near", "far"], ["little", "very"],
+    ["bit", "very"], ["little", "lot"], ["morning", "afternoon"], ["morning", "evening"], ["morning", "night"], ["afternoon", "evening"],
+    ["today", "tomorrow"], ["today", "yesterday"], ["tomorrow", "yesterday"], ["this", "next"], ["next", "last"], ["up", "down"], ["in", "out"],
+    ["can", "cannot"], ["will", "won't"], ["higher", "lower"], ["more", "fewer"], ["increase", "decrease"], ["arrive", "leave"], ["win", "lose"],
+    ["long", "short"], ["longer", "shorter"], ["slower", "faster"], ["quiet", "noisy"], ["quiet", "loud"], ["quieter", "noisier"], ["quieter", "louder"],
+    ["save", "waste"], ["saves", "wastes"], ["safe", "dangerous"], ["clean", "dirty"], ["full", "empty"], ["heavy", "light"]];
+  function opposite(a, b) { return OPP.some(function (p) { return (p[0] === a && p[1] === b) || (p[0] === b && p[1] === a); }); }
+  function syn(a, b) { return SYNG.some(function (g) { return g.indexOf(a) >= 0 && g.indexOf(b) >= 0; }); }
+  function near(a, b) {
+    if (a === b) return true;
+    if (NUMW.test(a) || NUMW.test(b)) return false;
+    return syn(a, b) || (a.length >= 5 && !grammarTwin(a, b) && lev(a, b) <= 1);
+  }
 
   /* The small words that carry the grammar — leave one out and the sentence is wrong
      ("I good", "I twenty-eight years old", "I from Ipoh and I work…"). Every one of them in
@@ -115,7 +142,7 @@
     "tangkak","setia","sutera","austin","indah","taiping","kedah","perak","kelantan","terengganu","sabah","sarawak","kuching","miri","sibu","bangi",
     "cheras","ampang","subang","puchong","kajang","nilai","port","dickson","langkawi","genting","cameron","highlands","mersing","desaru","gudang","pasir"];
   var CRITICAL = ["am", "is", "are", "was", "were", "be", "been", "do", "does", "did", "have", "has", "had",
-    "can", "could", "will", "would", "should", "not", "never", "because", "to",
+    "can", "could", "will", "would", "should", "not", "never", "because", "to", "but", "so", "or", "if",
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
     "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
     "i", "you", "he", "she", "it", "we", "they", "my", "your", "his", "her", "our", "their"];
@@ -139,7 +166,7 @@
         var parts = days(numbers((SAME[w] || w).replace(/-/g, " "))).split(" ").filter(Boolean);
         var isName = parts.every(function (p) { return names.indexOf(p) >= 0; });
         // a place or other proper name in mid-sentence (Kulai, Johor Bahru, Room 5) must be the right one
-        var proper = !isName && ri > 0 && /^[A-Z][a-z]/.test(raw) && !/^I'/.test(raw) && !/^(Mr|Mrs|Ms|Dr)\.?$/.test(raw) && !/[.!?]$/.test(tw[ri - 1]);
+        var proper = !isName && ri > 0 && /^[A-Z][a-z]/.test(raw) && !/^(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day|^(January|February|March|April|May|June|July|August|September|October|November|December)\b/.test(raw) && !/^I'/.test(raw) && !/^(Mr|Mrs|Ms|Dr)\.?$/.test(raw) && !/[.!?]$/.test(tw[ri - 1]);
         parts.forEach(function (p) { tv.push({ p: p, ri: ri, name: isName, proper: proper }); });
       });
       var n = tv.length, m = hw.length, i, j;
@@ -154,6 +181,8 @@
         if (k === soundKey(a.p)) return true;
         if (ownPlaces.indexOf(k) >= 0) return false;
         if (PLACES.some(function (pl) { return soundKey(pl) === k; })) return false;
+        // …nor a word of this sentence in another form ("lives" is not a place slot for "Singapore")
+        if (tv.some(function (t) { return t.p === b || grammarTwin(t.p, b); }) || CRITICAL.indexOf(b) >= 0) return false;
         return /^\d+$/.test(b) || b.length > 2;
       };
       var L = []; for (i = 0; i <= n; i++) { L[i] = []; for (j = 0; j <= m; j++) L[i][j] = 0; }
@@ -165,23 +194,74 @@
         else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++;
       }
       var leftover = hw.filter(function (_, k) { return !usedH[k]; });
-      var miss = [], why = "";
+      var miss = [], why = "", hard = "";
+      /* walkthrough 2026-09-26 (six learners): a sentence with the lesson's own mistake passed
+         whenever it ALSO differed in a content word ("he very helpful because he fix…",
+         "my colleagues is…"), and a changed meaning passed as a "missing word" ("Tuesday" for
+         Monday, "the old supplier" for the new one, "very tired" for a little tired). Now:
+         every grammar-word miss, grammar form, fact and replaced content word fails; only a
+         content word simply LEFT OUT (the phone drops words) is tolerated. */
+      var FILL = ["um", "uh", "er", "ah", "lah", "la", "like", "just", "really", "very", "so", "actually", "okay", "ok", "yeah", "yes",
+        "well", "oh", "also", "too", "then", "and", "but", "the", "a", "an", "hi", "hello", "sorry", "please", "thanks", "thank", "you", "now", "today", "here", "there"];
+      // a leftover that is only another form of a model word ("colleague" for "colleagues") is not a new word
+      /* …nor is a word of the sentence said in another place (a reordered sentence): only a word the
+         sentence does not have stands in for a missing one (round 3: "…because my colleagues is very
+         friendly" passed against the reordered alternative, its moved words counted as a new verb) */
+      var extraContent = leftover.filter(function (x) { return FILL.indexOf(x) < 0 && CRITICAL.indexOf(x) < 0 && x.length > 1 && !tv.some(function (t) { return grammarTwin(t.p, x) || t.p === x || near(t.p, x); }); });
+      var NEG = ["not", "never", "cannot", "no"];
+      var negT = tv.some(function (t) { return NEG.indexOf(t.p) >= 0; }), negH = hw.some(function (x) { return NEG.indexOf(x) >= 0 && x !== "no"; });
+      if (!negT && negH) {
+        var negates = hw.some(function (x, k) { return (x === "not" || x === "never" || x === "cannot") && hw.slice(k + 1, k + 3).some(function (y) { return FILL.indexOf(y) < 0 && tv.some(function (t) { return t.p === y; }); }); });
+        if (negates) hard = "fact:not";
+      }
+      // "I'm a little tired, but very happy today": subject + be left out after and / but / so
+      var elide = {};
+      tv.forEach(function (t, k) {
+        if (k > 0 && /^(and|but|so|or)$/.test(tv[k - 1].p) && /^(i|he|she|it|we|they|you)$/.test(t.p) && tv[k + 1] && /^(am|is|are|was|were)$/.test(tv[k + 1].p) && !hit[k] && !hit[k + 1]) { elide[k] = elide[k + 1] = true; }
+        else if (k > 0 && /^(and|but|then)$/.test(tv[k - 1].p) && /^(i|he|she|we|they|you)$/.test(t.p) && !hit[k]) {
+          // "…the report and (I will) send it": the pronoun, and a helper after it, left out before a verb that is there
+          var j = k + 1; while (tv[j] && /^(will|can|would|could|should|am|is|are)$/.test(tv[j].p) && !hit[j]) j++;
+          if (tv[j] && hit[j]) for (var e = k; e < j; e++) elide[e] = true;
+        }
+      });
       // a small word or a frequency word that was only MOVED ("Usually I wake up…") is still there
       var MOVABLE = CRITICAL.concat(["usually", "sometimes", "always", "often", "normally", "also", "too", "now", "today", "here", "there"]);
       var spare = leftover.slice();
+      var softSmall = 0;
+      var mainVerb = function (k) {
+        var t = tv[k].p, nx = tv[k + 1] ? tv[k + 1].p : "";
+        if (/^(have|has|had)$/.test(t)) return !/(ed$|^(been|done|gone|seen|to|got|finished|already|just|never|not|made|taken|eaten|given)$)/.test(nx);
+        if (/^(do|does|did)$/.test(t)) return /^(my|the|a|an|some|your|his|her|our|their|it|this|that|homework|work|nothing|everything)$/.test(nx);
+        return false;
+      };
       tv.forEach(function (t, k) {
-        if (hit[k]) return;
+        if (hit[k] || elide[k]) return;
         var at = spare.indexOf(t.p);
-        if (at >= 0 && MOVABLE.indexOf(t.p) >= 0 && !/^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(t.p)) { spare.splice(at, 1); hit[k] = true; return; }
+        var oneDay = tv.filter(function (x) { return /^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(x.p); }).length === 1;
+        // a place said in another part of the sentence is still that place ("I live in JB but I work in Singapore")
+        if (at >= 0 && t.proper) { spare.splice(at, 1); hit[k] = true; return; }
+        if (at >= 0 && MOVABLE.indexOf(t.p) >= 0 && (oneDay || !/^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(t.p))) { spare.splice(at, 1); hit[k] = true; return; }
         miss.push(t.p);
         var twin = leftover.filter(function (x) { return grammarTwin(t.p, x); })[0];
         var sOnly = twin && (t.p === twin + "s" || twin === t.p + "s" || t.p === twin + "es" || twin === t.p + "es");
         var prev = k > 0 ? tv[k - 1].p : "";
-        var verbSlot = /^(he|she|it)$/.test(prev) || (k > 0 && tv[k - 1].name);
-        if (twin && (!sOnly || verbSlot)) why = why || "form:" + t.p;
-        else if ((t.proper && leftover.some(function (x) { return PLACES.indexOf(x) >= 0; })) || /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) why = why || "fact:" + t.p;
-        else if (CRITICAL.indexOf(t.p) >= 0) why = why || "small:" + t.p;
+        /* an -s on its own is forgiven only on a plural noun ("my colleague" for "my colleagues",
+           "two report"): the word before it is a determiner or a number. "I checks", "the app
+           save", "everyone get" are verb forms, and those are the lesson */
+        var nounSlot = /^(a|an|the|my|your|his|her|our|their|two|three|four|five|six|seven|eight|nine|ten|many|some|these|those|all|any|more|few|several|\d+)$/.test(prev);
+        if (twin && (!sOnly || !nounSlot)) { why = why || "form:" + t.p; hard = hard || "form:" + t.p; }
+        else if ((t.proper && leftover.some(function (x) { return PLACES.indexOf(x) >= 0; })) || /^(mon|tues|wednes|thurs|fri|satur|sun)day$|^(january|february|march|april|may|june|july|august|september|october|november|december)$/.test(t.p)) { why = why || "fact:" + t.p; hard = hard || "fact:" + t.p; }
+        else if (CRITICAL.indexOf(t.p) >= 0 && !mainVerb(k)) {
+          /* am / is / are left out while another verb stands there ("I arrive here by eight" for
+             "I am here by eight", "I feel happy") is another way to say it, not "I tired" */
+          // …but not when a different am / is / are was said instead ("the workers is")
+          var otherVerb = /^(am|is|are)$/.test(t.p) && extraContent.length && !leftover.some(function (x) { return /^(am|is|are|was|were)$/.test(x) && x !== t.p; });
+          why = why || "small:" + t.p; if (!otherVerb) hard = hard || "small:" + t.p; else softSmall++;
+        }
+        else if (FACTNUM(t.p) || /^(morning|afternoon|evening|noon|tomorrow|yesterday)$/.test(t.p)) { why = why || "fact:" + t.p; hard = hard || "fact:" + t.p; }
+        else if (!/^(a|an|the)$/.test(t.p) && extraContent.some(function (x) { return opposite(t.p, x); })) { hard = hard || "swap:" + t.p; }
       });
+      if (/^fact:not$/.test(hard) && !why) why = hard;
       var res = tw.map(function (raw, ri) {
         var mine = tv.filter(function (t) { return t.ri === ri; });
         var ok = !mine.length || mine.every(function (t) { return hit[tv.indexOf(t)]; });
@@ -190,10 +270,8 @@
       var okN = n - miss.length;
       // a longer sentence said another natural way ("so much" for "a lot of", "normally" for "usually") still counts
       var allowed = n <= 5 ? 0 : n < 10 ? 1 : n < 12 ? 2 : 3;
-      // "missing a small word" only when the misses are small words — otherwise it was said another way
-      if (/^small:/.test(why) && miss.some(function (x) { return CRITICAL.indexOf(x) < 0; })) why = "";
-      var cand = { words: res, ok: okN, total: n, miss: miss, why: why, pass: !why && miss.length <= allowed };
-      if (/^fact:/.test(why)) cand.pass = false;
+      var replaced = Math.min(extraContent.length, miss.filter(function (x) { return CRITICAL.indexOf(x) < 0 && !/^(a|an|the)$/.test(x); }).length + softSmall);
+      var cand = { words: res, ok: okN, total: n, miss: miss, why: hard ? why || hard : (why && !/^small:/.test(why) ? why : ""), pass: !hard && miss.length - replaced <= allowed };
       if (!best || (cand.pass && !best.pass) || (cand.pass === best.pass && okN > best.ok)) best = cand;
     });
     return best;
@@ -365,5 +443,5 @@
     return t.replace(/\bmister\b/g, "mr").replace(/\b(\d{1,2}) 00\b/g, "$1 o'clock");
   }
 
-  global.TouchSpeech = { tokens: words, irregular: IRREG, available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording, audioFor: audioFor };
+  global.TouchSpeech = { opposite: opposite, isNumber: function (w) { return FACTNUM(w); }, tokens: words, irregular: IRREG, available: !!Rec, listen: listen, finish: finishNow, check: check, stop: stop, normalize: normalize, canRecord: canRecord, noRecording: noRecording, audioFor: audioFor };
 })(typeof globalThis !== "undefined" ? globalThis : window);
